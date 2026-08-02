@@ -1,0 +1,22 @@
+node_modules/
+.netlify
+.claude/
+
+# 原始／中間產物模型檔（數十 MB，非部署所需）
+*-raw.glb
+glb-backup-nodraco/
+
+# 根目錄的工作用模型；實際部署的壓縮版在 web-deploy/
+/macan.glb
+/mx5.glb
+/w202.glb
+/sample-car.glb
+
+# 本機備份
+*.bak
+*.bak.*
+*.bak-*
+*.backup-*
+
+# 打包產物
+*.zip

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>我的夢想車庫 · 電影式展示</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
+
+<!-- 舊分享連結（帶配置參數）直接進配置器，不看展示 -->
+<script>
+if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
+  location.replace('garage.html'+location.search);
+}
+</script>
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="我的夢想車庫 · 電影式展示">
+<meta property="og:description" content="滾動切換 9 台夢想車，鏡頭自動環繞展示。看完再進 360° 配置器自由配色、聽引擎聲、AR 看車。">
+<meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+<meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="我的夢想車庫 · 電影式展示">
+<meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+
+<!-- model-viewer：載入 .glb、光影反射；鏡頭由本頁引擎驅動 -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+
+<!-- 每台車有專屬環境光，先偷偷抓 HDR，換車才不會等 -->
+<link rel="prefetch" href="env-sunset.hdr">
+<link rel="prefetch" href="env-studio.hdr">
+<link rel="prefetch" href="env-night.hdr">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@200;300;400;500&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --bg:#0a0b0d;
+    --accent:#d4af37;           /* 依當前車款切換 */
+    --text:#ece9e2;
+    --dim:#8d8a82;
+  }
+  html,body{ height:100%; overflow:hidden; overscroll-behavior:none; }
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif; font-weight:300;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ===== 舞台背景 ===== */
+  #stage{
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 95% 52% at 50% 82%, var(--glow, rgba(212,175,55,.12)), transparent 62%),
+      radial-gradient(ellipse 130% 95% at 50% 38%, var(--stage-mid, #15161a), var(--bg) 78%);
+  }
+  #stage .haze{ position:absolute; inset:0;
+    background:radial-gradient(ellipse 60% 30% at 50% 88%, rgba(255,255,255,.045), transparent 70%); }
+
+  /* ===== 3D 車（3 格輪替池） ===== */
+  .car-viewer{
+    position:fixed; top:0; left:-12vw; width:124vw; height:100vh;
+    z-index:1; opacity:0; pointer-events:none;
+    --poster-color:transparent;
+    will-change:opacity, transform;
+  }
+
+  /* ===== 進度條（車輛進度） ===== */
+  #progress-bar{
+    position:fixed; top:0; left:0; width:100%; height:2px; z-index:40;
+    background:linear-gradient(90deg, var(--accent), #fff3);
+    transform-origin:left center; transform:scaleX(0);
+    transition:transform .7s cubic-bezier(.3,.7,.3,1);
+    box-shadow:0 0 10px var(--accent);
+  }
+
+  /* ===== 頂欄 ===== */
+  #topbar{
+    position:fixed; top:0; left:0; right:0; z-index:30;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 30px; pointer-events:none;
+  }
+  #topbar .brand{ font-size:13px; letter-spacing:.28em; color:var(--text); }
+  #topbar .brand b{ font-weight:500; }
+  #topbar .tools{ display:flex; gap:8px; }
+  #topbar .tools > *{
+    pointer-events:auto; font-family:inherit; font-size:12.5px; letter-spacing:.12em; text-decoration:none;
+    color:var(--text); border:1px solid rgba(255,255,255,.22); border-radius:30px;
+    padding:9px 18px; background:rgba(10,11,13,.4); backdrop-filter:blur(8px);
+    cursor:pointer; transition:.2s;
+  }
+  #topbar .tools > *:hover{ border-color:var(--accent); color:var(--accent); }
+  #btn-auto.on, #btn-snd.on{ border-color:var(--accent); color:var(--accent); box-shadow:0 0 12px color-mix(in srgb, var(--accent) 40%, transparent); }
+  /* Lucide 內嵌 icon（取代 emoji） */
+  svg.lic{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2;
+    stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; }
+  @keyframes licWiggle{ 0%,100%{ transform:rotate(0) } 30%{ transform:rotate(-14deg) } 65%{ transform:rotate(9deg) } }
+  #topbar .tools > *:hover svg.lic{ animation:licWiggle .55s ease; transform-origin:50% 50%; }
+
+  /* ===== 右側車輛縮圖導覽（手機縮成圓點） ===== */
+  #dots{
+    position:fixed; right:14px; top:50%; transform:translateY(-50%);
+    z-index:30; display:flex; flex-direction:column; gap:10px;
+  }
+  #dots button{
+    width:56px; height:32px; border-radius:6px; cursor:pointer;
+    border:1px solid rgba(255,255,255,.16); background:rgba(20,21,26,.7);
+    padding:0; position:relative; transition:.25s; opacity:.55;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #dots button img{ width:100%; height:100%; object-fit:cover; border-radius:5px; display:block; pointer-events:none; }
+  #dots button .ic{ font-style:normal; font-size:15px; line-height:1; }
+  #dots button:hover{ opacity:.9; }
+  #dots button.active{
+    opacity:1; border-color:var(--accent); transform:scale(1.08);
+    box-shadow:0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  #dots button .lb{
+    position:absolute; right:calc(100% + 10px); top:50%; transform:translateY(-50%);
+    font-size:11px; letter-spacing:.1em; color:var(--dim); white-space:nowrap;
+    opacity:0; transition:.2s; pointer-events:none;
+  }
+  #dots button:hover .lb, #dots button.active .lb{ opacity:1; }
+
+  /* ===== 開場：主標題在上、車在下，不重疊 ===== */
+  #hero-overlay{
+    position:fixed; top:6vh; left:0; right:0; z-index:20;
+    text-align:center; pointer-events:none;
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  #hero-overlay.gone{ opacity:0; transform:translateY(-30px); }
+  #hero-overlay .kick{ font-size:12px; letter-spacing:.6em; text-indent:.6em; color:var(--accent); margin-bottom:14px; }
+  #hero-overlay h1{
+    font-family:"Noto Serif TC",Georgia,serif; font-weight:300;
+    font-size:clamp(30px, 5.2vw, 56px); letter-spacing:.1em;
+  }
+  #hero-overlay .sub{ font-size:clamp(12px, 1.4vw, 15px); color:var(--dim); margin-top:12px; letter-spacing:.24em; }
+  #hint{
+    position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:20;
+    color:var(--dim); font-size:11.5px; letter-spacing:.4em; text-indent:.4em;
+    text-align:center; transition:opacity .5s;
+  }
+  #hint .arrow{
+    display:block; margin:10px auto 0; width:1px; height:30px;
+    background:linear-gradient(180deg, var(--accent), transparent);
+    animation:drip 2s ease-in-out infinite;
+  }
+  @keyframes drip{
+    0%{ transform:scaleY(0); transform-origin:top; opacity:1; }
+    60%{ transform:scaleY(1); transform-origin:top; opacity:1; }
+    100%{ transform:scaleY(1); transform-origin:top; opacity:0; }
+  }
+
+  /* ===== 文字卡：桌面在側邊、手機在底部 ===== */
+  #panel{
+    position:fixed; z-index:10; top:50%; transform:translateY(-50%);
+    left:6vw; width:min(420px, 38vw);
+    padding:26px 28px;
+    border:1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    border-radius:6px;
+    background:linear-gradient(160deg, rgba(14,14,17,.78), rgba(14,14,17,.55));
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 20px 56px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none;
+    transition:opacity .5s ease;
+    cursor:pointer;
+  }
+  #panel.show{ opacity:1; pointer-events:auto; }
+  #panel.side-right{ left:auto; right:max(6vw, 88px); text-align:right; }  /* 至少讓出右側縮圖欄 */
+  #panel .kicker{
+    font-size:11.5px; letter-spacing:.44em; color:var(--accent);
+    text-transform:uppercase; margin-bottom:12px;
+  }
+  #panel h2{
+    font-family:"Noto Serif TC",Georgia,serif;
+    font-size:clamp(24px, 3.6vw, 40px); font-weight:300; line-height:1.3; margin-bottom:10px;
+  }
+  #panel h2 em{
+    font-style:normal;
+    background:linear-gradient(120deg, #fff, var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, #000));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  #panel p{ font-size:clamp(13px, 1.3vw, 15px); line-height:2; color:var(--dim); }
+  #panel .divider{ width:54px; height:1px; margin:14px 0;
+    background:linear-gradient(90deg, var(--accent), transparent); }
+  #panel.side-right .divider{ margin-left:auto; background:linear-gradient(270deg, var(--accent), transparent); }
+  #panel .inner{ transition:opacity .35s ease; }
+  #panel .inner.fading{ opacity:0; }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 4px; }
+  #panel.side-right .chips{ justify-content:flex-end; }
+  .chips span{
+    font-size:11.5px; color:var(--text); letter-spacing:.04em;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.13);
+    padding:5px 12px; border-radius:30px;
+  }
+  .chips span b{ font-weight:400; color:var(--accent); margin-right:5px; }
+
+  .cta{
+    display:inline-block; margin-top:16px; text-decoration:none;
+    font-size:13px; letter-spacing:.14em; color:#0d0d10; font-weight:500;
+    background:linear-gradient(120deg, #fff, var(--accent));
+    border-radius:30px; padding:11px 24px; transition:.2s;
+    box-shadow:0 6px 26px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .cta:hover{ filter:brightness(1.1); transform:translateY(-1px); }
+  .cta.ghost{
+    color:var(--text); background:none; border:1px solid rgba(255,255,255,.3);
+    box-shadow:none; margin-left:10px;
+  }
+  .cta.ghost:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* 卡片輪播指示（3 條小槓）＋提示 */
+  #card-dots{ display:flex; gap:6px; margin-top:18px; }
+  #panel.side-right #card-dots{ justify-content:flex-end; }
+  #card-dots i{
+    width:22px; height:2px; background:rgba(255,255,255,.18); border-radius:2px; overflow:hidden; position:relative;
+  }
+  #card-dots i.done{ background:var(--accent); }
+  #card-dots i.now::after{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:100%;
+    background:var(--accent); transform-origin:left; transform:scaleX(var(--p,0));
+  }
+  #panel .tap-hint{ font-size:10.5px; color:#57534c; letter-spacing:.1em; margin-top:8px; }
+
+  /* ===== 結尾卡 ===== */
+  #outro-panel{
+    position:fixed; z-index:10; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(560px, 90vw); text-align:center;
+    padding:34px 34px 26px;
+    border:1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    border-radius:6px;
+    background:linear-gradient(160deg, rgba(14,14,17,.8), rgba(14,14,17,.6));
+    backdrop-filter:blur(10px);
+    box-shadow:0 20px 56px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none; transition:opacity .5s ease;
+  }
+  #outro-panel.show{ opacity:1; pointer-events:auto; }
+  #outro-panel .kicker{ font-size:11.5px; letter-spacing:.44em; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
+  #outro-panel h2{ font-family:"Noto Serif TC",Georgia,serif; font-size:clamp(26px,4vw,40px); font-weight:300; margin-bottom:10px; }
+  #outro-panel h2 em{ font-style:normal;
+    background:linear-gradient(120deg, #fff, var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, #000));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  #outro-panel p{ font-size:14px; line-height:2; color:var(--dim); }
+  #outro-panel .credits{ margin-top:22px; font-size:10.5px; line-height:2; color:#55534c; letter-spacing:.04em; }
+  #outro-panel .credits a{ color:#6d6a62; }
+
+  /* ===== 載入畫面 ===== */
+  #loader{
+    position:fixed; inset:0; background:var(--bg); z-index:50;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;
+    transition:opacity .9s ease;
+  }
+  #loader.done{ opacity:0; pointer-events:none; }
+  #loader .badge{ font-size:13px; letter-spacing:.5em; text-indent:.5em; color:var(--accent); }
+  #loader .bar-outer{ width:min(260px,60vw); height:1px; background:rgba(212,175,55,.18); }
+  #loader .bar-inner{ width:0%; height:100%;
+    background:linear-gradient(90deg, var(--accent), #fff);
+    box-shadow:0 0 10px var(--accent); transition:width .25s ease; }
+  #loader .pct{ font-size:11.5px; letter-spacing:.3em; color:var(--dim); }
+
+  #fallback-msg{
+    position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--dim); font-size:15px; line-height:2.2; text-align:center; padding:24px;
+  }
+  #fallback-msg b{ color:var(--accent); font-weight:400; }
+
+  @media (max-width:680px){
+    #topbar{ padding:12px 14px; }
+    #topbar .brand{ font-size:10.5px; letter-spacing:.16em; }
+    #topbar .tools > *{ padding:8px 12px; font-size:11.5px; }
+    #topbar .tools .bt{ display:none; }   /* 手機按鈕只留圖示，三顆才擠得下 */
+    #dots{ right:8px; gap:11px; }
+    #dots button{
+      width:8px; height:8px; border-radius:50%; border:none; opacity:1;
+      background:rgba(255,255,255,.22); box-shadow:none;
+    }
+    #dots button img, #dots button .ic{ display:none; }
+    #dots button.active{ background:var(--accent); box-shadow:0 0 8px var(--accent); transform:scale(1.3); }
+    #dots button .lb{ display:none; }
+    #hero-overlay{ top:9vh; }
+    .car-viewer{ left:0; width:100vw; }   /* 手機不做左右位移，畫布=螢幕寬，取景才不會被切 */
+    #panel{
+      top:auto; bottom:3.5vh; left:4vw; right:4vw; width:auto; transform:none;
+      padding:18px 20px; max-height:44vh; overflow-y:auto;
+    }
+    #panel.side-right{ left:4vw; right:4vw; text-align:left; }
+    #panel.side-right .divider{ margin-left:0; background:linear-gradient(90deg, var(--accent), transparent); }
+    #panel.side-right .chips, #panel.side-right #card-dots{ justify-content:flex-start; }
+    .cta{ padding:10px 18px; font-size:12.5px; }
+    .cta.ghost{ margin-left:8px; }
+    #hint{ bottom:calc(3.5vh + 2px); display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage"><div class="haze"></div></div>
+
+<div id="loader">
+  <div class="badge">DREAM GARAGE</div>
+  <div class="bar-outer"><div class="bar-inner" id="load-bar"></div></div>
+  <div class="pct" id="load-pct">載入車庫 0%</div>
+</div>
+
+<div id="fallback-msg">
+  <div>
+    3D 模型無法載入。<br><br>
+    這個頁面需要透過網站或本機伺服器開啟：<br>
+    請點兩下 <b>開啟配置器.bat</b>，或直接開網址版<br>
+    （直接點開 html 檔會因瀏覽器安全限制載不了模型）
+  </div>
+</div>
+
+<div id="progress-bar"></div>
+
+<div id="topbar">
+  <div class="brand"><svg class="lic" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> <b>我的夢想車庫</b></div>
+  <div class="tools">
+    <a href="intro.html" title="3 分鐘看完網站能做什麼"><svg class="lic" viewBox="0 0 24 24"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg><span class="bt"> 導覽</span></a>
+    <button id="btn-snd" title="切換車輛時播放引擎聲"><svg class="lic" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><line x1="22" x2="16" y1="9" y2="15" /><line x1="16" x2="22" y1="9" y2="15" /></svg><span class="bt"> 引擎聲</span></button>
+    <button id="btn-auto" title="自動輪播所有車輛"><svg class="lic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" /></svg><span class="bt"> 自動導覽</span></button>
+    <a href="garage.html"><svg class="lic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg><span class="bt"> 360° 配置器</span></a>
+  </div>
+</div>
+
+<div id="dots"></div>
+
+<!-- 3 個 model-viewer 由 JS 建立 -->
+<div id="viewers"></div>
+
+<!-- 開場標題：固定在畫面上方，車在下方，不重疊 -->
+<div id="hero-overlay">
+  <div class="kick">DREAM GARAGE · CINEMATIC</div>
+  <h1>我的夢想車庫</h1>
+  <div class="sub">滾 動 一 下 ，看 下 一 台 夢 想 之 車</div>
+</div>
+<div id="hint">滾動 / 滑動 切換車輛<span class="arrow"></span></div>
+
+<!-- 文字卡（一張，內容自動輪播：介紹 → 故事 → 規格） -->
+<div id="panel"><div class="inner" id="panel-inner"></div><div id="card-dots"><i></i><i></i><i></i></div><div class="tap-hint" id="tap-hint">點卡片看下一段 <svg class="lic" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></div></div>
+
+<!-- 結尾卡 -->
+<div id="outro-panel">
+  <div class="kicker">Build Yours</div>
+  <h2>打造<em>你的</em>那一台</h2>
+  <p>九台車，自由配色、換輪圈、聽真實引擎聲，還能用手機 AR 停進你家。</p>
+  <a class="cta" href="garage.html">進入 360° 配置器</a>
+  <a class="cta ghost" href="#" id="btn-restart">重看一次</a>
+  <div class="credits" id="credits"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   我的夢想車庫 · 電影式展示（步進版）
+   互動模型：滾輪/滑動/方向鍵 一次 = 切換一台車。
+   到站後展示自動進行：鏡頭飛入 → 慢速環繞，文字卡（介紹→故事→規格）
+   每 6 秒自動輪播，也可點卡片手動換頁。「自動導覽」開啟後連換車都全自動。
+   ===================================================================== */
+
+/* 三種環境光（HDR 同配置器；exposure/shadow 沿用配置器調好的值；tint 是舞台底色） */
+var ENVS = {
+  studio:{ file:'env-studio.hdr', exp:1.05, shadow:0.9,  tint:'#15161a' },
+  sunset:{ file:'env-sunset.hdr', exp:1.15, shadow:1.1,  tint:'#221712' },
+  night: { file:'env-night.hdr',  exp:2.2,  shadow:1.4,  tint:'#0f1523' }
+};
+var CARS = [
+  { file:'w202.glb',    short:'W202',    name:'1993 Mercedes-Benz W202 C220', pitch:-90, env:'sunset',
+    body:'carpaint', paint:'#7a1e23', accent:'#d4af37',
+    credit:{ t:'W202 Sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e' } },
+  { file:'mx5.glb',     short:'MX-5',    name:'2026 Mazda MX-5（ND）', pitch:-90, env:'sunset',
+    body:'carpaint', paint:'#a01521', accent:'#e8593f',
+    credit:{ t:'Mazda MX-5 (ND) by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc' } },
+  { file:'macan.glb',   short:'Macan',   name:'2022 Porsche Macan', pitch:0, env:'studio',
+    body:'Color1Mtl', paint:'#0aa1c8', accent:'#45c8e6',
+    credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a' } },
+  { file:'x5.glb',      short:'BMW X5',  name:'2015 BMW X5（F15）', pitch:0, env:'studio',
+    body:'carpaint', paint:'#e8eaec', accent:'#9fc2e8',
+    credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8' } },
+  { file:'q50.glb',     short:'Q50',     name:'2021 Infiniti Q50 Red Sport 400', pitch:0, env:'night',
+    body:/carpaint/i, paint:'#aeb4bb', accent:'#d4363c',
+    credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2' } },
+  { file:'r350.glb',    short:'R350',    name:'Mercedes-Benz R350（R-Class）', pitch:0, env:'sunset',
+    body:'rclassnotorious_bodyP', paint:'#1b2c4d', accent:'#8fa8d8',
+    credit:{ t:'Mercedes-Benz R-Class by KOElkast1007', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31' } },
+  { file:'mazda3.glb',  short:'Mazda 3', name:'2026 Mazda 3', pitch:0, env:'studio',
+    body:'Mazda_3MI_1218030001_089', paint:'#62686e', accent:'#c9cdd2',
+    credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d' } },
+  { file:'mustang.glb', short:'Mustang', name:'2026 Ford Mustang EcoBoost 2.3', pitch:0, env:'night',
+    body:/2024Coloured_Material|2024PaintA_Material/, paint:'#1666c0', accent:'#4d94e8',
+    credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt' } },
+  { file:'gt43.glb', short:'AMG GT', name:'2026 Mercedes-AMG GT 63 S 4-Door', pitch:0, env:'studio',
+    body:'gtishka_body', paint:'#2b2e33', accent:'#3ecf9e',
+    credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3' } }
+];
+var STORIES = [
+  { kick:'Mercedes-Benz · 1993', tag:'第一代 C-Class · 你的夢想之車', title:'經典<em>重生</em>',
+    story:'誕生在賓士最不計成本的年代。厚實鈑金、紮實底盤、開不壞的可靠度，讓 W202 成為「過度工程」的代名詞。',
+    story2:'鍍鉻飾條、盾形水箱罩、恰到好處的車身姿態——那是一個時代對品質的承諾。有些車不只是交通工具，而是一段記憶的形狀。' },
+  { kick:'Mazda · Roadster', tag:'人馬一體的純粹敞篷', title:'人馬<em>一體</em>',
+    story:'全球最暢銷的雙座敞篷跑車。沒有多餘的電子輔助，只有最純粹的駕駛樂趣。',
+    story2:'輕、小、後驅。過彎的瞬間，車與人像是同一個生命體——這就是 Roadster 六十年不變的信仰。' },
+  { kick:'Porsche · SUV', tag:'最好開的性能休旅', title:'跑車的<em>靈魂</em>',
+    story:'把跑車的靈魂塞進休旅車身。底盤調校與轉向手感都是保時捷的水準。',
+    story2:'日常接送、假日山路，一台車滿足兩種人生。這就是 Macan 站穩性能 SUV 標竿的原因。' },
+  { kick:'BMW · xDrive', tag:'豪華與性能兼具的大型休旅', title:'全能<em>旗艦</em>',
+    story:'BMW 的旗艦休旅。直六渦輪引擎綿密有力，xDrive 四驅穩定可靠。',
+    story2:'兼顧家庭、長途與駕駛樂趣——它不偏科，每一科都拿高分。' },
+  { kick:'Infiniti · Red Sport', tag:'低調的 400 匹性能房車', title:'西裝<em>暴徒</em>',
+    story:'外型內斂、實力驚人。3.0L 雙渦輪 V6 榨出 400 匹馬力。',
+    story2:'在路上它是一台安靜的豪華房車；踩下油門的那一秒，才露出真面目。' },
+  { kick:'Mercedes-Benz · MPV', tag:'被低估的豪華七人座', title:'家庭<em>頭等艙</em>',
+    story:'賓士罕見的豪華 MPV。寬敞的六到七人空間、平順的 V6 與 4MATIC 四驅。',
+    story2:'不張揚、不喧嘩，把每一段全家出遊，都變成頭等艙的旅程。' },
+  { kick:'Mazda · Kodo Design', tag:'魂動設計的精緻掀背', title:'移動的<em>藝術品</em>',
+    story:'把「美」放在第一位的掀背車。魂動設計語言讓它在路上像件藝術品。',
+    story2:'光影在鈑件上流動的樣子，是 Mazda 設計師雕出來的。內裝質感更直逼豪華品牌。' },
+  { kick:'Ford · S650', tag:'美式肌肉的入門傳奇', title:'野馬<em>精神</em>',
+    story:'超過一甲子的美式跑車圖騰。EcoBoost 2.3L 渦輪直四榨出 315 匹，配上經典後驅底盤。',
+    story2:'長車頭、短車尾的肌肉線條——不用 V8 也能享受純粹的美式駕馭樂趣。' },
+  { kick:'Mercedes-AMG · X290', tag:'四門的超跑靈魂', title:'壓軸<em>王者</em>',
+    story:'AMG 把 GT 超跑的血統，裝進四門轎跑的身體。手工 4.0L V8 雙渦輪、630 匹馬力、0-100 僅 3.2 秒。',
+    story2:'溜背線條、無框車門、主動尾翼——能載一家人的車裡，它是最快的那一批。優雅與暴力，同時在線。' }
+];
+var SPECS = [
+  [['年份','1993'],['引擎','2.2L 直四'],['馬力','150 hp'],['0–100','10.5 秒'],['驅動','後驅']],
+  [['年份','2016+'],['引擎','2.0L 直四'],['馬力','184 hp'],['0–100','6.5 秒'],['車重','1060 kg'],['驅動','後驅']],
+  [['年份','2022'],['引擎','2.9L V6 雙渦輪'],['馬力','440 hp'],['0–100','4.5 秒'],['驅動','四驅']],
+  [['年份','2015'],['引擎','3.0L 直六渦輪'],['馬力','306 hp'],['0–100','6.5 秒'],['驅動','xDrive']],
+  [['年份','2014+'],['引擎','3.0L V6 雙渦輪'],['馬力','400 hp'],['0–100','4.9 秒'],['驅動','後驅']],
+  [['年份','2006–12'],['引擎','3.5L V6'],['馬力','272 hp'],['座位','6–7 人'],['驅動','4MATIC']],
+  [['年份','2019+'],['引擎','2.5L 直四'],['馬力','191 hp'],['0–100','7.0 秒'],['驅動','前驅']],
+  [['年份','2026'],['引擎','2.3T EcoBoost'],['馬力','315 hp'],['0–100','5.1 秒'],['驅動','後驅']],
+  [['年份','2026'],['引擎','4.0L V8 雙渦輪'],['馬力','630 hp'],['0–100','3.2 秒'],['驅動','4MATIC+']]
+];
+
+var N = CARS.length;
+var OUTRO = N;                 // 第 9 站：結尾卡
+var CARD_SEC = 6;              // 每張文字卡停留秒數
+var FLY_SEC = 1.5;             // 換車飛入時間
+var loader = document.getElementById('loader');
+var fallback = document.getElementById('fallback-msg');
+
+if(location.protocol==='file:'){ loader.classList.add('done'); fallback.style.display='flex'; return; }
+
+/* ---------- 版權 ---------- */
+document.getElementById('credits').innerHTML =
+  '3D 模型（CC BY）：' + CARS.map(function(c){
+    return '<a href="'+c.credit.u+'" target="_blank" rel="noopener">'+c.credit.t+'</a>';
+  }).join(' · ');
+
+/* ---------- 右側縮圖導覽（手機縮成圓點） ---------- */
+var dotsBox = document.getElementById('dots');
+CARS.forEach(function(c,i){
+  var b=document.createElement('button');
+  b.innerHTML='<img src="thumb-'+c.file.replace('.glb','')+'.webp" alt="'+c.short+'"><span class="lb">'+c.short+'</span>';
+  b.onclick=function(){ goTo(i); };
+  dotsBox.appendChild(b);
+});
+(function(){
+  var b=document.createElement('button');
+  b.innerHTML='<i class="ic"><svg class="lic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg></i><span class="lb">Build Yours</span>';
+  b.onclick=function(){ goTo(OUTRO); };
+  dotsBox.appendChild(b);
+})();
+var dots = dotsBox.children;
+
+/* ---------- 3 格輪替的 model-viewer 池 ----------
+   重要教訓：一頁疊超過 3 個 model-viewer 會凍死 Chrome 的渲染程序，
+   所以只建 3 個，car % 3 決定格子，相鄰三台必落在不同格。 */
+var SLOT_N = 3;
+var viewerBox = document.getElementById('viewers');
+var slots = [];
+(function(){
+  for(var s=0;s<SLOT_N;s++){
+    var mv = document.createElement('model-viewer');
+    mv.className='car-viewer';
+    mv.setAttribute('loading','eager');   // 疊放的 fixed viewer 會騙過預設懶載入判定，一定要 eager
+    mv.setAttribute('interaction-prompt','none');
+    mv.setAttribute('shadow-intensity','0.9');
+    mv.setAttribute('shadow-softness','0.7');
+    mv.setAttribute('environment-image','neutral');
+    mv.setAttribute('exposure','1.05');
+    mv.setAttribute('tone-mapping','neutral');
+    mv.setAttribute('interpolation-decay','100');
+    mv.setAttribute('camera-orbit','-26deg 76deg 130%');
+    mv.setAttribute('field-of-view','30deg');
+    viewerBox.appendChild(mv);
+    var slot = { el:mv, car:-1, swapping:false, swapT:0 };
+    (function(slot){
+      slot.el.addEventListener('load', function(){
+        slot.swapping = false;
+        if(slot.car>=0) paintCar(slot.el, CARS[slot.car]);
+      });
+    })(slot);
+    slots.push(slot);
+  }
+})();
+function slotFor(k){ return slots[((k%SLOT_N)+SLOT_N)%SLOT_N]; }
+function assignSlot(k){
+  if(k<0||k>=N) return;
+  var s = slotFor(k);
+  if(s.car===k) return;
+  s.car = k;
+  s.swapping = true;    // src 換掉後 model-viewer 會先繼續畫舊車，載好前不能露臉
+  s.swapT = Date.now();
+  var c = CARS[k];
+  s.el.style.opacity = 0;
+  s.el.setAttribute('alt', c.name);
+  s.el.setAttribute('orientation','0deg '+(c.pitch||0)+'deg 0deg');
+  var E = ENVS[c.env] || ENVS.studio;            // 每台車專屬環境光
+  s.el.setAttribute('environment-image', E.file);
+  s.el.setAttribute('exposure', E.exp);
+  s.el.setAttribute('shadow-intensity', E.shadow);
+  s.el.setAttribute('src', c.file);
+}
+/* 上漆（sRGB → linear） */
+function s2l(c){ c/=255; return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+function paintCar(mv, car){
+  try{
+    var hex = car.paint.replace('#','');
+    var col = [ s2l(parseInt(hex.substr(0,2),16)), s2l(parseInt(hex.substr(2,2),16)), s2l(parseInt(hex.substr(4,2),16)), 1 ];
+    mv.model.materials.forEach(function(m){
+      var n = m.name||'';
+      var hit = (car.body instanceof RegExp) ? car.body.test(n) : n===car.body;
+      if(hit){
+        m.pbrMetallicRoughness.setBaseColorFactor(col);
+        m.pbrMetallicRoughness.setMetallicFactor(0.6);
+        m.pbrMetallicRoughness.setRoughnessFactor(0.38);
+      }
+    });
+  }catch(e){}
+}
+
+/* ---------- 狀態 ---------- */
+var step = 0;              // 0..N-1 = 車；N = 結尾
+var prevStep = -1;         // 換站時的上一站（做離場動畫）
+var stepT = 0;             // 到站後經過的秒數
+var transT = 999;          // 換站以來經過的秒數（>FLY_SEC 表示轉場結束）
+var heroActive = true;     // 開場標題還在
+var cardIdx = 0;           // 文字卡 0..2
+var cardT = 0;             // 這張卡顯示了幾秒
+var autoPlay = false;      // 自動導覽
+var lastNav = 0;
+
+function clamp(v,a,b){ return v<a?a : v>b?b : v; }
+function easeOut(t){ t=clamp(t,0,1); return 1-Math.pow(1-t,3); }
+function isMobile(){ return window.innerWidth<=680; }
+
+/* ---------- 每站的運鏡：飛入 → 慢速環繞 ---------- */
+function camFor(i, t){
+  var dir = (i%2===0)? 1 : -1;
+  var base = -30*dir;
+  var e = easeOut(t/FLY_SEC);
+  var th, ph, r;
+  if(t < FLY_SEC){
+    th = base - dir*70*(1-e);          // 從側後方掃進來
+    ph = 66 + 10*e;
+    r  = 210 - 90*e;                   // 從遠處推近
+  } else {
+    var u = t - FLY_SEC;
+    th = base - dir*9*u;               // 慢速環繞（約 40 秒一圈）
+    ph = 76 + 5*Math.sin(u*0.22);      // 呼吸般的高低起伏
+    r  = 120 + 6*Math.sin(u*0.15);
+  }
+  return { th:th, ph:ph, r:r };
+}
+
+/* ---------- 文字卡內容 ---------- */
+function cardHTML(i, c){
+  var st=STORIES[i], sp=SPECS[i], car=CARS[i];
+  if(c===0) return '<div class="kicker">'+st.kick+'</div><h2>'+st.title+'</h2><div class="divider"></div><p>'+car.name+'。'+st.tag+'。</p>';
+  if(c===1) return '<div class="kicker">Story</div><p>'+st.story+'</p><p style="margin-top:8px">'+st.story2+'</p>';
+  var chips = sp.map(function(kv){ return '<span><b>'+kv[0]+'</b>'+kv[1]+'</span>'; }).join('');
+  return '<div class="kicker">Spec</div><div class="chips">'+chips+'</div><a class="cta" href="garage.html?car='+i+'">進入 360° 配置 →</a>';
+}
+var panel = document.getElementById('panel');
+var panelInner = document.getElementById('panel-inner');
+function showCard(i, c, instant){
+  cardIdx = c; cardT = 0;
+  if(instant){
+    panelInner.innerHTML = cardHTML(i, c);
+    return;
+  }
+  panelInner.classList.add('fading');
+  setTimeout(function(){
+    panelInner.innerHTML = cardHTML(i, c);
+    panelInner.classList.remove('fading');
+  }, 300);
+}
+panel.addEventListener('click', function(e){
+  if(e.target.closest('a')) return;                 // CTA 連結不攔
+  if(step<N) showCard(step, (cardIdx+1)%3);
+});
+function updateCardDots(){
+  var bars = document.getElementById('card-dots').children;
+  for(var b=0;b<3;b++){
+    bars[b].className = b<cardIdx ? 'done' : (b===cardIdx ? 'now' : '');
+    if(b===cardIdx) bars[b].style.setProperty('--p', clamp(cardT/CARD_SEC,0,1));
+  }
+}
+
+/* Lucide icon 字串（給會動態改字的按鈕用） */
+var LIC = {
+  vol2:'<svg class="lic" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><path d="M16 9a5 5 0 0 1 0 6" /><path d="M19.364 18.364a9 9 0 0 0 0-12.728" /></svg>',
+  volx:'<svg class="lic" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><line x1="22" x2="16" y1="9" y2="15" /><line x1="16" x2="22" y1="9" y2="15" /></svg>',
+  play:'<svg class="lic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" /></svg>',
+  pause:'<svg class="lic" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></svg>'
+};
+
+/* ---------- 引擎聲：換車那一刻播一聲（預設關，記住偏好） ---------- */
+var sndOn = false;
+try{ sndOn = localStorage.getItem('dg_snd')==='1'; }catch(e){}
+var _eng = null;
+var sndBtn = document.getElementById('btn-snd');
+function drawSndBtn(){
+  sndBtn.innerHTML = (sndOn?LIC.vol2:LIC.volx)+'<span class="bt"> 引擎聲</span>';
+  sndBtn.classList.toggle('on', sndOn);
+}
+drawSndBtn();
+function stopEngine(){ if(_eng){ try{ _eng.pause(); }catch(e){} _eng=null; } }
+function playEngine(i){
+  if(!sndOn || i<0 || i>=N) return;
+  stopEngine();
+  var a = new Audio('snd-'+CARS[i].file.replace(/\.glb$/i,'.mp3'));
+  a.volume = 0.75;
+  _eng = a;
+  var p = a.play();
+  if(p && p.catch) p.catch(function(){});   // 沒有錄音檔（Mustang）或瀏覽器擋自動播放：靜默略過
+}
+sndBtn.onclick = function(){
+  sndOn = !sndOn;
+  try{ localStorage.setItem('dg_snd', sndOn?'1':'0'); }catch(e){}
+  drawSndBtn();
+  if(sndOn && !heroActive && step<N) playEngine(step);
+  else stopEngine();
+};
+
+/* ---------- 收開場標題（滾輪/觸控/鍵盤/按鈕共用） ---------- */
+function dismissHero(){
+  heroActive = false;
+  document.getElementById('hero-overlay').classList.add('gone');
+  document.getElementById('hint').style.opacity = 0;
+}
+
+/* ---------- 站點切換 ---------- */
+function applyTheme(i){
+  var c = CARS[clamp(i,0,N-1)];
+  document.documentElement.style.setProperty('--accent', c.accent);
+  var h=c.accent.replace('#','');
+  var stage = document.getElementById('stage');
+  stage.style.setProperty('--glow',
+    'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+',0.13)');
+  stage.style.setProperty('--stage-mid', (ENVS[c.env]||ENVS.studio).tint);   // 舞台底色跟著環境走
+  for(var d=0; d<dots.length; d++) dots[d].classList.toggle('active', d===i);
+}
+var prevT = 0;   // 上一站離場時的環繞秒數（讓離場的車維持原姿態，不跳角度）
+function goTo(n){
+  n = clamp(n, 0, OUTRO);
+  if(n===step) return;
+  prevStep = step;
+  prevT = stepT;
+  step = n;
+  stepT = 0; transT = 0;
+  lastNav = performance.now();
+  if(heroActive) dismissHero();
+  applyTheme(step);
+  document.getElementById('progress-bar').style.transform = 'scaleX('+(step/OUTRO)+')';
+  panel.classList.remove('show');
+  var outro = document.getElementById('outro-panel');
+  if(step===OUTRO){
+    outro.classList.add('show');
+    assignSlot(N-1);            // 結尾卡背後放最後一台車當背景
+    stopEngine();
+  } else {
+    outro.classList.remove('show');
+    panel.classList.toggle('side-right', step%2===1);
+    showCard(step, 0, true);
+    assignSlot(step); assignSlot(step+1); assignSlot(step-1);
+    playEngine(step);           // 引擎聲跟著鏡頭飛入一起來
+  }
+}
+
+/* ---------- 主迴圈（時間驅動，不靠捲動） ---------- */
+var lastTick = 0;
+function tick(now){
+  var dt = lastTick ? Math.min((now-lastTick)/1000, 0.1) : 0.016;
+  lastTick = now;
+  stepT += dt; transT += dt;
+  var showCar = (step===OUTRO) ? N-1 : step;   // 結尾卡背後留最後一台車
+
+  /* 文字卡自動輪播 + 自動導覽 */
+  if(step<N && !heroActive && transT>FLY_SEC){
+    cardT += dt;
+    if(cardT >= CARD_SEC){
+      if(cardIdx<2) showCard(step, cardIdx+1);
+      else if(autoPlay) { goTo(step+1); }
+      else { cardT = 0; cardIdx = 0; showCard(step, 0); }
+    }
+    if(!panel.classList.contains('show')) panel.classList.add('show');
+    updateCardDots();
+  }
+  if(step===OUTRO && autoPlay && stepT>10) goTo(0);   // 自動導覽看完結尾回到第一台
+
+  /* 每個格子的透明度與鏡頭 */
+  for(var s=0;s<SLOT_N;s++){
+    var slot = slots[s];
+    if(slot.car<0){ slot.el.style.opacity=0; continue; }
+    /* 換車保險絲：load 事件沒來但 loaded 為真且超過 1.5 秒，視同完成 */
+    if(slot.swapping && slot.el.loaded && Date.now()-slot.swapT>1500){
+      slot.swapping=false; paintCar(slot.el, CARS[slot.car]);
+    }
+    if(slot.swapping || !slot.el.loaded){ slot.el.style.opacity=0; continue; }
+
+    var op=0, cam=null;
+    if(slot.car===showCar){
+      cam = camFor(slot.car, stepT);
+      if(isMobile()) cam.r += 8;                         // 窄螢幕再稍微拉遠一點點
+
+      op = (transT<FLY_SEC) ? easeOut(transT/FLY_SEC) : 1;
+      if(step===OUTRO){ op = 0.45; cam.r += 30; }        // 結尾：拉遠變背景
+    } else if(slot.car===prevStep && prevStep<N && transT<FLY_SEC*0.7){
+      var eo = transT/(FLY_SEC*0.7);
+      cam = camFor(slot.car, prevT + transT);             // 沿著原本的環繞姿態繼續轉
+      cam.r += eo*70;                                     // 往後拉遠離場
+      op = 1-easeOut(eo);
+    }
+    if(cam){
+      var xs = (isMobile()||heroActive) ? 0 : (slot.car%2===0 ? 8 : -8);   // 桌面：車閃開文字卡；手機/開場置中
+      var ys = heroActive ? 7 : (isMobile() ? -6 : 0);                      // 開場車往下讓標題、手機車往上讓底卡
+      slot.el.style.opacity = op.toFixed(3);
+      slot.el.style.transform = 'translate('+xs+'vw,'+ys+'vh)';
+      slot.el.cameraOrbit = cam.th.toFixed(2)+'deg '+cam.ph.toFixed(2)+'deg '+cam.r.toFixed(1)+'%';
+    } else {
+      slot.el.style.opacity = 0;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+/* 保險絲：rAF 被節流（背景分頁/嵌入面板）時用計時器補幀 */
+setInterval(function(){
+  if(performance.now()-lastTick>250) tick(performance.now());
+}, 150);
+
+/* ---------- 輸入：滾輪 / 觸控 / 鍵盤 = 一次一站 ---------- */
+function navBy(d){
+  var now = performance.now();
+  if(now-lastNav < 900) return;   // 冷卻，避免觸控板慣性連跳
+  goTo(step + d);
+}
+window.addEventListener('wheel', function(e){
+  if(Math.abs(e.deltaY)<20) return;
+  if(heroActive){                       // 開場第一滾：收標題留在第一台
+    var now=performance.now();
+    if(now-lastNav<900) return;
+    lastNav=now;
+    dismissHero();
+    transT = FLY_SEC+0.01;              // 已經在看第一台了，直接開卡
+    playEngine(step);
+    return;
+  }
+  navBy(e.deltaY>0 ? 1 : -1);
+}, {passive:true});
+var _tY=null;
+window.addEventListener('touchstart', function(e){ _tY = e.touches[0].clientY; }, {passive:true});
+window.addEventListener('touchend', function(e){
+  if(_tY===null) return;
+  var dy = _tY - e.changedTouches[0].clientY;
+  _tY = null;
+  if(Math.abs(dy)<45) return;
+  if(heroActive){
+    dismissHero();
+    transT = FLY_SEC+0.01;
+    playEngine(step);
+    return;
+  }
+  navBy(dy>0 ? 1 : -1);
+}, {passive:true});
+window.addEventListener('keydown', function(e){
+  if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' ') { e.preventDefault(); heroActive? (function(){dismissHero();transT=FLY_SEC+0.01;playEngine(step);})() : navBy(1); }
+  if(e.key==='ArrowUp'||e.key==='PageUp') { e.preventDefault(); navBy(-1); }
+});
+
+/* ---------- 自動導覽 ---------- */
+var autoBtn = document.getElementById('btn-auto');
+autoBtn.onclick = function(){
+  autoPlay = !autoPlay;
+  autoBtn.classList.toggle('on', autoPlay);
+  autoBtn.innerHTML = (autoPlay?LIC.pause:LIC.play)+'<span class="bt"> 自動導覽'+(autoPlay?'中':'')+'</span>';
+  if(autoPlay && heroActive){
+    dismissHero();
+    transT = FLY_SEC+0.01;
+    playEngine(step);
+  }
+};
+document.getElementById('btn-restart').onclick = function(e){ e.preventDefault(); goTo(0); };
+
+/* ---------- 初始化 ---------- */
+applyTheme(0);
+showCard(0, 0, true);   // 預先放好第一台的介紹卡（開場收掉後立刻能用）
+assignSlot(0); assignSlot(1);
+slots[0].el.addEventListener('progress', function(e){
+  if(slots[0].car!==0) return;
+  var pct = Math.round(e.detail.totalProgress*100);
+  document.getElementById('load-bar').style.width = pct+'%';
+  document.getElementById('load-pct').textContent = '載入車庫 '+pct+'%';
+});
+slots[0].el.addEventListener('error', function(){ loader.classList.add('done'); fallback.style.display='flex'; });
+var waited=0;
+var poll=setInterval(function(){
+  waited+=300;
+  if(slots[0].el.loaded){
+    clearInterval(poll);
+    document.getElementById('load-bar').style.width='100%';
+    loader.classList.add('done');
+    stepT = 0; transT = 0;      // 開場：第一台做飛入
+  } else if(waited>=45000){
+    clearInterval(poll);
+    loader.classList.add('done'); fallback.style.display='flex';
+  }
+},300);
+})();
+</script>
+</body>
+</html>

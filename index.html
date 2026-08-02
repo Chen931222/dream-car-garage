@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>我的夢想車 · 360° 環景配置器</title>
+
+<!-- ① 載入 3D 函式庫（需要網路，第一次開啟時會從 CDN 下載） -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#1d1f23; --sub:#6b7178; --line:rgba(0,0,0,.08);
+    --panel:rgba(255,255,255,.72); --accent:#0a66c2;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; overflow:hidden; }
+  body{
+    font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
+    color:var(--ink); background:#eef1f4;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{ position:fixed; inset:0; }
+  canvas{ display:block; cursor:grab; }
+  canvas:active{ cursor:grabbing; }
+
+  /* ── 頂列 ── */
+  .topbar{
+    position:absolute; top:0; left:0; right:0; height:64px; z-index:5;
+    display:flex; align-items:center; gap:24px; padding:0 28px;
+    pointer-events:none;
+  }
+  .brand{ display:flex; align-items:baseline; gap:18px; }
+  .brand h1{ font-size:19px; font-weight:700; letter-spacing:.02em; }
+  .brand .price-wrap{ line-height:1; }
+  .brand .price-label{ font-size:11px; color:var(--sub); display:block; margin-bottom:4px; }
+  .brand .price{ font-size:16px; font-weight:700; }
+  .brand .price small{ font-size:12px; font-weight:500; color:var(--sub); }
+  .top-actions{ margin-left:auto; display:flex; gap:10px; pointer-events:auto; }
+  .top-actions button{
+    font-family:inherit; font-size:14px; border:none; border-radius:8px;
+    padding:9px 16px; cursor:pointer; transition:.15s;
+  }
+  .btn-ghost{ background:transparent; color:var(--ink); }
+  .btn-ghost:hover{ background:rgba(0,0,0,.05); }
+  .btn-save{ background:var(--accent); color:#fff; font-weight:500; }
+  .btn-save:hover{ filter:brightness(1.08); }
+
+  /* ── 左側面板 ── */
+  .panel{
+    position:absolute; top:88px; left:24px; width:268px; z-index:5;
+    background:var(--panel); backdrop-filter:blur(20px) saturate(1.2);
+    -webkit-backdrop-filter:blur(20px) saturate(1.2);
+    border:1px solid var(--line); border-radius:16px;
+    box-shadow:0 12px 40px rgba(20,30,50,.10);
+    overflow:hidden;
+  }
+  .tabs{ display:flex; flex-direction:column; padding:8px; gap:2px; border-bottom:1px solid var(--line); }
+  .tab{
+    text-align:left; font-family:inherit; font-size:15px; color:var(--ink);
+    background:transparent; border:none; border-radius:10px;
+    padding:11px 14px; cursor:pointer; transition:.15s; font-weight:500;
+  }
+  .tab:hover{ background:rgba(0,0,0,.04); }
+  .tab.active{ background:var(--ink); color:#fff; }
+  .tab .small{ font-size:11px; color:var(--sub); font-weight:400; }
+  .tab.active .small{ color:rgba(255,255,255,.7); }
+
+  .section{ padding:18px; display:none; }
+  .section.active{ display:block; animation:fade .25s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+  .section h3{ font-size:13px; color:var(--sub); font-weight:500; margin-bottom:14px; letter-spacing:.04em; }
+
+  .swatches{ display:flex; flex-wrap:wrap; gap:12px; }
+  .swatch{
+    width:42px; height:42px; border-radius:50%; cursor:pointer; position:relative;
+    border:2px solid rgba(255,255,255,.85); box-shadow:0 1px 4px rgba(0,0,0,.18);
+    transition:transform .15s;
+  }
+  .swatch:hover{ transform:scale(1.08); }
+  .swatch.sel{ box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink); }
+  .swatch .tip{
+    position:absolute; bottom:-26px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; font-size:11px; white-space:nowrap;
+    padding:3px 8px; border-radius:6px; opacity:0; pointer-events:none; transition:.15s; z-index:9;
+  }
+  .swatch:hover .tip{ opacity:1; bottom:-24px; }
+
+  /* 總結 */
+  .summary-row{ display:flex; justify-content:space-between; font-size:14px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .summary-row span:last-child{ color:var(--sub); }
+  .summary-total{ display:flex; justify-content:space-between; font-size:17px; font-weight:700; padding-top:14px; }
+
+  /* ── 底部 360 提示 ── */
+  .hud{
+    position:absolute; bottom:26px; left:50%; transform:translateX(-50%); z-index:5;
+    display:flex; align-items:center; gap:14px;
+  }
+  .hud .pill{
+    background:var(--panel); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--line); border-radius:30px; padding:10px 18px;
+    font-size:13px; color:var(--sub); display:flex; align-items:center; gap:8px;
+    box-shadow:0 6px 20px rgba(20,30,50,.10);
+  }
+  .hud button{
+    font-family:inherit; font-size:13px; cursor:pointer; border:1px solid var(--line);
+    background:var(--panel); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-radius:30px; padding:10px 18px; color:var(--ink); transition:.15s;
+    box-shadow:0 6px 20px rgba(20,30,50,.10); display:flex; align-items:center; gap:8px;
+  }
+  .hud button:hover{ background:#fff; }
+  .hud button .dot{ width:8px; height:8px; border-radius:50%; background:#22c55e; }
+  .hud button.off .dot{ background:#cbd1d8; }
+
+  /* 載入 / 錯誤 */
+  #loading{
+    position:absolute; inset:0; z-index:20; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; background:#eef1f4;
+  }
+  .spinner{ width:38px; height:38px; border:3px solid rgba(0,0,0,.1); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  #loading p{ color:var(--sub); font-size:14px; }
+  #loading.error .spinner{ display:none; }
+  #loading.error p{ color:#c0392b; max-width:320px; text-align:center; line-height:1.6; }
+
+  @media (max-width:680px){
+    .panel{ top:auto; bottom:0; left:0; right:0; width:100%; border-radius:18px 18px 0 0; max-height:46vh; overflow-y:auto; }
+    .hud{ bottom:auto; top:72px; }
+    .brand h1{ font-size:16px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 頂列 -->
+  <div class="topbar">
+    <div class="brand">
+      <h1 id="model-name">我的夢想車</h1>
+      <div class="price-wrap">
+        <span class="price-label">參考售價</span>
+        <span class="price"><span id="price">3,010,000</span> <small>台幣</small></span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn-ghost">更多 ⌄</button>
+      <button class="btn-save">♥ 儲存</button>
+    </div>
+  </div>
+
+  <!-- 左側面板 -->
+  <div class="panel">
+    <div class="tabs" id="tabs"></div>
+    <div id="sections"></div>
+  </div>
+
+  <!-- 底部 HUD -->
+  <div class="hud">
+    <div class="pill">↔ 拖曳車身可 360° 環景</div>
+    <button id="rotate-toggle"><span class="dot"></span> 自動旋轉</button>
+  </div>
+
+  <!-- 載入畫面 -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>正在載入 3D 展示間…</p>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   夢想車 360° 配置器  ——  純 Three.js 雛形
+   車子是用程式「捏」出來的（不需外部模型檔），所以保證能跑、能換色。
+   之後想換成真實車模：用 GLTFLoader 載入你的 .glb，把車身材質
+   指到下面的 bodyMat 即可，UI／換色邏輯完全沿用。
+   ===================================================================== */
+
+if (typeof THREE === 'undefined') {
+  showError('無法載入 3D 函式庫，請確認電腦有連上網路後再重新整理。');
+} else {
+  init();
+}
+
+function showError(msg){
+  var l = document.getElementById('loading');
+  l.className = 'error';
+  l.innerHTML = '<p>' + msg + '</p>';
+}
+
+function init(){
+
+  /* ---------- 選項資料（顏色 / 內裝 / 輪圈）---------- */
+  const BASE_PRICE = 3010000;
+  const EXTERIOR = [
+    { name:'曜岩黑',   hex:'#0c0d10', add:0 },
+    { name:'北極白',   hex:'#eef0f2', add:0 },
+    { name:'高山灰',   hex:'#6b7177', add:30000 },
+    { name:'鈦銀',     hex:'#aeb4bb', add:30000 },
+    { name:'午夜藍',   hex:'#1b2c4d', add:60000 },
+    { name:'翡翠綠',   hex:'#1f3d33', add:60000 },
+    { name:'太陽石紅', hex:'#7a1e23', add:60000 },
+  ];
+  const INTERIOR = [
+    { name:'曜石黑', hex:'#17181c', add:0 },
+    { name:'馬鞍棕', hex:'#5b3a24', add:45000 },
+    { name:'瓷石米', hex:'#d6cbb8', add:45000 },
+    { name:'酒紅',   hex:'#4a1f24', add:60000 },
+  ];
+  const WHEELS = [
+    { name:'雙色鋁圈（銀）', hex:'#c9ced6', add:0 },
+    { name:'黑化鋁圈',       hex:'#26282d', add:25000 },
+  ];
+  const state = { ext:0, int:0, wheel:0 };
+
+  /* ---------- Three.js 基本場景 ---------- */
+  const app = document.getElementById('app');
+  const renderer = new THREE.WebGLRenderer({ antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.02;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  app.insertBefore(renderer.domElement, app.firstChild);
+
+  const scene = new THREE.Scene();
+  scene.background = gradientTexture(['#f1f3f6','#fbfcfd'], false);
+
+  const camera = new THREE.PerspectiveCamera(42, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(5.6, 2.2, 6.6);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0.55, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4.2;
+  controls.maxDistance = 12;
+  controls.maxPolarAngle = Math.PI * 0.495;   // 不讓鏡頭鑽到地面下
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.7;
+  controls.update();
+
+  /* ---------- 環境光 + 反射 ---------- */
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xc9ced6, 0.45));
+
+  const key = new THREE.DirectionalLight(0xffffff, 2.3);
+  key.position.set(6, 9, 7);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.near = 0.5; key.shadow.camera.far = 30;
+  key.shadow.camera.left = -5; key.shadow.camera.right = 5;
+  key.shadow.camera.top = 5; key.shadow.camera.bottom = -5;
+  key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02;
+  scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0xffffff, 0.7); fill.position.set(-7, 4, -2); scene.add(fill);
+  const rim  = new THREE.DirectionalLight(0xffffff, 1.0); rim.position.set(-4, 6, -8); scene.add(rim);
+
+  // 用 RoomEnvironment 產生車漆反射（包在 try 裡，萬一不支援也不會壞）
+  try {
+    if (THREE.RoomEnvironment) {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+    }
+  } catch(e){ console.warn('環境反射略過：', e); }
+
+  /* ---------- 地板（攝影棚白底 + 陰影）---------- */
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(30, 64),
+    new THREE.MeshStandardMaterial({ map: gradientTexture(['#ffffff','#e3e6ea'], true), roughness:0.85, metalness:0 })
+  );
+  ground.rotation.x = -Math.PI/2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  /* ---------- 捏一台車 ---------- */
+  const CX = 2.29, W = 1.78;                 // 車身置中位移、車寬
+  const car = new THREE.Group();
+  scene.add(car);
+
+  // 材質（之後換真車模時，把 bodyMat 指到車身材質即可）
+  const bodyMat = new THREE.MeshPhysicalMaterial({
+    color: sRGB(EXTERIOR[state.ext].hex),
+    metalness:0.65, roughness:0.32, clearcoat:1, clearcoatRoughness:0.12, envMapIntensity:1.1
+  });
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: sRGB('#0a0d12'), metalness:0, roughness:0.08, transparent:true, opacity:0.42, envMapIntensity:1.4
+  });
+  const tireMat = new THREE.MeshStandardMaterial({ color: sRGB('#16181c'), roughness:0.85 });
+  const rimMat  = new THREE.MeshStandardMaterial({ color: sRGB(WHEELS[state.wheel].hex), metalness:0.9, roughness:0.25 });
+  const seatMat = new THREE.MeshStandardMaterial({ color: sRGB(INTERIOR[state.int].hex), roughness:0.75 });
+  const lightW  = new THREE.MeshStandardMaterial({ color: sRGB('#fff7e8'), emissive: sRGB('#fff0d0'), emissiveIntensity:0.6, roughness:0.3 });
+  const lightR  = new THREE.MeshStandardMaterial({ color: sRGB('#5a0d0d'), emissive: sRGB('#c01616'), emissiveIntensity:0.7, roughness:0.4 });
+
+  // 車身：用「側面剪影」拉伸成形，底部挖出兩個輪拱
+  const body = new THREE.Shape();
+  body.moveTo(4.50,0.55);
+  body.quadraticCurveTo(4.52,0.66, 4.30,0.74);
+  body.quadraticCurveTo(4.05,0.82, 3.45,0.86);
+  body.quadraticCurveTo(3.15,0.90, 2.95,1.36);     // 擋風玻璃斜度
+  body.quadraticCurveTo(2.40,1.46, 1.78,1.38);     // 車頂
+  body.quadraticCurveTo(1.42,1.33, 1.18,1.02);     // 後窗
+  body.lineTo(0.62,0.92);
+  body.quadraticCurveTo(0.20,0.86, 0.10,0.66);
+  body.lineTo(0.06,0.30);
+  body.lineTo(0.35,0.30);
+  body.absarc(0.95,0.30,0.60, Math.PI, 0, true);   // 後輪拱
+  body.lineTo(3.15,0.30);
+  body.absarc(3.75,0.30,0.60, Math.PI, 0, true);   // 前輪拱
+  body.lineTo(4.45,0.30);
+  body.lineTo(4.50,0.55);
+  const bodyGeo = new THREE.ExtrudeGeometry(body, {
+    depth:W, bevelEnabled:true, bevelThickness:0.04, bevelSize:0.04, bevelSegments:2, curveSegments:28
+  });
+  bodyGeo.translate(-CX, 0, -W/2);
+  const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+  bodyMesh.castShadow = true; bodyMesh.receiveShadow = true;
+  car.add(bodyMesh);
+
+  // 車艙玻璃（拉伸出擋風、車頂兩側與後窗）
+  const cab = new THREE.Shape();
+  cab.moveTo(3.35,0.90);
+  cab.quadraticCurveTo(3.12,0.96, 2.96,1.33);
+  cab.quadraticCurveTo(2.40,1.42, 1.82,1.35);
+  cab.quadraticCurveTo(1.50,1.30, 1.30,1.02);
+  cab.lineTo(3.35,0.90);
+  const Wg = W - 0.16;
+  const cabGeo = new THREE.ExtrudeGeometry(cab, { depth:Wg, bevelEnabled:false, curveSegments:28 });
+  cabGeo.translate(-CX, 0, -Wg/2);
+  car.add(new THREE.Mesh(cabGeo, glassMat));
+
+  // 椅子（透過玻璃看得到 → 用來展示內裝換色）
+  [0.55, -0.35].forEach(function(px){
+    [0.34, -0.34].forEach(function(pz){
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.46,0.16,0.46), seatMat);
+      base.position.set(px - CX, 0.64, pz);
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.46,0.50,0.14), seatMat);
+      back.position.set(px - CX - 0.18, 0.92, pz); back.rotation.z = 0.18;
+      car.add(base, back);
+    });
+  });
+
+  // 車燈
+  [0.62, -0.62].forEach(function(pz){
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.10,0.13,0.34), lightW);
+    hl.position.set(4.40 - CX, 0.72, pz); car.add(hl);
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.14,0.52), lightR);
+    tl.position.set(0.10 - CX, 0.72, pz); car.add(tl);
+  });
+
+  // 輪子
+  function makeWheel(){
+    const g = new THREE.Group();
+    const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.45,0.30,40), tireMat);
+    tire.rotation.x = Math.PI/2; tire.castShadow = true; g.add(tire);
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.30,0.30,0.32,28), rimMat);
+    disc.rotation.x = Math.PI/2; g.add(disc);
+    for (let i=0;i<5;i++){
+      const a = i*Math.PI*2/5;
+      const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.30,0.07,0.05), rimMat);
+      spoke.position.set(Math.cos(a)*0.15, Math.sin(a)*0.15, 0.16);
+      spoke.rotation.z = a; g.add(spoke);
+    }
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.34,20), rimMat);
+    cap.rotation.x = Math.PI/2; g.add(cap);
+    return g;
+  }
+  const wheelPos = [[1.475,0.82],[1.475,-0.82],[-1.325,0.82],[-1.325,-0.82]];
+  wheelPos.forEach(function(p){
+    const w = makeWheel();
+    w.position.set(p[0], 0.45, p[1]);
+    if (p[1] < 0) w.rotation.y = Math.PI;     // 左側輪轂朝外
+    car.add(w);
+  });
+
+  /* ---------- 換色用的目標色（每幀平滑過渡）---------- */
+  const tBody = sRGB(EXTERIOR[state.ext].hex);
+  const tSeat = sRGB(INTERIOR[state.int].hex);
+  const tRim  = sRGB(WHEELS[state.wheel].hex);
+
+  /* ---------- 介面：分頁 + 色票 ---------- */
+  buildUI();
+
+  function buildUI(){
+    const tabsEl = document.getElementById('tabs');
+    const secEl = document.getElementById('sections');
+    const TABS = [
+      { id:'ext',  label:'外觀',  small:'車身顏色' },
+      { id:'int',  label:'內裝',  small:'座椅顏色' },
+      { id:'whl',  label:'輪圈',  small:'樣式' },
+      { id:'sum',  label:'總結',  small:'規格與售價' },
+    ];
+    TABS.forEach(function(t, i){
+      const b = document.createElement('button');
+      b.className = 'tab' + (i===0?' active':'');
+      b.innerHTML = t.label + ' <span class="small">' + t.small + '</span>';
+      b.onclick = function(){ selectTab(t.id, b); };
+      tabsEl.appendChild(b);
+    });
+
+    secEl.appendChild(swatchSection('ext','選擇車身顏色', EXTERIOR, function(i){
+      state.ext=i; tBody.copy(sRGB(EXTERIOR[i].hex)); refresh();
+    }, true));
+    secEl.appendChild(swatchSection('int','選擇內裝顏色', INTERIOR, function(i){
+      state.int=i; tSeat.copy(sRGB(INTERIOR[i].hex)); refresh();
+    }, false));
+    secEl.appendChild(swatchSection('whl','選擇輪圈樣式', WHEELS, function(i){
+      state.wheel=i; tRim.copy(sRGB(WHEELS[i].hex)); refresh();
+    }, false));
+
+    const sum = document.createElement('div');
+    sum.className = 'section'; sum.id = 'sec-sum';
+    secEl.appendChild(sum);
+
+    refresh();
+  }
+
+  function swatchSection(id, title, items, onPick, isFirst){
+    const sec = document.createElement('div');
+    sec.className = 'section' + (isFirst?' active':''); sec.id = 'sec-'+id;
+    sec.innerHTML = '<h3>'+title+'</h3>';
+    const wrap = document.createElement('div'); wrap.className='swatches';
+    items.forEach(function(it, i){
+      const s = document.createElement('div');
+      s.className = 'swatch'; s.style.background = it.hex; s.dataset.group = id; s.dataset.i = i;
+      s.innerHTML = '<span class="tip">'+it.name + (it.add? ' +'+it.add.toLocaleString('en-US'):'') +'</span>';
+      s.onclick = function(){ onPick(i); };
+      wrap.appendChild(s);
+    });
+    sec.appendChild(wrap);
+    return sec;
+  }
+
+  function selectTab(id, btn){
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById('sec-'+id).classList.add('active');
+  }
+
+  function refresh(){
+    // 更新色票選取狀態
+    document.querySelectorAll('.swatch').forEach(function(s){
+      const g = s.dataset.group, i = +s.dataset.i;
+      const on = (g==='ext'&&i===state.ext)||(g==='int'&&i===state.int)||(g==='whl'&&i===state.wheel);
+      s.classList.toggle('sel', on);
+    });
+    // 價格
+    const total = BASE_PRICE + EXTERIOR[state.ext].add + INTERIOR[state.int].add + WHEELS[state.wheel].add;
+    document.getElementById('price').textContent = total.toLocaleString('en-US');
+    // 總結頁
+    document.getElementById('sec-sum').innerHTML =
+      '<h3>你的配置</h3>' +
+      row('車身顏色', EXTERIOR[state.ext].name) +
+      row('內裝顏色', INTERIOR[state.int].name) +
+      row('輪圈樣式', WHEELS[state.wheel].name) +
+      '<div class="summary-total"><span>總計</span><span>'+ total.toLocaleString('en-US') +' 台幣</span></div>';
+  }
+  function row(k,v){ return '<div class="summary-row"><span>'+k+'</span><span>'+v+'</span></div>'; }
+
+  /* ---------- 自動旋轉開關 ---------- */
+  const rotBtn = document.getElementById('rotate-toggle');
+  rotBtn.onclick = function(){
+    controls.autoRotate = !controls.autoRotate;
+    rotBtn.classList.toggle('off', !controls.autoRotate);
+    rotBtn.querySelector('.dot').nextSibling.textContent = controls.autoRotate ? ' 自動旋轉' : ' 已暫停';
+  };
+
+  /* ---------- 動畫迴圈 ---------- */
+  let first = true;
+  function animate(){
+    requestAnimationFrame(animate);
+    bodyMat.color.lerp(tBody, 0.14);
+    seatMat.color.lerp(tSeat, 0.14);
+    rimMat.color.lerp(tRim, 0.14);
+    controls.update();
+    renderer.render(scene, camera);
+    if (first){ first=false; document.getElementById('loading').style.display='none'; }
+  }
+  animate();
+
+  window.addEventListener('resize', function(){
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  /* ---------- 小工具 ---------- */
+  // 把網頁色碼（sRGB）轉成 Three 用的線性色，避免顏色偏亮失真
+  function sRGB(hex){ return new THREE.Color(hex).convertSRGBToLinear(); }
+
+  // 產生漸層貼圖（背景 / 地板用）
+  function gradientTexture(colors, radial){
+    const c = document.createElement('canvas'); c.width = c.height = 512;
+    const ctx = c.getContext('2d');
+    let grad;
+    if (radial){ grad = ctx.createRadialGradient(256,256,40, 256,256,300); }
+    else { grad = ctx.createLinearGradient(0,0,0,512); }
+    grad.addColorStop(0, colors[0]); grad.addColorStop(1, colors[1]);
+    ctx.fillStyle = grad; ctx.fillRect(0,0,512,512);
+    const tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
+  }
+}
+</script>
+</body>
+</html>

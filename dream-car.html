@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>我的夢想車庫 · 360° 環景配置器</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E">
+
+<!-- 分享預覽卡（貼到 LINE / FB 時顯示標題＋縮圖）-->
+<meta property="og:type" content="website">
+<meta property="og:title" content="我的夢想車庫 · 360° 環景配置器">
+<meta property="og:description" content="8 台夢想車，自由配色、換內裝、聽真實引擎聲，還能用手機 AR 在你家看車。">
+<meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+<meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="我的夢想車庫 · 360° 環景配置器">
+<meta name="twitter:description" content="8 台夢想車，自由配色、換內裝、聽真實引擎聲，還能用手機 AR 在你家看車。">
+<meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+
+<!-- model-viewer：Google 的 3D 模型網頁元件，負責載入 .glb、360 旋轉、光影與反射 -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<!-- QR code 產生器（分享用）-->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{ --ink:#1d2126; --sub:#9aa0a8; --line:rgba(0,0,0,.09); --panel:#ffffff; --accent:#0a66c2; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; overflow:hidden; }
+  body{
+    font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif; color:var(--ink); font-weight:300;
+    background:radial-gradient(circle at 50% 40%, #ffffff 0%, #f5f7f9 70%, #eef1f4 100%);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{ position:fixed; inset:0; }
+
+  /* 載入開場畫面 */
+  #loader{ position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 40%, #ffffff 0%, #f5f7f9 70%, #eef1f4 100%); transition:opacity .5s ease; }
+  #loader.gone{ opacity:0; pointer-events:none; }
+  .loader-in{ text-align:center; }
+  .loader-badge{ font-size:34px; }
+  .loader-title{ font-size:16px; letter-spacing:.22em; color:var(--ink); font-weight:500; margin:10px 0 22px; }
+  .spin{ width:30px; height:30px; margin:0 auto; border:3px solid rgba(0,0,0,.1); border-top-color:var(--ink); border-radius:50%; animation:ldspin .9s linear infinite; }
+  @keyframes ldspin{ to{ transform:rotate(360deg); } }
+
+  /* 車庫入口大廳：縮圖牆，點一台進入 */
+  #lobby{ position:absolute; inset:0; z-index:15; overflow-y:auto;
+    background:radial-gradient(circle at 50% 30%, #ffffff 0%, #f4f6f9 65%, #eaedf1 100%);
+    display:flex; flex-direction:column; align-items:center; padding:54px 22px 40px; transition:opacity .45s ease; }
+  #lobby.gone{ opacity:0; pointer-events:none; }
+  .lobby-kick{ font-size:12px; letter-spacing:.3em; color:var(--sub); }
+  .lobby-title{ font-size:30px; font-weight:200; letter-spacing:.06em; margin:10px 0 4px; }
+  .lobby-sub{ font-size:13px; color:var(--sub); margin-bottom:30px; }
+  .lobby-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(205px, 1fr)); gap:14px; width:min(1060px, 94vw); }
+  .lcard{ font-family:inherit; text-align:left; background:#fff; border:1px solid var(--line); border-radius:16px;
+    overflow:hidden; cursor:pointer; padding:0; transition:transform .18s, box-shadow .18s; box-shadow:0 6px 20px rgba(20,30,50,.07); }
+  .lcard:hover{ transform:translateY(-3px); box-shadow:0 16px 34px rgba(20,30,50,.14); }
+  .lcard img{ width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:linear-gradient(180deg,#f6f8fa,#e9edf1); }
+  .lcard .ln{ font-size:14px; font-weight:500; padding:11px 14px 2px; }
+  .lcard .lt{ font-size:11.5px; color:var(--sub); padding:0 14px 12px; line-height:1.5; }
+  .lcard .lbadge{ display:inline-block; font-size:10px; color:#fff; background:var(--accent); border-radius:20px; padding:2px 8px; margin-left:7px; vertical-align:1px; }
+
+  model-viewer{
+    width:100%; height:100%; background:transparent;
+    --poster-color:transparent; --min-hotspot-opacity:0;
+  }
+  /* 排氣煙：每縷煙是一顆模糊的圓，往上飄並淡出 */
+  .smoke{ pointer-events:none; }
+  .smoke-in{ transition:opacity .35s ease; }   /* 依視角淡出（外層 .smoke 交給 model-viewer 做遮擋）*/
+  .smoke i{ position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%;
+    background:radial-gradient(circle, rgba(205,205,210,.6), rgba(205,205,210,0) 68%);
+    transform:translate(-50%,-50%); animation:smk 2.5s linear infinite; opacity:0; }
+  @keyframes smk{ 0%{ transform:translate(-50%,-30%) scale(.3); opacity:0; } 18%{ opacity:.6; } 100%{ transform:translate(-38%,-210%) scale(2.8); opacity:0; } }
+
+  /* 拖放覆蓋層 */
+  #drop{
+    position:absolute; inset:0; z-index:8; display:none; align-items:center; justify-content:center;
+    background:rgba(10,102,194,.10); border:3px dashed var(--accent); border-radius:18px; margin:14px;
+    font-size:20px; color:var(--accent); font-weight:500;
+  }
+  #drop.show{ display:flex; }
+
+  /* 品牌（左上）/ 動作鈕（右上）*/
+  .brand{ position:absolute; top:26px; left:32px; z-index:5; display:flex; align-items:center; gap:9px;
+    font-size:14px; letter-spacing:.16em; color:var(--ink); cursor:pointer; }
+  .brand b{ font-weight:500; } .brand .sep{ opacity:.45; }
+  .actions{ position:absolute; top:22px; right:28px; z-index:6; display:flex; gap:7px; }
+  .actions button{ width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:rgba(255,255,255,.65);
+    color:var(--sub); font-size:15px; cursor:pointer; font-family:inherit; transition:.15s; }
+  .actions button:hover{ color:var(--ink); border-color:#cfd4da; }
+
+  /* 車名 / 副標：置頂左上（乾淨背景、清楚可讀）*/
+  .title{ position:absolute; top:60px; left:32px; z-index:4; text-align:left; pointer-events:none; max-width:64vw; }
+  #car-name{ font-size:27px; font-weight:200; letter-spacing:.03em; line-height:1.2; }
+  #car-tag{ font-size:13px; color:var(--sub); margin-top:5px; letter-spacing:.04em; }
+
+  /* 底部設定 dock：霧面底襯，色點清楚、與車身分隔 */
+  .info{ position:absolute; left:0; right:0; bottom:118px; z-index:4; text-align:center; pointer-events:none; }
+  .dock{ display:inline-block; pointer-events:auto; background:rgba(255,255,255,.74); backdrop-filter:blur(12px);
+    border:1px solid rgba(0,0,0,.07); border-radius:20px; padding:14px 28px 12px; box-shadow:0 10px 34px rgba(20,30,50,.13); }
+  .color-rows{ display:flex; justify-content:center; gap:30px; flex-wrap:wrap; }
+  .color-row{ display:flex; flex-direction:column; align-items:center; gap:9px; }
+  .color-row .lab{ font-size:11px; color:var(--sub); letter-spacing:.18em; }
+  .swatches{ display:flex; gap:12px; justify-content:center; }
+  .swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; position:relative;
+    border:1px solid rgba(0,0,0,.25); box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .15s; }
+  .swatch:hover{ transform:scale(1.12); } .swatch.sel{ box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink); }
+  .swatch .tip{ position:absolute; bottom:-25px; left:50%; transform:translateX(-50%); background:var(--ink);
+    color:#fff; font-size:10.5px; white-space:nowrap; padding:3px 7px; border-radius:6px; opacity:0; pointer-events:none; transition:.15s; z-index:9; }
+  .swatch:hover .tip{ opacity:1; }
+  .more{ margin-top:13px; }
+  .linkbtn{ font-family:inherit; font-size:13px; font-weight:400; color:var(--sub); background:none; border:none;
+    cursor:pointer; letter-spacing:.08em; padding:6px 4px; transition:.15s; }
+  .linkbtn:hover{ color:var(--ink); }
+
+  /* 車庫：底部一排車名（單列、必要時可橫向捲動）*/
+  .garage{ position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:5;
+    display:flex; gap:20px; align-items:center; max-width:calc(100vw - 280px); flex-wrap:nowrap;
+    overflow-x:auto; justify-content:center; white-space:nowrap; padding:4px 2px; }
+  .garage button{ font-family:inherit; font-size:13px; font-weight:300; color:var(--sub); background:none; border:none;
+    cursor:pointer; letter-spacing:.04em; white-space:nowrap; transition:.15s; }
+  .garage button:hover{ color:var(--ink); }
+  .garage button.active{ color:var(--ink); font-weight:500; }
+
+  /* 控制鈕（置中、在換車列上方）*/
+  /* width:max-content 必加：left:50% 定位的 flex 容器可用寬度只有畫面一半，沒設會提早折行 */
+  .controls{ position:absolute; bottom:60px; left:50%; transform:translateX(-50%); z-index:5; display:flex; gap:7px; flex-wrap:wrap; width:max-content; max-width:92vw; justify-content:center; }
+  .controls button{ font-family:inherit; font-size:12.5px; color:var(--ink); background:rgba(255,255,255,.7);
+    border:1px solid var(--line); border-radius:30px; padding:8px 13px; cursor:pointer; transition:.15s;
+    display:flex; align-items:center; gap:6px; }
+  .controls button:hover{ border-color:#cfd4da; }
+  .controls button.on{ border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
+  .controls .dot{ width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; }
+  .controls .off .dot{ background:#cbd1d8; }
+  /* 車身熱點 */
+  .tip-hot{ border:none; background:none; padding:0; cursor:pointer; }
+  .tip-dot{ display:block; width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.92); border:2px solid var(--ink); box-shadow:0 1px 5px rgba(0,0,0,.35); position:relative; }
+  .tip-dot::after{ content:'+'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; line-height:1; color:var(--ink); }
+  .tip-card{ position:absolute; left:24px; top:50%; transform:translateY(-50%); width:198px; background:var(--ink); color:#fff; font-size:12px; line-height:1.6; padding:9px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:.15s; box-shadow:0 8px 24px rgba(0,0,0,.28); text-align:left; z-index:9; }
+  .tip-card b{ font-weight:500; font-size:13px; }
+  .tip-hot.show .tip-card, .tip-hot:hover .tip-card, .tip-hot:focus .tip-card{ opacity:1; }
+
+  .hint{ position:absolute; bottom:30px; right:28px; z-index:4; font-size:11.5px; color:var(--sub); letter-spacing:.04em; }
+
+  /* AR 按鈕：預設隱藏，只有在支援 AR 的裝置才顯示 */
+  #ar-btn{ position:absolute; top:18px; right:148px; z-index:6; font-family:inherit; font-size:13px; font-weight:400;
+    cursor:pointer; color:#fff; background:var(--accent); border:none; border-radius:30px; padding:9px 16px;
+    align-items:center; gap:8px; display:none; }
+  #ar-btn:hover{ filter:brightness(1.08); }
+  #ar-btn.ar-ok{ display:flex; }
+
+  /* toast */
+  #toast{ position:absolute; bottom:96px; left:50%; transform:translateX(-50%); z-index:9; background:var(--ink);
+    color:#fff; font-size:13px; padding:10px 16px; border-radius:10px; opacity:0; transition:.3s; pointer-events:none; max-width:80vw; text-align:center; }
+  #toast.show{ opacity:1; }
+
+  .credit{ position:absolute; right:14px; bottom:8px; z-index:3; font-size:10.5px; color:var(--sub);
+    background:rgba(255,255,255,.7); padding:4px 9px; border-radius:8px; }
+  .credit a{ color:var(--sub); text-decoration:underline; }
+
+  /* 深色場景（夜晚）：把疊在畫面上的文字轉亮色，維持可讀 */
+  body.scene-dark .brand, body.scene-dark #car-name{ color:#eef1f4; }
+  body.scene-dark #car-tag{ color:#8b97a3; }
+  body.scene-dark .garage button{ color:#8b97a3; }
+  body.scene-dark .garage button:hover, body.scene-dark .garage button.active{ color:#fff; }
+
+  /* 覆蓋視窗：故事與規格 / 個人化 */
+  .sheet{ position:absolute; inset:0; z-index:8; background:rgba(248,250,251,.72); backdrop-filter:blur(8px);
+    display:none; align-items:center; justify-content:center; padding:20px; }
+  .sheet.show{ display:flex; }
+  .card{ width:540px; max-width:90vw; max-height:86vh; overflow-y:auto; background:#fff; border:1px solid var(--line);
+    border-radius:16px; padding:36px 38px 32px; box-shadow:0 30px 70px rgba(20,30,50,.18); position:relative; }
+  .card .x{ position:absolute; top:14px; right:16px; width:34px; height:34px; border:none; background:none; font-size:18px; color:var(--sub); cursor:pointer; }
+  .card h2{ font-size:26px; font-weight:200; letter-spacing:.03em; }
+  .card .csub{ font-size:13px; color:var(--sub); margin-top:6px; letter-spacing:.04em; }
+  .card h3{ font-size:11.5px; color:var(--sub); font-weight:500; letter-spacing:.04em; margin:22px 0 12px; }
+  .card p.story{ font-size:14px; font-weight:300; line-height:2; color:#41464d; margin:18px 0 4px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:16px 0 4px; }
+  .chips span{ font-size:11.5px; color:var(--ink); background:rgba(0,0,0,.05); border:1px solid var(--line); padding:4px 11px; border-radius:30px; }
+
+  /* 個人化面板的表單元件 */
+  select{ width:100%; font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
+    border:1px solid var(--line); border-radius:9px; padding:9px 10px; margin-bottom:8px; }
+  .custom-color{ display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--sub); cursor:pointer; margin-right:18px; }
+  .custom-color input[type=color]{ width:44px; height:30px; border:1px solid var(--line); border-radius:8px; background:none; cursor:pointer; padding:0; }
+  .filebtn{ display:inline-block; font-family:inherit; font-size:13px; cursor:pointer; background:var(--ink);
+    color:#fff; border:none; border-radius:9px; padding:9px 14px; margin-bottom:8px; }
+  .pathrow{ display:flex; gap:6px; margin-bottom:6px; }
+  .pathrow input{ flex:1; font-family:inherit; font-size:13px; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:9px; padding:9px 10px; }
+  .pathrow button{ flex:0 0 auto; font-family:inherit; font-size:13px; cursor:pointer; background:var(--accent); color:#fff; border:none; border-radius:9px; padding:0 14px; }
+  .orient-row{ display:flex; gap:6px; }
+  .orient-row button{ flex:1; font-family:inherit; font-size:13px; cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:9px; padding:9px 4px; color:var(--ink); }
+  .orient-row button:hover{ background:rgba(0,0,0,.05); }
+  .summary-row{ display:flex; justify-content:space-between; font-size:13.5px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .summary-row span:last-child{ color:var(--sub); text-align:right; max-width:200px; }
+  .summary-total{ display:flex; justify-content:space-between; font-size:16px; font-weight:500; padding-top:12px; }
+  .spec-row{ display:flex; justify-content:space-between; font-size:13.5px; padding:7px 0; border-bottom:1px solid var(--line); }
+  .spec-row span:last-child{ color:var(--sub); }
+  .opt-row{ display:flex; align-items:center; gap:11px; font-size:13.5px; padding:9px 2px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .opt-row input{ width:16px; height:16px; flex:0 0 auto; cursor:pointer; accent-color:var(--ink); }
+  .opt-row .opt-name{ flex:1; }
+  .opt-row .opt-add{ color:var(--sub); font-size:12.5px; white-space:nowrap; }
+  .opt-total{ font-size:13px; color:var(--sub); margin-top:12px; }
+  #qr-box{ text-align:center; margin-top:18px; }
+  #qr-box img{ width:172px; height:172px; image-rendering:pixelated; border:1px solid var(--line); border-radius:8px; }
+  .finish-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .finish-row button{ flex:1; min-width:62px; font-family:inherit; font-size:13px; cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:9px; padding:9px 6px; color:var(--ink); transition:.15s; }
+  .finish-row button:hover{ background:rgba(0,0,0,.04); }
+  .finish-row button.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  #cfg-total{ color:var(--ink); font-weight:500; }
+
+  @media (max-width:680px){
+    model-viewer{ height:46vh; }
+    .brand{ top:12px; left:12px; font-size:11.5px; letter-spacing:.08em; }
+    .actions{ top:10px; right:10px; gap:6px; }
+    .actions button{ width:34px; height:34px; font-size:14px; }
+    #ar-btn{ top:auto; bottom:calc(54vh + 6px); right:10px; }
+    .title{ top:44px; left:12px; max-width:76vw; }
+    #car-name{ font-size:20px; letter-spacing:.02em; line-height:1.15; }
+    #car-tag{ font-size:12px; margin-top:4px; }
+    /* 下半部由下往上乾淨堆疊：色票面板 → 控制鈕 → 換車列 → 版權 */
+    .info{ bottom:150px; top:auto; }
+    .dock{ padding:12px 16px 10px; }
+    .color-rows{ gap:16px; margin-top:0; }
+    .color-row .lab{ font-size:10.5px; letter-spacing:.12em; }
+    .swatches{ gap:8px; }
+    .swatch{ width:22px; height:22px; }
+    .more{ margin-top:9px; }
+    .linkbtn{ font-size:12px; }
+    .controls{ top:auto; bottom:56px; left:50%; transform:translateX(-50%); flex-wrap:wrap; justify-content:center; width:94vw; max-width:94vw; gap:6px; }
+    .controls button{ padding:7px 11px; font-size:12px; }
+    .garage{ bottom:18px; max-width:94vw; gap:16px; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; padding:6px 10px; }
+    .hint{ display:none; }
+    .credit{ bottom:2px; right:8px; font-size:9px; padding:2px 6px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="loader"><div class="loader-in"><div class="loader-badge">🏁</div><div class="loader-title">我的夢想車庫</div><div class="spin"></div></div></div>
+
+  <!-- 車庫入口大廳 -->
+  <div id="lobby">
+    <div class="lobby-kick">DREAM GARAGE</div>
+    <div class="lobby-title">我的夢想車庫</div>
+    <div class="lobby-sub">選一台車開始 360° 配置</div>
+    <div class="lobby-grid" id="lobby-grid"></div>
+  </div>
+
+  <model-viewer id="mv"
+    src="w202.glb"
+    alt="1993 Mercedes-Benz W202 C220"
+    loading="eager"
+    camera-controls
+    auto-rotate auto-rotate-delay="800" rotation-per-second="22deg"
+    interaction-prompt="none"
+    shadow-intensity="1.0" shadow-softness="0.6"
+    environment-image="neutral" exposure="1.05" tone-mapping="neutral"
+    orientation="0deg -90deg 0deg"
+    ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor"
+    camera-orbit="-30deg 75deg 120%" max-camera-orbit="auto 89deg auto"
+    min-field-of-view="20deg">
+    <button slot="ar-button" id="ar-btn">📱 在你的空間裡看車</button>
+  </model-viewer>
+
+  <div id="drop">放開以載入這個 3D 模型</div>
+
+  <!-- 品牌（左上）/ 動作鈕（右上）-->
+  <div class="brand">🏁 <b>我的夢想車庫</b> <span class="sep">·</span> 360°</div>
+  <div class="actions">
+    <button id="btn-cfg" title="個人化設定">⚙</button>
+    <button id="btn-shot" title="存成圖片">⤓</button>
+    <button id="btn-share" title="分享連結">↗</button>
+  </div>
+
+  <!-- 車名 / 副標：置頂左上（乾淨背景、清楚可讀）-->
+  <div class="title">
+    <div id="car-name">1993 W202 C220</div>
+    <div id="car-tag"></div>
+  </div>
+
+  <!-- 底部：車身＋內裝色 + 介紹鈕（霧面底襯，色點清楚、與車身分隔）-->
+  <div class="info">
+    <div class="dock">
+      <div class="color-rows">
+        <div class="color-row"><span class="lab">車身</span><div class="swatches" id="sw-ext"></div></div>
+        <div class="color-row"><span class="lab">內裝</span><div class="swatches" id="sw-int"></div></div>
+      </div>
+      <div class="more"><button class="linkbtn" id="rand-btn">🎲 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 ⌄</button></div>
+    </div>
+  </div>
+
+  <!-- 底部：換車 -->
+  <div class="garage" id="garage"></div>
+
+  <!-- 左下：控制鈕 -->
+  <div class="controls">
+    <button id="lights-btn">🔑 發動引擎</button>
+    <button id="scene-btn">🌗 場景</button>
+    <button id="interior-view">🔍 看內裝</button>
+    <button id="tips-btn">📍 亮點</button>
+    <button id="rotate-toggle"><span class="dot"></span> 自動旋轉</button>
+    <button id="showcase-btn">🎬 展示</button>
+  </div>
+  <div class="credit" id="credit"></div>
+
+  <!-- 視窗：車款故事與規格 -->
+  <div class="sheet" id="sheet-story">
+    <div class="card">
+      <button class="x" id="story-x" title="關閉">✕</button>
+      <h2 id="story-name">1993 W202 C220</h2>
+      <div class="csub" id="story-sub"></div>
+      <p class="story" id="story-text"></p>
+      <div class="chips" id="story-hi"></div>
+      <div id="sec-sum"></div>
+      <p style="font-size:12px;color:var(--sub);margin-top:14px">選配加價　<span id="price">—</span></p>
+    </div>
+  </div>
+
+  <!-- 視窗：個人化 -->
+  <div class="sheet" id="sheet-cfg">
+    <div class="card">
+      <button class="x" id="cfg-x" title="關閉">✕</button>
+      <h2>個人化</h2>
+      <div class="csub">更多顏色與進階選項</div>
+
+      <h3>一鍵套件</h3>
+      <div class="finish-row" id="pkg-row"></div>
+
+      <h3>自訂顏色</h3>
+      <label class="custom-color">🎨 車身 <input type="color" id="ext-color" value="#0c0d10"></label>
+      <label class="custom-color">🎨 內裝 <input type="color" id="int-color" value="#17181c"></label>
+
+      <h3>車漆質感</h3>
+      <div class="finish-row" id="finish-row"></div>
+
+      <div id="caliper-block" style="display:none">
+        <h3>煞車卡鉗顏色</h3>
+        <div class="swatches" id="sw-caliper"></div>
+      </div>
+      <div id="wheel-block" style="display:none">
+        <h3>輪圈樣式</h3>
+        <div class="swatches" id="sw-wheel"></div>
+      </div>
+
+      <h3>選配套件</h3>
+      <div id="opt-list"></div>
+      <div class="opt-total">目前選配加價　<span id="cfg-total">免費</span></div>
+
+      <h3>進階 · 指定材質（顏色換錯位置時用）</h3>
+      <select id="body-mat"></select>
+      <select id="int-mat"></select>
+
+      <h3>進階 · 載入自己的車模</h3>
+      <label class="filebtn">選擇 .glb 檔案<input id="file" type="file" accept=".glb,.gltf" hidden></label>
+      <div class="pathrow">
+        <input id="path" type="text" placeholder="例如 w202.glb 或網址">
+        <button id="path-load">載入</button>
+      </div>
+      <div class="orient-row">
+        <button id="rot-pitch">翻正 90°</button>
+        <button id="rot-yaw">轉向 90°</button>
+        <button id="rot-reset">重設方向</button>
+      </div>
+      <p style="font-size:12px;color:var(--sub);margin-top:12px;line-height:1.8">載入別的車模若方向不對，用上面三顆轉正。想把新車<b>永久加進車庫</b>，跟我說一聲即可。</p>
+    </div>
+  </div>
+
+  <!-- 視窗：分享（連結 / LINE / QR code）-->
+  <div class="sheet" id="sheet-share">
+    <div class="card">
+      <button class="x" id="share-x" title="關閉">✕</button>
+      <h2>分享你的配置</h2>
+      <div class="csub">傳給朋友，或手機掃 QR code 用 AR 看車</div>
+      <div id="qr-box"></div>
+      <div class="pathrow" style="margin-top:16px"><input id="share-link" type="text" readonly><button id="share-copy">複製</button></div>
+      <button id="share-line" class="filebtn" style="background:#06c755;width:100%;margin-top:12px;padding:11px">分享到 LINE</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+/* =====================================================================
+   1993 W202 C220 · 360° 環景配置器（model-viewer 版）
+   - 載入任何 .glb 車模 → 自動 360 旋轉、攝影棚光影
+   - 因為下載來的模型材質名稱五花八門，所以提供「材質下拉選單」，
+     讓你指定哪個材質是車身烤漆 / 內裝，再用色票即時換色。
+   ===================================================================== */
+
+const EXTERIOR = [
+  { name:'曜岩黑',   hex:'#0c0d10', add:0 },
+  { name:'北極白',   hex:'#eef0f2', add:0 },
+  { name:'高山灰',   hex:'#6b7177', add:30000 },
+  { name:'鈦銀',     hex:'#aeb4bb', add:30000 },
+  { name:'午夜藍',   hex:'#1b2c4d', add:60000 },
+  { name:'翡翠綠',   hex:'#1f3d33', add:60000 },
+  { name:'太陽石紅', hex:'#7a1e23', add:60000 },
+];
+const INTERIOR = [
+  { name:'曜石黑', hex:'#17181c', add:0 },
+  { name:'馬鞍棕', hex:'#5b3a24', add:45000 },
+  { name:'瓷石米', hex:'#d6cbb8', add:45000 },
+  { name:'酒紅',   hex:'#4a1f24', add:60000 },
+];
+const CALIPER = [
+  { name:'紅色', hex:'#c01616' },
+  { name:'黑色', hex:'#1a1a1a' },
+];
+const WHEELS = [
+  { name:'原廠銀', hex:'#c8ccd0', metal:0.9,  rough:0.35 },
+  { name:'鏡面鉻', hex:'#e8edf2', metal:1.0,  rough:0.06 },
+  { name:'亮黑',   hex:'#16181b', metal:0.85, rough:0.2  },
+  { name:'消光黑', hex:'#1b1d20', metal:0.2,  rough:0.85 },
+  { name:'古銅金', hex:'#7d5a2c', metal:0.95, rough:0.35 },
+  { name:'槍灰金屬', hex:'#3b4046', metal:0.9,  rough:0.4  },
+  { name:'玫瑰金', hex:'#b87a73', metal:0.95, rough:0.3  },
+  { name:'珍珠白', hex:'#eef0f2', metal:0.5,  rough:0.3  },
+  { name:'寶藍',   hex:'#1f3a6b', metal:0.9,  rough:0.25 },
+  { name:'香檳金', hex:'#c2a878', metal:0.9,  rough:0.3  },
+];
+// 選配套件：不改外觀的選配項目（勾選 → 列入配置清單 ＋ 加價試算）
+const OPTIONS = [
+  { name:'氣壓電子懸吊',     add:80000 },
+  { name:'全景天窗',         add:60000 },
+  { name:'環繞音響升級',     add:45000 },
+  { name:'通風加熱座椅',     add:40000 },
+  { name:'智慧 LED 頭燈組',  add:35000 },
+  { name:'抬頭顯示器（HUD）', add:30000 },
+];
+// 車漆質感（改 metalness/roughness；avoid 太亮會放大低面數稜角）
+const FINISHES = [
+  { name:'亮面', metal:0.5,  rough:0.4  },
+  { name:'消光', metal:0.12, rough:0.82 },
+  { name:'金屬', metal:0.9,  rough:0.45 },
+  { name:'珍珠', metal:0.55, rough:0.26 },
+];
+// 一鍵配置套件：套用 車身色/質感/卡鉗/輪圈/選配（index 對應上面各陣列）
+const PACKAGES = [
+  { name:'運動風', ext:0, int:3, finish:2, cal:0, wheel:2, opts:[0,4] },
+  { name:'優雅風', ext:1, int:2, finish:3, cal:1, wheel:1, opts:[1,3] },
+  { name:'個性風', ext:4, int:1, finish:1, cal:0, wheel:6, opts:[2,5] },
+];
+const SCENES = [
+  // env = 真實 HDR 環境圖（Poly Haven CC0）：車漆反射真實光影，質感遠勝內建 neutral
+  { name:'攝影棚', bg:'radial-gradient(circle at 50% 38%, #fbfcfd 0%, #eef1f4 60%, #e4e7ec 100%)', exposure:1.05, shadow:1.1, env:'env-studio.hdr' },
+  { name:'夕陽',   bg:'linear-gradient(160deg, #ffe6bf 0%, #ffb583 45%, #b9795c 100%)',             exposure:1.15, shadow:1.3, env:'env-sunset.hdr' },
+  { name:'夜晚',   bg:'linear-gradient(160deg, #1b2233 0%, #11151f 55%, #090c12 100%)',             exposure:2.2, shadow:1.6, env:'env-night.hdr', dark:true },
+];
+// 每台車的規格（顯示在「總結」分頁）
+const SPECS = [
+  [['年份','1993'],['引擎','2.2L 直列四缸'],['馬力','150 hp'],['0–100 km/h','約 10.5 秒'],['驅動','後輪驅動']],
+  [['年份','2016+（ND 世代）'],['引擎','2.0L 直列四缸'],['馬力','184 hp'],['0–100 km/h','約 6.5 秒'],['車重','約 1060 kg'],['驅動','後輪驅動']],
+  [['年份','2022'],['引擎','2.9L V6 雙渦輪（GTS）'],['馬力','440 hp'],['0–100 km/h','約 4.5 秒'],['驅動','四輪驅動']],
+  [['年份','2015'],['引擎','3.0L 直六渦輪（35i）'],['馬力','306 hp'],['0–100 km/h','約 6.5 秒'],['驅動','xDrive 四驅']],
+  [['年份','2014+'],['引擎','3.0L V6 雙渦輪'],['馬力','400 hp'],['0–100 km/h','約 4.9 秒'],['驅動','後輪驅動']],
+  [['年份','2006–2012'],['引擎','3.5L V6'],['馬力','272 hp'],['0–100 km/h','約 8.4 秒'],['座位','6–7 人'],['驅動','4MATIC 四驅']],
+  [['年份','2019–2026（現行世代）'],['引擎','2.5L 直列四缸'],['馬力','191 hp'],['0–100 km/h','約 7.0 秒'],['驅動','前輪驅動']],
+  [['年份','2026（S650 世代）'],['引擎','2.3L 直列四缸渦輪（EcoBoost）'],['馬力','約 315 hp'],['0–100 km/h','約 5.1 秒'],['變速','10 速自排'],['驅動','後輪驅動']],
+];
+const BASE_PRICE = 0;                       // 經典老車就不標原廠價了，純算選配
+
+/* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
+const CARS = [
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', pitch:-90, yaw:0, body:'carpaint', interior:'interior', wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2'],
+    credit:{ t:'W202 Sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e' } },
+  { name:'2026 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, body:'carpaint', interior:'interior', wheel:'material', caliper:'brakedisk', calIdx:1,
+    credit:{ t:'Mazda MX-5 (ND) by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc' } },
+  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', pitch:0, yaw:0, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
+    credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a' } },
+  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', pitch:0, yaw:0, exSign:-1, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', wheel:'car_bmw_x5_2015_Meshrim',
+    credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8' } },
+  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', pitch:0, yaw:0, exSign:-1, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'disk', calIdx:1,
+    credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2' } },
+  { name:'Mercedes-Benz R350（R-Class）',  short:'R350', file:'r350.glb', pitch:0, yaw:0, exSign:-1, body:'rclassnotorious_bodyP', interior:/interiorssss|prim_int|secondary_interior|perf_in|alckant/i, wheel:'rclassnotorious_wheel123',
+    credit:{ t:'Mercedes-Benz R-Class by KOElkast1007', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31' } },
+  { name:'2026 Mazda 3',                    short:'Mazda 3',   file:'mazda3.glb', pitch:0, yaw:0, exSign:-1, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
+    credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d' } },
+  { name:'2026 Ford Mustang EcoBoost 2.3',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
+    credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt' } },
+];
+// 每台車的故事 / 副標 / 亮點（顯示在中央副標 + 「故事與規格」視窗）
+const STORIES = [
+  { tag:'第一代 C-Class · 你的夢想之車', sub:'Mercedes-Benz 第一代 C-Class（1993）',
+    story:'誕生在賓士最不計成本的年代。厚實鈑金、紮實底盤、開不壞的可靠度，讓 W202 成為「過度工程」的代名詞。2.2L 直四沉穩優雅，方正車格歷久彌新——許多人心中第一台、也最想擁有的那台賓士。',
+    hi:['經典方正車格','過度工程·耐用','後輪驅動','夢想入門賓士'] },
+  { tag:'人馬一體的純粹敞篷', sub:'Mazda MX-5 · ND 世代輕量後驅跑車',
+    story:'全球最暢銷的雙座敞篷跑車。沒有多餘的電子輔助，只有最純粹的駕駛樂趣——輕、小、後驅，過彎時車與人像是同一個生命體。',
+    hi:['輕量後驅','敞篷','人馬一體','平價跑車經典'] },
+  { tag:'最好開的性能休旅', sub:'Porsche Macan · 入門性能 SUV',
+    story:'把跑車的靈魂塞進休旅車身。底盤調校與轉向手感都是保時捷的水準，日常實用又能在山路上盡情奔馳。',
+    hi:['保時捷操控','V6 雙渦輪','四輪驅動','實用性能'] },
+  { tag:'豪華與性能兼具的大型休旅', sub:'BMW X5 · F15 世代 xDrive 四驅',
+    story:'BMW 的旗艦休旅。直六渦輪引擎綿密有力，xDrive 四驅穩定可靠，是兼顧家庭、長途與駕駛樂趣的全能選擇。',
+    hi:['直六渦輪','xDrive 四驅','豪華旗艦','全能休旅'] },
+  { tag:'低調的 400 匹性能房車', sub:'Infiniti Q50 Red Sport 400',
+    story:'外型內斂、實力驚人。3.0L 雙渦輪 V6 榨出 400 匹馬力，是一台會讓人意想不到的「西裝暴徒」。',
+    hi:['400 匹馬力','雙渦輪 V6','低調性能','後輪驅動'] },
+  { tag:'被低估的豪華七人座', sub:'Mercedes-Benz R-Class · 4MATIC 四驅',
+    story:'賓士罕見的豪華 MPV。寬敞的六到七人空間、平順的 V6 與 4MATIC 四驅，是低調又舒適的家庭旗艦。',
+    hi:['六至七人座','4MATIC 四驅','豪華空間','家庭旗艦'] },
+  { tag:'魂動設計的精緻掀背', sub:'Mazda 3 · 現行世代前驅掀背',
+    story:'把「美」放在第一位的掀背車。魂動設計語言讓它在路上像件藝術品，內裝質感更直逼豪華品牌。',
+    hi:['魂動設計','精緻內裝','前輪驅動','美型掀背'] },
+  { tag:'美式肌肉的入門傳奇', sub:'Ford Mustang · S650 世代 EcoBoost 後驅跑車',
+    story:'超過一甲子的美式跑車圖騰。EcoBoost 2.3L 渦輪直四榨出 315 匹，配上經典後驅底盤與長車頭短車尾的肌肉線條——不用 V8 也能享受純粹的美式駕馭樂趣，是最平易近人的一台野馬。',
+    hi:['美式肌肉車','2.3T 渦輪','後輪驅動','平價跑車傳奇'] }
+];
+
+let activeCar = 0;
+const state = { ext:0, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, opts:[], finish:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[] };
+
+const mv = document.getElementById('mv');
+
+/* ---------- 記住上次配置（存在瀏覽器 localStorage）---------- */
+var savedCfg = null;
+try{ savedCfg = JSON.parse(localStorage.getItem('dg-cfg')||'null'); }catch(e){}
+// 開機初始化會連發 refresh()——必須等使用者第一次真的點擊後才開始存，否則預設值會洗掉上次的配置
+var cfgSaveEnabled = false;
+document.addEventListener('pointerdown', function(){ cfgSaveEnabled = true; }, {once:true, capture:true});
+function saveCfg(){
+  if(!cfgSaveEnabled) return;
+  try{
+    localStorage.setItem('dg-cfg', JSON.stringify({
+      car:activeCar, ext:(state.extHex||state.ext), int:(state.intHex||state.int),
+      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish,
+      opts:state.opts.slice(), scene:state.scene
+    }));
+  }catch(e){}
+}
+
+/* ---------- 建立車庫 + 色票 + 分頁 ---------- */
+buildGarage();
+buildSwatches('sw-ext', EXTERIOR, i => { state.ext=i; state.extHex=null; applyExterior(); refresh(); });
+buildSwatches('sw-int', INTERIOR, i => { state.int=i; state.intHex=null; applyInterior(); refresh(); });
+buildSwatches('sw-caliper', CALIPER, i => { state.caliperColor=i; applyCaliper(); refresh(); });
+buildSwatches('sw-wheel', WHEELS, i => { state.wheelStyle=i; applyWheel(); refresh(); });
+buildOptions();
+buildFinish();
+buildPackages();
+refresh();
+
+/* 一鍵配置套件：套用整套配色＋選配 */
+function applyPackage(i){
+  var pk=PACKAGES[i]; if(!pk) return;
+  state.ext=pk.ext; state.extHex=null; state.int=pk.int; state.intHex=null;
+  if(typeof FINISHES!=='undefined') state.finish=pk.finish;
+  if(state.caliperMats.length) state.caliperColor=pk.cal;
+  if(state.wheelMats.length) state.wheelStyle=pk.wheel;
+  state.opts=(pk.opts||[]).slice();
+  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
+  toast('已套用「'+pk.name+'」套件');
+}
+function buildPackages(){
+  var box=document.getElementById('pkg-row'); if(!box) return;
+  box.innerHTML='';
+  PACKAGES.forEach(function(pk,i){
+    var b=document.createElement('button'); b.textContent=pk.name;
+    b.onclick=function(){ applyPackage(i); };
+    box.appendChild(b);
+  });
+}
+/* 車漆質感（亮面/消光/金屬/珍珠）*/
+function buildFinish(){
+  var box=document.getElementById('finish-row'); if(!box) return;
+  box.innerHTML='';
+  FINISHES.forEach(function(f,i){
+    var b=document.createElement('button'); b.textContent=f.name; b.className=(i===state.finish?'active':'');
+    b.onclick=function(){ state.finish=i; applyExterior();
+      Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===i?'active':''); });
+      refresh(); };
+    box.appendChild(b);
+  });
+}
+/* 選配套件清單（勾選 → 加進配置 ＋ 加價試算；不改外觀）*/
+function buildOptions(){
+  var box=document.getElementById('opt-list'); if(!box) return;
+  box.innerHTML='';
+  OPTIONS.forEach(function(o,i){
+    var r=document.createElement('label'); r.className='opt-row';
+    r.innerHTML='<input type="checkbox" data-i="'+i+'"><span class="opt-name">'+o.name+'</span><span class="opt-add">＋NT$ '+o.add.toLocaleString('en-US')+'</span>';
+    r.querySelector('input').onchange=function(){
+      var idx=state.opts.indexOf(i);
+      if(this.checked){ if(idx<0) state.opts.push(i); } else if(idx>=0){ state.opts.splice(idx,1); }
+      refresh();
+    };
+    box.appendChild(r);
+  });
+}
+
+/* ---------- 自訂顏色（調色盤）---------- */
+document.getElementById('ext-color').addEventListener('input', e=>{ state.extHex=e.target.value; applyExterior(); refresh(); });
+document.getElementById('int-color').addEventListener('input', e=>{ state.intHex=e.target.value; applyInterior(); refresh(); });
+
+/* ---------- 場景：攝影棚／夕陽／夜晚 ---------- */
+function applyScene(i){ state.scene=i; var s=SCENES[i]; document.body.style.background=s.bg;
+  mv.setAttribute('exposure', s.exposure); mv.setAttribute('shadow-intensity', s.shadow);
+  mv.setAttribute('environment-image', s.env || 'neutral');
+  document.body.classList.toggle('scene-dark', !!s.dark);
+  if(typeof saveCfg==='function') saveCfg();
+  var sb=document.getElementById('scene-btn'); if(sb) sb.textContent='🌗 '+s.name; }
+document.getElementById('scene-btn').onclick = ()=> applyScene((state.scene+1)%SCENES.length);
+applyScene(0);
+
+/* ---------- AR：只在支援的裝置上顯示「在你的空間裡看車」按鈕 ---------- */
+function updateARButton(){
+  var b=document.getElementById('ar-btn');
+  if(b) b.classList.toggle('ar-ok', !!mv.canActivateAR);
+}
+mv.addEventListener('load', updateARButton);
+setTimeout(updateARButton, 1500);   // 能力偵測有時稍慢，補一次
+
+/* ---------- 車燈：把頭燈/尾燈/方向燈材質設為自發光，看起來像「亮起來」 ---------- */
+function applyLights(){
+  if(!mv.model) return;
+  mv.model.materials.forEach(function(m){
+    var n=(m.name||'').toLowerCase(); var col=null;
+    if(/taillight|tail_light|\bbrake|stoplight|reverselight|glass_tail|\brb1|rueck|chmsl|red_?glass|redglass/.test(n)) col=[0.95,0.03,0.03];               // 尾燈：紅
+    else if(/signal|indicator|blinker|strelki|orange_?glass|orangeglass/.test(n)) col=[1,0.45,0];                                                          // 方向燈：橙
+    else if(/headlight|head_light|highbeam|lowbeam|\bfog|foglight|drl|daytime|xenon|phare|glass_fara|movsteer1101|hlight|\blights?\b|gl_emiss|emiss/.test(n)) col=[1,1,0.96]; // 頭燈：乾淨白（避免在夜晚變成橘色光點）
+    if(col && m.setEmissiveFactor){ m.setEmissiveFactor(state.lights ? col : [0,0,0]); if(m.setEmissiveStrength) m.setEmissiveStrength(state.lights ? 1.6 : 1); }
+  });
+}
+/* ---------- 排氣煙：在車尾排氣管位置放 CSS 煙霧（自發光車燈 ＋ 煙 ＝ 發動引擎）---------- */
+// 從模型外框自動算出「車尾、接近車底、左右雙出」的排氣口位置（只在天生正向的車）
+function exhaustPoints(){
+  if(!mv.model) return [];
+  var car = activeCar>=0 ? CARS[activeCar] : {};
+  if(car.exhaust) return car.exhaust;          // 手動指定的排氣口座標（適用任何模型，含翻正車/外框異常的車）
+  // 否則用車身外框自動算（僅正向、外框乾淨、且有設 exSign 的車）
+  if((car.pitch||0)!==0 || car.exSign===undefined) return [];
+  var c=mv.getBoundingBoxCenter(), d=mv.getDimensions();
+  var sign = car.exSign;                        // 車尾在長軸的哪一端（每台車校正）
+  var lowY = c.y - d.y/2 + d.y*0.13;           // 接近車底
+  var lenZ = d.z >= d.x;                        // 車長在 Z 還是 X 軸
+  var halfLen = (lenZ ? d.z : d.x)/2;
+  var width = lenZ ? d.x : d.z;
+  var pts=[];
+  // 位移都用「車身尺寸的比例」算，才能適應不同縮放的模型（有的模型單位是公尺、有的很小）
+  [-width*0.22, width*0.22].forEach(function(off){   // 左右雙出
+    var x=c.x, z=c.z;
+    if(lenZ){ z=c.z+sign*(halfLen-d.z*0.04); x=c.x+off; } else { x=c.x+sign*(halfLen-d.x*0.04); z=c.z+off; }
+    pts.push(x.toFixed(4)+' '+lowY.toFixed(4)+' '+z.toFixed(4));
+  });
+  return pts;
+}
+function applyExhaust(){
+  if(!mv.model) return;
+  mv.querySelectorAll('[slot^="hotspot-exh"]').forEach(function(e){ e.remove(); });
+  if(!state.lights) return;
+  exhaustPoints().forEach(function(pos,i){
+    var el=document.createElement('div'); el.slot='hotspot-exh'+i; el.className='smoke';
+    el.setAttribute('data-position', pos); el.setAttribute('data-normal','0 1 0');
+    var h=''; for(var k=0;k<5;k++) h+='<i style="animation-delay:'+(k*0.5)+'s"></i>';
+    el.innerHTML='<div class="smoke-in">'+h+'</div>'; mv.appendChild(el);
+  });
+  updateSmokeVisibility();
+}
+// HTML 煙霧疊在 3D 畫面上層、無法被車體遮住；越接近俯視（phi 越小）看穿透越明顯，所以越俯視就越淡出
+function updateSmokeVisibility(){
+  if(!mv.getCameraOrbit) return;
+  var o = mv.getCameraOrbit();
+  var car = (typeof activeCar!=='undefined' && activeCar>=0) ? CARS[activeCar] : {};
+  var rear = (car.rearTheta!==undefined ? car.rearTheta : 180) * Math.PI/180;  // 每台車的「車尾方位」(度)
+  var opPhi = Math.max(0, Math.min(1, (o.phi - 0.72)/0.42));               // 俯視淡出（煙會蓋到車頂）
+  var opRear = Math.max(0, Math.min(1, Math.cos(o.theta - rear)/0.5));     // 只在「車尾方向」(±約60°)看才顯示；側面/正面隱藏（HTML 煙無法被車體擋住）
+  var op = opPhi * opRear;
+  mv.querySelectorAll('.smoke-in').forEach(function(s){ s.style.opacity = op; });
+}
+mv.addEventListener('camera-change', updateSmokeVisibility);
+var lightsBtn=document.getElementById('lights-btn');
+lightsBtn.onclick=function(){ state.lights=!state.lights; applyLights(); applyExhaust(); if(state.lights){ try{ playEngine(); }catch(e){} } else { try{ stopEngine(); }catch(e){} }
+  lightsBtn.classList.toggle('on', state.lights);
+  lightsBtn.textContent = state.lights ? '🔥 熄火' : '🔑 發動引擎';
+  toast(state.lights ? '🔑 引擎發動（車燈＋排氣）' : '熄火'); };
+
+/* 引擎啟動音效：每台車播自己的真實引擎錄音（snd-<檔名>.mp3）；載入失敗才退回合成音 */
+var _engineAudio=null;
+function stopEngine(){ if(_engineAudio){ try{ _engineAudio.pause(); }catch(e){} _engineAudio=null; } }
+function playEngine(){
+  stopEngine();
+  var car = activeCar>=0 ? CARS[activeCar] : null;
+  var src = (car && car.file) ? 'snd-'+car.file.replace(/\.glb$/i,'.mp3') : null;
+  if(src){
+    try{
+      _engineAudio = new Audio(src); _engineAudio.volume = 1.0;
+      var pr = _engineAudio.play();
+      if(pr && pr.catch) pr.catch(function(){ try{ playSynthEngine(); }catch(e){} });
+      return;
+    }catch(e){}
+  }
+  playSynthEngine();
+}
+/* 後備：用 Web Audio 即時合成（自訂載入的車模沒有對應錄音時用）*/
+var _actx=null;
+function playSynthEngine(){
+  var AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  _actx = _actx || new AC(); var ctx=_actx; if(ctx.state==='suspended') ctx.resume();
+  var t0=ctx.currentTime;
+  var master=ctx.createGain(); master.gain.value=0.0001; master.connect(ctx.destination);
+  var lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(400,t0);
+  lp.frequency.linearRampToValueAtTime(1500,t0+0.5); lp.frequency.linearRampToValueAtTime(750,t0+1.2);
+  lp.connect(master);
+  [0,8].forEach(function(det){
+    var o=ctx.createOscillator(); o.type='sawtooth'; o.detune.value=det;
+    o.frequency.setValueAtTime(42,t0);
+    o.frequency.exponentialRampToValueAtTime(125,t0+0.5);
+    o.frequency.exponentialRampToValueAtTime(70,t0+1.15);
+    o.connect(lp); o.start(t0); o.stop(t0+1.5);
+  });
+  master.gain.setValueAtTime(0.0001,t0);
+  master.gain.exponentialRampToValueAtTime(0.28,t0+0.12);
+  master.gain.exponentialRampToValueAtTime(0.13,t0+0.7);
+  master.gain.exponentialRampToValueAtTime(0.0001,t0+1.5);
+}
+
+/* ---------- 車身熱點導覽：點圓點看部位介紹（位置用車身外框估算）---------- */
+function buildHotspots(){
+  if(!mv) return;
+  mv.querySelectorAll('[slot^="hotspot-tip"]').forEach(function(e){ e.remove(); });
+  if(!state.tips || !mv.model || !mv.getBoundingBoxCenter) return;
+  var c=mv.getBoundingBoxCenter(), d=mv.getDimensions(), lenZ=d.z>=d.x;
+  var sp=(activeCar>=0 && SPECS[activeCar])?SPECS[activeCar]:[];
+  function spec(k){ for(var i=0;i<sp.length;i++) if(sp[i][0]===k) return sp[i][1]; return ''; }
+  var pts=[];
+  function P(x,y,z,n,t,b){ pts.push({p:[x,y,z],n:n,t:t,b:b}); }
+  P(c.x, c.y+d.y*0.42, c.z, '0 1 0', '車頂線條', '流暢的車頂與車身比例。');
+  if(lenZ) P(c.x+d.x*0.5, c.y, c.z, '1 0 0', '車身烤漆', '主畫面可換色，個人化可換質感（亮面／消光／金屬／珍珠）。');
+  else     P(c.x, c.y, c.z+d.z*0.5, '0 0 1', '車身烤漆', '主畫面可換色，個人化可換質感（亮面／消光／金屬／珍珠）。');
+  if(lenZ) P(c.x+d.x*0.42, c.y-d.y*0.3, c.z+d.z*0.34, '1 0 0', '鋁圈與煞車', '個人化可換 10 種鋁圈質感、卡鉗顏色。');
+  else     P(c.x+d.x*0.34, c.y-d.y*0.3, c.z+d.z*0.42, '0 0 1', '鋁圈與煞車', '個人化可換 10 種鋁圈質感、卡鉗顏色。');
+  var eng=spec('引擎'), hp=spec('馬力');
+  P(c.x, c.y+d.y*0.12, c.z, '0 1 0', '座艙與動力'+(eng?'｜'+eng+(hp?' · '+hp:''):''), '可換內裝顏色；按發動引擎，車燈亮起＋引擎聲。');
+  pts.forEach(function(o,i){
+    var btn=document.createElement('button'); btn.slot='hotspot-tip'+i; btn.className='tip-hot';
+    btn.setAttribute('data-position', o.p.map(function(v){return (+v).toFixed(4);}).join(' '));
+    btn.setAttribute('data-normal', o.n);
+    btn.innerHTML='<span class="tip-dot"></span><span class="tip-card"><b>'+o.t+'</b><br>'+o.b+'</span>';
+    btn.addEventListener('mouseenter', function(){ btn.classList.add('show'); });
+    btn.addEventListener('mouseleave', function(){ btn.classList.remove('show'); });
+    mv.appendChild(btn);
+  });
+}
+var tipsBtn=document.getElementById('tips-btn');
+if(tipsBtn) tipsBtn.onclick=function(){ state.tips=!state.tips; buildHotspots();
+  tipsBtn.classList.toggle('on', state.tips);
+  toast(state.tips ? '已開啟亮點導覽，點圓點看介紹' : '已關閉亮點導覽'); };
+
+/* ---------- 存成圖片 ---------- */
+function cfgSummaryText(){
+  var ex = state.extHex ? ('自訂 '+state.extHex) : EXTERIOR[state.ext].name;
+  var ins = state.intHex ? ('自訂 '+state.intHex) : INTERIOR[state.int].name;
+  var fin = (typeof FINISHES!=='undefined'&&FINISHES[state.finish]) ? FINISHES[state.finish].name : '';
+  var s = ex + (fin?(' · '+fin+'漆'):'') + '　內裝 ' + ins;
+  if(state.wheelMats.length) s += '　' + WHEELS[state.wheelStyle].name + '圈';
+  return s;
+}
+document.getElementById('btn-shot').onclick = function(){
+  try{
+    var url=mv.toDataURL('image/png'), img=new Image();
+    img.onload=function(){
+      var W=img.width, H=img.height, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+      var x=cv.getContext('2d'); x.drawImage(img,0,0);
+      var bar=Math.max(120, H*0.16);
+      var g=x.createLinearGradient(0,H-bar,0,H); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.6)');
+      x.fillStyle=g; x.fillRect(0,H-bar,W,bar);
+      x.textAlign='left'; x.fillStyle='#fff'; x.font='700 '+Math.round(W*0.033)+'px "Noto Sans TC",sans-serif';
+      x.fillText(activeCar>=0?CARS[activeCar].name:'自訂車模', W*0.04, H-bar*0.52);
+      x.fillStyle='rgba(255,255,255,.88)'; x.font='400 '+Math.round(W*0.02)+'px "Noto Sans TC",sans-serif';
+      x.fillText(cfgSummaryText(), W*0.04, H-bar*0.2);
+      var d=new Date(), ds=d.getFullYear()+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2);
+      x.textAlign='right'; x.fillStyle='rgba(255,255,255,.72)'; x.font='400 '+Math.round(W*0.018)+'px "Noto Sans TC",sans-serif';
+      x.fillText('我的夢想車庫 · '+ds, W*0.96, H-bar*0.2);
+      var a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=(activeCar>=0?CARS[activeCar].short:'mycar')+'.png'; document.body.appendChild(a); a.click(); a.remove();
+      toast('📸 已存圖（含配置資訊）');
+    };
+    img.onerror=function(){ toast('截圖失敗'); };
+    img.src=url;
+  }catch(e){ toast('截圖失敗：'+e.message); }
+};
+
+/* ---------- 分享配置：把目前設定編成連結 ---------- */
+function buildShareLink(){
+  var p=new URLSearchParams();
+  if(activeCar>=0) p.set('car', activeCar);
+  p.set('ext', state.extHex || state.ext);
+  p.set('int', state.intHex || state.int);
+  if(state.finish) p.set('fin', state.finish);
+  if(state.caliperMats.length) p.set('cal', state.caliperColor);
+  if(state.wheelMats.length) p.set('wheel', state.wheelStyle);
+  p.set('scene', state.scene);
+  if(state.opts && state.opts.length) p.set('opt', state.opts.join('-'));
+  return location.origin+location.pathname+'?'+p.toString();
+}
+document.getElementById('btn-share').onclick = function(){
+  var link=buildShareLink();
+  var li=document.getElementById('share-link'); if(li) li.value=link;
+  var qb=document.getElementById('qr-box');
+  if(qb){ qb.innerHTML='';
+    try{ var qr=qrcode(0,'M'); qr.addData(link); qr.make(); qb.innerHTML=qr.createImgTag(5,8); }
+    catch(e){ qb.textContent='（QR 產生失敗，連結仍可複製）'; }
+  }
+  document.getElementById('sheet-share').classList.add('show');
+};
+(function(){
+  var sx=document.getElementById('share-x'), ss=document.getElementById('sheet-share');
+  if(sx) sx.onclick=function(){ ss.classList.remove('show'); };
+  if(ss) ss.addEventListener('click', function(e){ if(e.target===ss) ss.classList.remove('show'); });
+  var cp=document.getElementById('share-copy');
+  if(cp) cp.onclick=function(){ var l=buildShareLink();
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(l).then(function(){toast('🔗 已複製連結');}, function(){prompt('複製這條連結：',l);});
+    else prompt('複製這條連結：',l); };
+  var ln=document.getElementById('share-line');
+  if(ln) ln.onclick=function(){ window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(buildShareLink()),'_blank','noopener'); };
+})();
+
+/* ---------- 隨機「幫我配」：隨機組一套配色 ---------- */
+function randomConfig(){
+  function ri(n){ return Math.floor(Math.random()*n); }
+  state.ext=ri(EXTERIOR.length); state.extHex=null;
+  state.int=ri(INTERIOR.length); state.intHex=null;
+  if(typeof FINISHES!=='undefined') state.finish=ri(FINISHES.length);
+  if(state.caliperMats.length) state.caliperColor=ri(CALIPER.length);
+  if(state.wheelMats.length) state.wheelStyle=ri(WHEELS.length);
+  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
+  toast('🎲 幫你配了一套！');
+}
+var randBtn=document.getElementById('rand-btn'); if(randBtn) randBtn.onclick=randomConfig;
+
+/* 載入開場畫面：模型好了淡出；9 秒保險。換車時也重新顯示（12 秒保險） */
+var _ldTimer=null;
+function hideLoader(){ var l=document.getElementById('loader'); if(l) l.classList.add('gone'); clearTimeout(_ldTimer); }
+function showLoader(){ var l=document.getElementById('loader'); if(l) l.classList.remove('gone');
+  clearTimeout(_ldTimer); _ldTimer=setTimeout(hideLoader, 12000); }
+setTimeout(hideLoader, 9000);
+
+/* ---------- 車庫入口大廳 ---------- */
+function buildLobby(){
+  var g=document.getElementById('lobby-grid'); if(!g) return;
+  g.innerHTML='';
+  CARS.forEach(function(c,i){
+    var s=(typeof STORIES!=='undefined'&&STORIES[i])?STORIES[i]:null;
+    var b=document.createElement('button'); b.className='lcard';
+    var last=(savedCfg && savedCfg.car===i) ? '<span class="lbadge">上次的配置</span>' : '';
+    b.innerHTML='<img loading="lazy" src="thumb-'+c.file.replace(/\.glb$/i,'')+'.webp" alt="'+c.short+'" onerror="this.remove()">'
+      +'<div class="ln">'+c.name+last+'</div>'
+      +'<div class="lt">'+(s?s.tag:'')+'</div>';
+    b.onclick=function(){ enterFromLobby(i); };
+    g.appendChild(b);
+  });
+}
+function closeLobby(){ var l=document.getElementById('lobby'); if(l) l.classList.add('gone'); }
+function openLobby(){ var l=document.getElementById('lobby'); if(l) l.classList.remove('gone'); }
+function enterFromLobby(i){
+  closeLobby();
+  if(savedCfg && savedCfg.car===i){
+    // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
+    applyScene((+savedCfg.scene)||0);
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, opt:(savedCfg.opts||[]).join('-') };
+    if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
+  } else if(i!==activeCar){ switchCar(i); }
+}
+buildLobby();
+var brandEl=document.querySelector('.brand');
+if(brandEl){ brandEl.onclick=openLobby; brandEl.title='回車庫大廳'; }
+/* 分享連結直接開車，不擋大廳 */
+if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)) closeLobby();
+
+/* ---------- 開啟分享連結時套用設定 ----------
+   注意：這個函式會呼叫 switchCar()，而 switchCar 用到 _pitch / interiorView
+   等在腳本後段才宣告的 let 變數，所以「定義在這裡、但等整段腳本跑完後才呼叫」
+   （見檔尾的 parseShareURL()），否則會踩到 TDZ 直接讓整段腳本中斷。*/
+var pendingCfg=null;
+function parseShareURL(){
+  var p=new URLSearchParams(location.search);
+  if(p.has('scene')) applyScene(+p.get('scene')||0);
+  var cfg={};
+  if(p.has('ext')) cfg.ext=p.get('ext');
+  if(p.has('int')) cfg.int=p.get('int');
+  if(p.has('cal')) cfg.cal=+p.get('cal');
+  if(p.has('wheel')) cfg.wheel=+p.get('wheel');
+  if(p.has('fin')) cfg.fin=+p.get('fin');
+  if(p.has('opt')) cfg.opt=p.get('opt');
+  if(Object.keys(cfg).length) pendingCfg=cfg;
+  if(p.has('car')){ var ci=+p.get('car'); if(ci>=0 && ci<CARS.length && ci!==activeCar) switchCar(ci); }
+}
+
+function buildGarage(){
+  const g = document.getElementById('garage');
+  g.innerHTML = '';
+  CARS.forEach((car,i)=>{
+    const b = document.createElement('button');
+    b.textContent = car.short;
+    b.className = (i===activeCar ? 'active' : '');
+    b.onclick = ()=> switchCar(i);
+    g.appendChild(b);
+  });
+  document.getElementById('car-name').textContent = CARS[activeCar].name;
+  updateCredit();
+}
+
+function updateCredit(){
+  const el = document.getElementById('credit'); if(!el) return;
+  if(activeCar < 0){ el.innerHTML = '3D 模型（CC BY）'; return; }
+  const c = CARS[activeCar].credit;
+  el.innerHTML = '© <a href="'+c.u+'" target="_blank" rel="noopener" title="3D 模型授權 CC BY">'+c.t+'</a>';
+}
+
+function switchCar(i){
+  activeCar = i;
+  if(typeof stopEngine==='function') stopEngine();
+  if(typeof showLoader==='function') showLoader();
+  const car = CARS[i];
+  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation();
+  state.ext = 0; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.opts = []; state.finish = 0;
+  document.getElementById('car-name').textContent = car.name;
+  mv.setAttribute('alt', car.name);
+  if (typeof interiorView !== 'undefined' && interiorView) exitInterior();
+  mv.src = car.file;
+  document.querySelectorAll('#garage button').forEach((b,bi)=> b.classList.toggle('active', bi===i));
+  updateCredit();
+  refresh();
+  updateStory();
+}
+
+function buildTabs(){
+  const TABS = [
+    { id:'ext',   label:'外觀',  small:'車身顏色' },
+    { id:'int',   label:'內裝',  small:'座椅顏色' },
+    { id:'model', label:'模型',  small:'載入 / 下載' },
+    { id:'sum',   label:'總結',  small:'你的配置' },
+  ];
+  const tabsEl = document.getElementById('tabs');
+  TABS.forEach((t,i)=>{
+    const b = document.createElement('button');
+    b.className = 'tab' + (i===0?' active':'');
+    b.innerHTML = t.label + ' <span class="small">'+t.small+'</span>';
+    b.onclick = ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+      document.getElementById('sec-'+t.id).classList.add('active');
+    };
+    tabsEl.appendChild(b);
+  });
+}
+
+function buildSwatches(containerId, items, onPick){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  items.forEach((it,i)=>{
+    const s = document.createElement('div');
+    s.className = 'swatch'; s.style.background = it.hex; s.dataset.box = containerId; s.dataset.i = i;
+    s.innerHTML = '<span class="tip">'+it.name+(it.add?' +'+it.add.toLocaleString('en-US'):'')+'</span>';
+    s.onclick = ()=> onPick(i);
+    wrap.appendChild(s);
+  });
+}
+
+/* ---------- 模型載入後：抓出材質清單 ---------- */
+function onModelLoad(){
+  const mats = mv.model && mv.model.materials ? mv.model.materials : [];
+  const bodySel = document.getElementById('body-mat');
+  const intSel  = document.getElementById('int-mat');
+  bodySel.innerHTML = ''; intSel.innerHTML = '';
+  mats.forEach((m,i)=>{
+    const label = matLabel(m.name) || ('材質 '+i);
+    bodySel.appendChild(new Option(label, i));
+    intSel.appendChild(new Option(label, i));
+  });
+  // 決定車身 / 內裝材質（可用名稱字串、名稱陣列或正則；否則自動猜測）。內裝常跨多個材質。
+  var carCfg = activeCar>=0 ? CARS[activeCar] : {};
+  state.bodyMats = resolveMats(mats, carCfg.body, [/carpaint|car.?paint|bodypaint/i, /paint/i, /exterior|kaross|lackier|varnish/i, /\bbody\b|gloss|outer|shell/i], 0);
+  state.intMats  = resolveMats(mats, carCfg.interior, [/interior/i, /seat|leather|fabric|cloth|cabin|dash/i, /inner/i], Math.min(1, mats.length-1));
+  // 煞車卡鉗：僅指定 caliper 的車才有，且獨立於內裝
+  state.caliperMats = [];
+  if (carCfg.caliper){ mats.forEach((m,i)=>{ var sp=carCfg.caliper; var hit=(sp instanceof RegExp)? sp.test(m.name||'') : (m.name===sp); if(hit) state.caliperMats.push(i); }); }
+  var cblk=document.getElementById('caliper-block'); if(cblk) cblk.style.display = state.caliperMats.length ? 'block' : 'none';
+  // 輪圈：僅指定 wheel 的車才有
+  state.wheelMats = [];
+  if (carCfg.wheel){ mats.forEach((m,i)=>{ var sp=carCfg.wheel; var hit=(sp instanceof RegExp)? sp.test(m.name||'') : (m.name===sp); if(hit) state.wheelMats.push(i); }); }
+  var wblk=document.getElementById('wheel-block'); if(wblk) wblk.style.display = state.wheelMats.length ? 'block' : 'none';
+  bodySel.value = state.bodyMats[0]; intSel.value = state.intMats[0];
+  bodySel.onchange = ()=>{ state.bodyMats = [+bodySel.value]; applyExterior(); };
+  intSel.onchange  = ()=>{ state.intMats  = [+intSel.value];  applyInterior(); };
+  if(carCfg && carCfg.calIdx!=null) state.caliperColor=carCfg.calIdx;  // 碟煞的車預設黑色（低調）
+  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); fixGlass(); hidePlates(); applyLights(); applyExhaust(); buildHotspots();
+  if(typeof pendingCfg!=='undefined' && pendingCfg){
+    var c=pendingCfg; pendingCfg=null;
+    if(c.ext!=null){ if((''+c.ext).charAt(0)==='#'){ state.extHex=c.ext; } else { state.ext=+c.ext; state.extHex=null; } }
+    if(c.int!=null){ if((''+c.int).charAt(0)==='#'){ state.intHex=c.int; } else { state.int=+c.int; state.intHex=null; } }
+    if(c.cal!=null && state.caliperMats.length) state.caliperColor=c.cal;
+    if(c.wheel!=null && state.wheelMats.length) state.wheelStyle=c.wheel;
+    if(c.fin!=null) state.finish=c.fin;
+    if(c.opt!=null){ state.opts=(''+c.opt).split('-').map(Number).filter(function(n){return !isNaN(n)&&OPTIONS[n];}); }
+    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
+    var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
+    var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
+  }
+  toast('模型載入完成，共 '+mats.length+' 個材質'); hideLoader();
+}
+// 用「模型物件是否換新」來判斷載入完成，比 load 事件更可靠
+// （eager + 本機檔案時，load 事件常在腳本掛上監聽器前就觸發了）
+let lastModel = null;
+function checkModel(){
+  if (mv.model && mv.model !== lastModel && mv.model.materials && mv.model.materials.length){
+    lastModel = mv.model;
+    onModelLoad();
+  }
+}
+mv.addEventListener('load', checkModel);
+mv.addEventListener('error', ()=> toast('⚠ 模型載入失敗，請確認檔案是 .glb 或路徑正確'));
+setInterval(checkModel, 300);   // 保險輪詢（成本極低）
+
+function guess(mats, tiers, fallback){
+  for (const re of tiers){
+    for (let i=0;i<mats.length;i++){ if (re.test(mats[i].name||'')) return i; }
+  }
+  return mats.length ? fallback : -1;
+}
+// 解析材質指定：正則 / 名稱陣列 / 名稱字串；都沒中就退回 guess。回傳「索引陣列」。
+function resolveMats(mats, spec, tiers, fb){
+  var out=[];
+  if(spec instanceof RegExp){ mats.forEach((m,i)=>{ if(spec.test(m.name||'')) out.push(i); }); }
+  else if(Array.isArray(spec)){ mats.forEach((m,i)=>{ if(spec.indexOf(m.name)>=0) out.push(i); }); }
+  else if(typeof spec==='string'){ mats.forEach((m,i)=>{ if(m.name===spec) out.push(i); }); }
+  if(!out.length){ var g=guess(mats, tiers, fb); if(g>=0) out=[g]; }
+  return out;
+}
+// 把模型內部的材質名稱翻成好懂的中文（涵蓋三台車的命名習慣；不認得的就顯示原名）
+function matLabel(name){
+  var n=(name||'').toLowerCase();
+  if(!n) return '材質';
+  // ── X5 / Q50 / R350 等新車的材質命名（特定規則要先於下面的一般規則）──
+  if(/caliper/.test(n)) return '煞車卡鉗';
+  if(/meshdisk|\bdisk\b|brakedisk/.test(n)) return '煞車碟';
+  if(/interior|\binter\b|leather|alckant|int_c|prim_int|perf_in|secondary_int|costura|stitch|carpback/.test(n)) return '內裝';
+  if(/rim|meshrim|wheel/.test(n)) return '輪圈';
+  if(/carpaint|bodypaint|bodyp/.test(n)) return '車身烤漆';
+  if(/grille/.test(n)) return '水箱罩';
+  if(/taillight|headlight|\blights?\b|highbeam|lamp/.test(n)) return '車燈';
+  if(/plasatic|plastic|\bplas/.test(n)) return '塑件';
+  if(/chassis|chasis/.test(n)) return '底盤';
+  if(n==='color1mtl') return '車身烤漆';
+  if(n==='intcolor1mtl') return '煞車卡鉗';
+  if(/movsteer1101/.test(n)) return '頭燈';
+  if(/movsteer/.test(n)) return '方向盤／轉向件';
+  if(/bootok/.test(n)) return '後窗玻璃';
+  if(/windscreen/.test(n)) return '擋風玻璃';
+  if(/doorlr/.test(n)) return '車門內飾';
+  if(/intcolor|interior/.test(n)) return '內裝';
+  if(/wiper/.test(n)) return '雨刷';
+  if(/handle/.test(n)) return '門把／把手';
+  if(/rb1/.test(n)) return '尾燈';
+  if(/a1mtl/.test(n)) return '亮面飾件';
+  if(/carpaint|bodypaint|\bpaint\b/.test(n)) return '車身烤漆';
+  if(n==='material') return '輪圈';
+  if(/redglass/.test(n)) return '紅色燈殼';
+  if(/orangeglass/.test(n)) return '橙色燈殼';
+  if(/glass/.test(n)) return '玻璃';
+  if(/tire|tyre/.test(n)) return '輪胎';
+  if(/chrome/.test(n)) return '鍍鉻飾條';
+  if(/mattemetal|metal/.test(n)) return '金屬件';
+  if(/mirror/.test(n)) return '後視鏡';
+  if(/brakedisk|brake/.test(n)) return '煞車碟';
+  if(/black/.test(n)) return '黑色件';
+  if(/blue/.test(n)) return '藍色件';
+  if(/material__\d|meshesmacan/.test(n)) return '車身部件';
+  return name;
+}
+
+/* ---------- 換色（可同時套用到多個材質）---------- */
+function applyExterior(){
+  const lin = hexToLinear(state.extHex || EXTERIOR[state.ext].hex);
+  state.bodyMats.forEach(function(i){ var m=matAt(i); if(!m) return;
+    m.pbrMetallicRoughness.setBaseColorFactor([lin[0],lin[1],lin[2],1]);
+    // 真實金屬車漆：金屬感適中、表面略帶霧面（避免像鏡面/錫箔，也能蓋掉低面數模型的稜角）
+    var f=(typeof FINISHES!=='undefined'&&FINISHES[state.finish])?FINISHES[state.finish]:{metal:0.5,rough:0.45};
+    m.pbrMetallicRoughness.setMetallicFactor(f.metal);
+    m.pbrMetallicRoughness.setRoughnessFactor(f.rough);
+  });
+}
+function applyInterior(){
+  const lin = hexToLinear(state.intHex || INTERIOR[state.int].hex);
+  state.intMats.forEach(function(i){ var m=matAt(i); if(!m) return;
+    m.pbrMetallicRoughness.setBaseColorFactor([lin[0],lin[1],lin[2],1]);
+  });
+}
+function applyCaliper(){
+  if(!state.caliperMats.length) return;
+  const lin = hexToLinear(CALIPER[state.caliperColor].hex);
+  state.caliperMats.forEach(function(i){ var m=matAt(i); if(!m) return;
+    m.pbrMetallicRoughness.setBaseColorFactor([lin[0],lin[1],lin[2],1]);
+    m.pbrMetallicRoughness.setMetallicFactor(0.2);
+    m.pbrMetallicRoughness.setRoughnessFactor(0.4);
+  });
+}
+function applyWheel(){
+  if(!state.wheelMats.length) return;
+  const w = WHEELS[state.wheelStyle]; const lin = hexToLinear(w.hex);
+  state.wheelMats.forEach(function(i){ var m=matAt(i); if(!m) return;
+    m.pbrMetallicRoughness.setBaseColorFactor([lin[0],lin[1],lin[2],1]);
+    m.pbrMetallicRoughness.setMetallicFactor(w.metal);
+    m.pbrMetallicRoughness.setRoughnessFactor(w.rough);
+  });
+}
+// 有些模型（如 Macan）的車窗玻璃透明度幾乎是 0，看起來像沒裝玻璃。
+// 把「幾乎透明」的玻璃材質補成淡色半透明玻璃（不動本來就正常的玻璃）。
+function fixGlass(){
+  if(!mv.model) return;
+  mv.model.materials.forEach(function(m){
+    var n=(m.name||'').toLowerCase();
+    if(!/glass|windscreen|windshield|bootok/.test(n)) return;
+    var p=m.pbrMetallicRoughness;
+    if((p.baseColorFactor[3]||0) < 0.15){
+      p.setBaseColorFactor([0.04,0.06,0.07,0.45]);
+      p.setMetallicFactor(0.0);
+      p.setRoughnessFactor(0.06);
+      if(m.setAlphaMode) m.setAlphaMode('BLEND');
+    }
+  });
+}
+function matAt(i){ return (mv.model && i>=0 && mv.model.materials[i]) ? mv.model.materials[i] : null; }
+// 把車牌廣告（如 W202 的 HUMSTER3D）壓成素黑車牌
+function hidePlates(){
+  var c = activeCar>=0 ? CARS[activeCar] : {};
+  if(!c.plateMats || !mv.model) return;
+  mv.model.materials.forEach(function(m){
+    if(c.plateMats.indexOf(m.name)>=0){
+      m.pbrMetallicRoughness.setBaseColorFactor([0.05,0.055,0.06,1]);
+      m.pbrMetallicRoughness.setMetallicFactor(0.3);
+      m.pbrMetallicRoughness.setRoughnessFactor(0.5);
+    }
+  });
+}
+
+/* ---------- 介面更新 ---------- */
+function refresh(){
+  document.querySelectorAll('.swatch').forEach(s=>{
+    const box=s.dataset.box, i=+s.dataset.i;
+    const on=(box==='sw-ext'&&i===state.ext&&!state.extHex)||(box==='sw-int'&&i===state.int&&!state.intHex)||(box==='sw-caliper'&&i===state.caliperColor)||(box==='sw-wheel'&&i===state.wheelStyle);
+    s.classList.toggle('sel', on);
+  });
+  // 選配套件（氣壓懸吊等）：勾選的累加加價、列入摘要、同步勾選框
+  var optTotal=0, optRows='';
+  (state.opts||[]).forEach(function(i){ if(OPTIONS[i]){ optTotal+=OPTIONS[i].add; optRows+=row(OPTIONS[i].name, '＋NT$ '+OPTIONS[i].add.toLocaleString('en-US')); } });
+  document.querySelectorAll('#opt-list input[type=checkbox]').forEach(function(cb){ cb.checked = (state.opts||[]).indexOf(+cb.dataset.i)>=0; });
+  var _fb=document.getElementById('finish-row'); if(_fb) Array.prototype.forEach.call(_fb.children,function(x,xi){ x.className=(xi===state.finish?'active':''); });
+  const total = BASE_PRICE + (state.extHex?0:EXTERIOR[state.ext].add) + (state.intHex?0:INTERIOR[state.int].add) + optTotal;
+  var priceTxt = total>0 ? ('＋NT$ '+total.toLocaleString('en-US')) : '免費';
+  var pe=document.getElementById('price'); if(pe) pe.textContent=priceTxt;
+  var ct=document.getElementById('cfg-total'); if(ct) ct.textContent=priceTxt;
+  const extName = state.extHex ? ('自訂 '+state.extHex) : EXTERIOR[state.ext].name;
+  const intName = state.intHex ? ('自訂 '+state.intHex) : INTERIOR[state.int].name;
+  const specs = (activeCar>=0 && SPECS[activeCar]) ? '<h3 style="margin-top:18px">車輛規格</h3>'+SPECS[activeCar].map(s=>'<div class="spec-row"><span>'+s[0]+'</span><span>'+s[1]+'</span></div>').join('') : '';
+  document.getElementById('sec-sum').innerHTML =
+    '<h3>你的配置</h3>'+
+    row('車身顏色', extName)+
+    row('車漆質感', (typeof FINISHES!=='undefined'&&FINISHES[state.finish]?FINISHES[state.finish].name:''))+
+    row('內裝顏色', intName)+
+    (state.caliperMats.length ? row('煞車卡鉗', CALIPER[state.caliperColor].name) : '')+
+    (state.wheelMats.length ? row('輪圈樣式', WHEELS[state.wheelStyle].name) : '')+
+    optRows+
+    '<div class="summary-total"><span>選配總計</span><span>'+total.toLocaleString('en-US')+' 元</span></div>'+
+    specs;
+  if(typeof saveCfg==='function') saveCfg();
+}
+function row(k,v){ return '<div class="summary-row"><span>'+k+'</span><span>'+v+'</span></div>'; }
+
+/* ---------- 模型方向控制（W202 預設 -90° 翻正；載入別的車可手動調）---------- */
+let _pitch = -90, _yaw = 0;
+function applyOrientation(){ mv.setAttribute('orientation', '0deg ' + _pitch + 'deg ' + _yaw + 'deg'); }
+document.getElementById('rot-pitch').onclick = ()=>{ _pitch=(_pitch+90)%360; applyOrientation(); };
+document.getElementById('rot-yaw').onclick   = ()=>{ _yaw=(_yaw+90)%360; applyOrientation(); };
+document.getElementById('rot-reset').onclick = ()=>{ _pitch=0; _yaw=0; applyOrientation(); };
+
+/* ---------- 載入：檔案 / 拖放 / 路徑（新模型先把方向歸零）---------- */
+function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); activeCar=-1;
+  document.querySelectorAll('#garage button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('car-name').textContent='自訂車模'; updateCredit(); if(typeof showLoader==='function') showLoader(); mv.src = src; updateStory(); }
+document.getElementById('file').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(f) loadSrc(URL.createObjectURL(f));
+});
+document.getElementById('path-load').onclick = ()=>{
+  const p = document.getElementById('path').value.trim(); if(p) loadSrc(p);
+};
+const drop = document.getElementById('drop');
+['dragenter','dragover'].forEach(ev=> window.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('show'); }));
+['dragleave','drop'].forEach(ev=> window.addEventListener(ev, e=>{ e.preventDefault(); if(ev==='drop'||e.target===drop) drop.classList.remove('show'); }));
+window.addEventListener('drop', e=>{
+  const f = e.dataTransfer.files[0];
+  if(f && /\.(glb|gltf)$/i.test(f.name)) loadSrc(URL.createObjectURL(f));
+  else toast('請拖入 .glb 檔（單一檔案最穩）');
+});
+
+/* ---------- 自動旋轉 ---------- */
+const rotBtn = document.getElementById('rotate-toggle');
+rotBtn.onclick = ()=>{
+  const on = mv.hasAttribute('auto-rotate');
+  if(on) mv.removeAttribute('auto-rotate'); else mv.setAttribute('auto-rotate','');
+  rotBtn.classList.toggle('off', on);
+  rotBtn.lastChild.textContent = on ? ' 已暫停' : ' 自動旋轉';
+};
+
+/* ---------- 看內裝：把鏡頭拉進車艙，可在裡面 360 度看儀表/中控 ---------- */
+let interiorView = false;
+const ivBtn = document.getElementById('interior-view');
+function enterInterior(){
+  interiorView = true;
+  mv.removeAttribute('auto-rotate'); rotBtn.classList.add('off'); rotBtn.lastChild.textContent=' 已暫停';
+  const t = mv.getCameraTarget(); const d = mv.getDimensions();
+  mv.cameraTarget = t.x+'m '+(t.y + d.y*0.20)+'m '+t.z+'m';   // 對準車艙（抬到車窗高度）
+  mv.cameraOrbit = '-18deg 82deg 38%';                         // 拉近、略高，從前 3/4 看進去
+  mv.fieldOfView = '62deg';
+  ivBtn.textContent = '↩ 看外觀'; ivBtn.classList.add('on');
+  toast('已進入車內視角，拖曳即可環視內裝');
+}
+function exitInterior(){
+  interiorView = false;
+  mv.cameraTarget = 'auto auto auto';
+  mv.cameraOrbit = '-30deg 75deg 120%';
+  mv.fieldOfView = 'auto';
+  ivBtn.textContent = '🔍 看內裝'; ivBtn.classList.remove('on');
+}
+ivBtn.onclick = ()=>{ interiorView ? exitInterior() : enterInterior(); };
+
+/* ---------- 小工具 ---------- */
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function hexToLinear(hex){
+  const n=parseInt(hex.slice(1),16);
+  return [ (n>>16&255)/255, (n>>8&255)/255, (n&255)/255 ].map(srgbToLinear);
+}
+function srgbToLinear(c){ return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+
+/* ---------- 車款故事：更新中央副標 + 「故事與規格」視窗 ---------- */
+function updateStory(){
+  var name = activeCar>=0 ? CARS[activeCar].name : '自訂車模';
+  var sn=document.getElementById('story-name'); if(sn) sn.textContent=name;
+  var s = (activeCar>=0 && typeof STORIES!=='undefined' && STORIES[activeCar]) ? STORIES[activeCar] : null;
+  var tag=document.getElementById('car-tag'), sub=document.getElementById('story-sub'),
+      txt=document.getElementById('story-text'), hi=document.getElementById('story-hi');
+  if(tag) tag.textContent = s ? s.tag : '';
+  if(sub) sub.textContent = s ? s.sub : '';
+  if(txt) txt.textContent = s ? s.story : '';
+  if(hi)  hi.innerHTML = s ? s.hi.map(function(h){return '<span>'+h+'</span>';}).join('') : '';
+}
+/* ---------- 兩個覆蓋視窗：故事與規格 / 個人化 ---------- */
+function bindSheet(btnId, sheetId, xId){
+  var b=document.getElementById(btnId), sh=document.getElementById(sheetId), x=document.getElementById(xId);
+  if(b) b.onclick=function(){ if(sh) sh.classList.add('show'); };
+  if(x) x.onclick=function(){ if(sh) sh.classList.remove('show'); };
+  if(sh) sh.addEventListener('click', function(e){ if(e.target===sh) sh.classList.remove('show'); });
+}
+bindSheet('btn-story','sheet-story','story-x');
+bindSheet('btn-cfg','sheet-cfg','cfg-x');
+
+/* ---------- 展示模式：自動旋轉＋輪播車身色 ---------- */
+var _showTimer=null;
+function toggleShowcase(){
+  var b=document.getElementById('showcase-btn');
+  if(_showTimer){ clearInterval(_showTimer); _showTimer=null; if(b) b.classList.remove('on'); toast('展示模式關閉'); return; }
+  mv.setAttribute('auto-rotate','');
+  var rb=document.getElementById('rotate-toggle'); if(rb){ rb.classList.remove('off'); if(rb.lastChild) rb.lastChild.textContent=' 自動旋轉'; }
+  _showTimer=setInterval(function(){ state.ext=(state.ext+1)%EXTERIOR.length; state.extHex=null; applyExterior(); refresh(); }, 2600);
+  if(b) b.classList.add('on'); toast('🎬 展示模式：自動旋轉＋輪播顏色');
+}
+var scBtn=document.getElementById('showcase-btn'); if(scBtn) scBtn.onclick=toggleShowcase;
+updateStory();
+
+/* 整段腳本（含 _pitch / interiorView 等 let 宣告）都跑完後，才套用分享連結設定 */
+parseShareURL();
+
+if (!customElements.get('model-viewer')) {
+  setTimeout(()=>{ if(!customElements.get('model-viewer')) toast('⚠ 無法載入 3D 元件，請確認網路連線'); }, 4000);
+}
+</script>
+</body>
+</html>
