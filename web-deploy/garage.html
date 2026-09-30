@@ -9,13 +9,13 @@
 <!-- 分享預覽卡（貼到 LINE / FB 時顯示標題＋縮圖）-->
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 360° 環景配置器">
-<meta property="og:description" content="9 台夢想車，自由配色、換內裝、聽真實引擎聲，還能用手機 AR 在你家看車。">
+<meta property="og:description" content="10 台夢想車，自由配色、換內裝、聽真實引擎聲，還能用手機 AR 在你家看車。">
 <meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/">
 <meta property="og:locale" content="zh_TW">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="我的夢想車庫 · 360° 環景配置器">
-<meta name="twitter:description" content="9 台夢想車，自由配色、換內裝、聽真實引擎聲，還能用手機 AR 在你家看車。">
+<meta name="twitter:description" content="10 台夢想車，自由配色、換內裝、聽真實引擎聲，還能用手機 AR 在你家看車。">
 <meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 
 <!-- model-viewer：Google 的 3D 模型網頁元件，負責載入 .glb、360 旋轉、光影與反射 -->
@@ -526,11 +526,12 @@ const SPECS = [
   [['年份','2019–2026（現行世代）'],['引擎','2.5L 直列四缸'],['馬力','191 hp'],['0–100 km/h','約 7.0 秒'],['驅動','前輪驅動']],
   [['年份','2026（S650 世代）'],['引擎','2.3L 直列四缸渦輪（EcoBoost）'],['馬力','約 315 hp'],['0–100 km/h','約 5.1 秒'],['變速','10 速自排'],['驅動','後輪驅動']],
   [['年份','2026（X290 世代）'],['引擎','4.0L V8 雙渦輪'],['馬力','630 hp'],['0–100 km/h','約 3.2 秒'],['變速','AMG 9 速'],['驅動','4MATIC+ 四驅']],
+  [['年份','2020'],['引擎','2.5L Skyactiv-G 直四'],['馬力','194 hp'],['0–100 km/h','約 8.9 秒'],['驅動','i-Activ AWD 四驅']],
 ];
 const BASE_PRICE = 0;                       // 經典老車就不標原廠價了，純算選配
 // 每台車的主題強調色（比首頁的亮色版更深，亮背景上才夠力）
 // 注意：一定要宣告在 buildGarage() 首次呼叫之前，const 不會 hoist
-const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#3d5a96','#5a6169','#1257a4','#1f7a5f'];
+const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#3d5a96','#5a6169','#1257a4','#1f7a5f','#8e3b2e'];
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
@@ -552,6 +553,9 @@ const CARS = [
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt' } },
   { name:'2026 Mercedes-AMG GT 63 S 4-Door', short:'AMG GT', file:'gt43.glb', pitch:0, yaw:0, body:'gtishka_body', interior:/__none__/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3' } },
+  // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
+  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', pitch:0, yaw:0, exSign:-1, body:'Paint_Color', interior:/__none__/,
+    credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642' } },
 ];
 // 每台車的故事 / 副標 / 亮點（顯示在中央副標 + 「故事與規格」視窗）
 const STORIES = [
@@ -581,7 +585,10 @@ const STORIES = [
     hi:['美式肌肉車','2.3T 渦輪','後輪驅動','平價跑車傳奇'] },
   { tag:'四門的超跑靈魂', sub:'Mercedes-AMG GT 63 S · X290 四門轎跑',
     story:'AMG 把 GT 超跑的血統裝進四門轎跑的身體。手工組裝的 4.0L V8 雙渦輪爆發 630 匹馬力，0-100 只要 3.2 秒——能載一家人的車裡，它是最快的那一批。溜背線條、無框車門、主動尾翼，優雅與暴力同時在線。',
-    hi:['630 匹 V8','0-100 3.2 秒','4MATIC+ 四驅','四門超跑'] }
+    hi:['630 匹 V8','0-100 3.2 秒','4MATIC+ 四驅','四門超跑'] },
+  { tag:'魂動設計的中型休旅', sub:'Mazda CX-5 · 2020 年式 Skyactiv',
+    story:'Mazda 把轎車的操控感搬進休旅車。2.5L 自然進氣配 i-Activ 四驅，沒有渦輪的暴力，換來的是線性好預測的動力與紮實的轉向手感。魂動設計的鈑金光影，在同級距裡幾乎沒有對手。',
+    hi:['魂動設計','2.5L 自然進氣','i-Activ 四驅','轎車化操控'] }
 ];
 
 let activeCar = 0;
