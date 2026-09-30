@@ -552,7 +552,7 @@ var STORIES = [
     story2:'第四代把腰線拿掉，車側只靠鈑件曲面反射光影。' },
   { kick:'Ford · S650 GT', tag:'美式跑車', title:'5.0 升 V8',
     story:'1964 年誕生的美式跑車，這是第七代。GT 是 5.0L 自然進氣 V8，美規 480 hp。',
-    story2:'長車頭、短車尾的比例從第一代延續到現在。這台沒有引擎聲音檔，會播合成音。' },
+    story2:'長車頭、短車尾的比例從第一代延續到現在。' },
   { kick:'Mercedes-AMG · X290', tag:'四門轎跑', title:'四門、639 PS',
     story:'4.0L V8 雙渦輪、639 PS，原廠宣稱 0-100 只要 3.2 秒。2018 年日內瓦車展發表。',
     story2:'這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆。我把它拆開重組，從 26MB 壓到 1.6MB。' },
@@ -768,7 +768,6 @@ function stopEngine(){ if(_eng){ try{ _eng.pause(); }catch(e){} _eng=null; } }
 function playEngine(i){
   if(!sndOn || i<0 || i>=N) return;
   stopEngine();
-  if(/^(mustang|cx5)[.]glb$/.test(CARS[i].file)) return;   // 這兩台沒有音檔，不發請求
   var a = new Audio('snd-'+CARS[i].file.replace(/\.glb$/i,'.mp3'));
   a.volume = 0.75;
   _eng = a;

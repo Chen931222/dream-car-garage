@@ -554,12 +554,12 @@ const CARS = [
     credit:{ t:'Mercedes-Benz R-Class by Gerda (koelkastasbers)', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31', l:'Sketchfab 標準授權', lu:'https://sketchfab.com/licenses' } },
   { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, noSnd:true, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
+  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
-  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', pitch:0, yaw:0, exSign:-1, noSnd:true, body:'Paint_Color', noInterior:true,
+  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
 ];
 // 每台車的故事 / 副標 / 亮點（顯示在中央副標 + 「故事與規格」視窗）
@@ -586,8 +586,8 @@ const STORIES = [
     story:'2020 年式，2.5L 直四，美規 186 hp。第四代把腰線拿掉，車側只靠鈑件曲面反射光影。',
     hi:['2.5L 直四','前驅或四驅','第四代','可進車內'] },
   { tag:'美式跑車', sub:'Ford Mustang · S650 世代 GT',
-    story:'1964 年誕生的美式跑車圖騰，第七代 S650。GT 是 5.0L 自然進氣 V8，美規 480 hp，可選六速手排。這台沒有引擎聲音檔，會播合成音。',
-    hi:['5.0L V8','後輪驅動','可選手排','合成引擎聲'] },
+    story:'1964 年誕生的美式跑車圖騰，第七代 S650。GT 是 5.0L 自然進氣 V8，美規 480 hp，可選六速手排。',
+    hi:['5.0L V8','後輪驅動','可選手排','可進車內'] },
   { tag:'四門轎跑', sub:'Mercedes-AMG GT 63 S · X290 四門轎跑',
     story:'4.0L V8 雙渦輪，639 PS，原廠宣稱 0-100 只要 3.2 秒。這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆、方向盤停在原點。我把它拆開重組，從 26MB 壓到 1.6MB。',
     hi:['639 PS V8','0-100 3.2 秒','4MATIC+ 四驅','重組過的模型'] },
@@ -779,20 +779,22 @@ lightsBtn.onclick=function(){ state.lights=!state.lights; applyLights(); applyEx
   lightsBtn.innerHTML = state.lights ? (LIC.flame+' 熄火') : (LIC.key+' 發動引擎');
   if(!state.lights) toast('熄火'); };
 
-/* 引擎啟動音效：播 snd-<檔名>.mp3；沒有檔案（Mustang、CX-5）就退回合成音並告訴使用者 */
+/* 引擎啟動音效：播 snd-<檔名>.mp3（Freesound／Commons 的授權錄音，出處見 sources.html）。
+   多數不是同款車，SND_NOTE 寫出錄音實際是哪台車，提示時照實顯示。 */
+var SND_NOTE = {"w202": "90 年代 C-Class 實錄", "mx5": "初代 MX-5 錄音，不是 ND", "macan": "VW Golf GTI 2.0 渦輪，同系列引擎，不是 Macan", "x5": "1988 BMW 320 直六，不是 N55", "q50": "Nissan VQ35 V6，不是 VR30", "r350": "Mercedes E320 V6，上一代引擎", "mazda3": "Mazda 3 錄音，世代不明", "mustang": "Mustang V8，世代不明", "gt43": "S63 AMG 雙渦輪 V8，不是 GT 63", "cx5": "2015 CX-5 車內錄音"};
 var _engineAudio=null;
 function stopEngine(){ if(_engineAudio){ try{ _engineAudio.pause(); }catch(e){} _engineAudio=null; } }
 function playEngine(){
   stopEngine();
   var car = activeCar>=0 ? CARS[activeCar] : null;
-  if(car && car.noSnd){ toast(LIC.key+' 引擎發動（這台沒有錄音，播的是合成音）'); playSynthEngine(); return; }
+  var note = (car && SND_NOTE[car.file.replace(/\.glb$/i,'')]) || '';
   var src = (car && car.file) ? 'snd-'+car.file.replace(/\.glb$/i,'.mp3') : null;
   if(src){
     try{
       _engineAudio = new Audio(src); _engineAudio.volume = 1.0;
       var pr = _engineAudio.play();
-      if(pr && pr.then) pr.then(function(){ toast(LIC.key+' 引擎發動'); },
-        function(){ toast(LIC.key+' 引擎發動（這台沒有錄音，播的是合成音）'); try{ playSynthEngine(); }catch(e){} });
+      if(pr && pr.then) pr.then(function(){ toast(LIC.key+' 引擎發動'+(note ? '　錄音：'+note : '')); },
+        function(){ toast(LIC.key+' 引擎發動（音檔載入失敗，改播合成音）'); try{ playSynthEngine(); }catch(e){} });
       return;
     }catch(e){}
   }

@@ -57,6 +57,12 @@
   .notes{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:28px 40px; }
   .notes h3{ font-size:14px; font-weight:500; letter-spacing:.06em; margin-bottom:6px; }
   .notes p{ font-size:14px; color:#d4cfc4; }
+  .snd-block{ margin-top:34px; }
+  .snd-block h3{ font-size:14px; font-weight:500; letter-spacing:.06em; margin-bottom:6px; }
+  .snd-block p{ font-size:14px; color:#d4cfc4; }
+  ul.snd{ list-style:none; margin:14px 0; font-size:13.5px; color:#d4cfc4; }
+  ul.snd li{ padding:7px 0; border-bottom:1px solid var(--rule); line-height:1.7; }
+  ul.snd b{ font-weight:500; color:var(--text); margin-right:2px; }
   footer{ margin:80px 0 0; padding:26px 0 40px; border-top:1px solid var(--rule); font-size:13px; color:var(--dim); }
 
   @media (max-width:720px){
@@ -178,8 +184,24 @@
     <div><h3>環境光</h3><p>攝影棚、夕陽、夜晚三張 HDR 來自 Poly Haven，CC0。</p></div>
     <div><h3>內裝貼圖</h3><p>皮革、胡桃木、地毯的貼圖來自 Poly Haven，CC0。W202 的儀表面板是我用程式畫的。</p></div>
     <div><h3>開場短片</h3><p>我在 Blender 做的。行人是 Renderpeople 的真人掃描模型，只出現在渲染好的影片裡，網站沒有散布模型檔。</p></div>
-    <div><h3>引擎聲</h3><p>八台車的音檔來源我當初沒有留下紀錄，正在補查；查不到出處的會換掉。Mustang 和 CX-5 沒有音檔，播的是瀏覽器即時合成的聲音。</p></div>
   </div>
+    <div class="snd-block">
+    <h3>引擎聲</h3>
+    <p>十段都是 Freesound 和 Wikimedia Commons 上有授權的錄音，我剪成 4 到 8 秒並統一音量。只有 W202 錄的是同款車，其他九台是同系列或同類型的引擎；在配置器按「發動引擎」時，畫面也會寫出是哪台車錄的。</p>
+    <ul class="snd">
+      <li><b>W202</b>：90 年代 C-Class，同款車。<a href="https://freesound.org/people/monotraum/sounds/210859/" target="_blank" rel="noopener">car, start, drive away.wav</a>，monotraum，Freesound，<a href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a></li>
+      <li><b>MX-5</b>：初代 MX-5，不是 ND。<a href="https://freesound.org/people/TurboTheSergal/sounds/523351/" target="_blank" rel="noopener">Miata Start and Stop.mp3</a>，TurboTheSergal，Freesound，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></li>
+      <li><b>Macan</b>：VW Golf GTI 2.0 渦輪，同系列引擎。<a href="https://freesound.org/people/EverydaySounds/sounds/268623/" target="_blank" rel="noopener">VW Golf GTI Pull Away (Zoom H2n M&amp;S).wav</a>，EverydaySounds，Freesound，<a href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a></li>
+      <li><b>X5</b>：1988 BMW 320 直六，不是 N55。<a href="https://freesound.org/people/ninebilly/sounds/173005/" target="_blank" rel="noopener">BMW 320 1988..wav</a>，ninebilly，Freesound，<a href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a></li>
+      <li><b>Q50</b>：Nissan VQ35 V6，不是 VR30。<a href="https://commons.wikimedia.org/wiki/File:NISSAN_VQ35HR_engine.ogg" target="_blank" rel="noopener">NISSAN VQ35HR engine.ogg</a>，TTTNIS，Wikimedia Commons，<a href="" target="_blank" rel="noopener">Public domain</a></li>
+      <li><b>R350</b>：Mercedes E320 V6，上一代引擎。<a href="https://freesound.org/people/cftosa/sounds/774675/" target="_blank" rel="noopener">car_3</a>，cftosa，Freesound，<a href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a></li>
+      <li><b>Mazda 3</b>：Mazda 3，世代不明。<a href="https://freesound.org/people/GiovanniProvenzale/sounds/474486/" target="_blank" rel="noopener">Mazda 3 engine starting</a>，GiovanniProvenzale，Freesound，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></li>
+      <li><b>Mustang</b>：Mustang V8，世代不明。<a href="https://freesound.org/people/pastori666/sounds/384055/" target="_blank" rel="noopener">ford mustang v8 rear startup.wav</a>，pastori666，Freesound，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></li>
+      <li><b>AMG GT 63</b>：S63 AMG 雙渦輪 V8。<a href="https://freesound.org/people/marcelweiss/sounds/505321/" target="_blank" rel="noopener">S63 AMG V8 Engine Revs</a>，marcelweiss，Freesound，<a href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a></li>
+      <li><b>CX-5</b>：2015 CX-5 車內。<a href="https://freesound.org/people/tickle_feet_frida/sounds/847650/" target="_blank" rel="noopener">Interior Car Drive Night Nolensville Pk to Old Hickory Blvd Brentwood TN - 2015 Mazda CX-5 T3</a>，tickle_feet_frida，Freesound，<a href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0 1.0</a></li>
+    </ul>
+    <p class="small">原本的音檔是從網路影片擷取的，沒有授權、也沒留下出處，2026 年 9 月全部換掉。</p>
+    </div>
 
   <h2>選模型學到的事</h2>
   <p>Sketchfab 的 API 會回報每個模型有幾個材質，我一開始拿這個數字篩選：材質越多，零件分得越細，越好換色。後來發現那是 Sketchfab 轉檔後的數字，不是原始檔真的能用的材質數。有一台 3 系列房車（G20）下載下來是 349 個沒有名字的碎片，貼圖還拼在同一張圖上，換車身色會連不相干的零件一起塗到。</p>
