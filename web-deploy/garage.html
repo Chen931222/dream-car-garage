@@ -540,9 +540,9 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#3d5a96','#5
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, iv:{axis:'z',fwd:1}, body:'carpaint', interior:'interior', wheel:'material', caliper:'brakedisk', calIdx:1,
+  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
     credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
@@ -556,7 +556,7 @@ const CARS = [
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, noSnd:true, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', pitch:0, yaw:0, body:'gtishka_body', noInterior:true, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
+  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
   { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', pitch:0, yaw:0, exSign:-1, noSnd:true, body:'Paint_Color', noInterior:true,
@@ -1336,6 +1336,7 @@ function enterInterior(){
   interiorView = true;
   _ivRotWasOn = mv.hasAttribute('auto-rotate');
   mv.removeAttribute('auto-rotate'); rotBtn.classList.add('off'); rotBtn.lastChild.textContent=' 已暫停';
+  if(mv.resetTurntableRotation) mv.resetTurntableRotation(0);   // 自動旋轉轉的是模型本身，不歸零的話車頭方向會跑掉
   const c = mv.getBoundingBoxCenter(), d = mv.getDimensions();
   const len = iv.axis==='x' ? d.x : d.z;
   const floorY = c.y - d.y/2;
@@ -1345,7 +1346,7 @@ function enterInterior(){
   const theta = iv.axis==='x' ? (iv.fwd>0 ? 270 : 90) : (iv.fwd>0 ? 180 : 0);
   mv.minCameraOrbit = 'auto auto 0m';
   mv.maxFieldOfView = '90deg';
-  mv.cameraTarget = tx+'m '+(floorY + 0.70*d.y)+'m '+tz+'m';
+  mv.cameraTarget = tx+'m '+(floorY + (iv.h||0.70)*d.y)+'m '+tz+'m';   // h：眼睛高度占車高的比例（MX-5 座椅低、車頂矮，要 0.83）
   mv.cameraOrbit = theta+'deg 95deg '+(0.01*len)+'m';
   mv.fieldOfView = '75deg';
   mv.jumpCameraToGoal();
