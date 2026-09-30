@@ -48,27 +48,31 @@
   .spin{ width:30px; height:30px; margin:0 auto; border:3px solid rgba(0,0,0,.1); border-top-color:var(--ink); border-radius:50%; animation:ldspin .9s linear infinite; }
   @keyframes ldspin{ to{ transform:rotate(360deg); } }
 
-  /* 車庫入口大廳：縮圖牆，點一台進入 */
-  #lobby{ position:absolute; inset:0; z-index:15; overflow-y:auto;
-    background:radial-gradient(circle at 50% 30%, #ffffff 0%, #f4f6f9 65%, #eaedf1 100%);
-    display:flex; flex-direction:column; align-items:center; padding:54px 22px 40px; transition:opacity .45s ease; }
+  /* 車庫入口大廳：縮圖牆，點一台進入。深色、襯線標題，跟首頁同一套（配置器本體維持淺色，看車色要中性底） */
+  #lobby{ position:absolute; inset:0; z-index:15; overflow-y:auto; color:#ece9e2;
+    background:radial-gradient(ellipse at 50% 0%, #1a1814 0%, #0c0d0f 60%, #0a0b0d 100%);
+    display:flex; flex-direction:column; align-items:center; padding:64px 22px 48px; transition:opacity .45s ease; }
   #lobby.gone{ opacity:0; pointer-events:none; }
-  .lobby-kick{ font-size:12px; letter-spacing:.3em; color:var(--sub); }
-  .lobby-title{ font-size:30px; font-weight:200; letter-spacing:.06em; margin:10px 0 4px; }
-  .lobby-sub{ font-size:13px; color:var(--sub); margin-bottom:14px; }
-  .lobby-nav{ display:flex; gap:8px; margin-bottom:26px; flex-wrap:wrap; justify-content:center; }
-  .lobby-nav a{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--sub); text-decoration:none;
-    border:1px solid var(--line); border-radius:30px; padding:8px 16px; background:rgba(255,255,255,.8); transition:.15s; }
-  .lobby-nav a:hover{ color:var(--ink); border-color:#cfd4da; }
+  /* 大廳開著時，後面的配置器介面整個藏起來：看不到的按鈕不該還能被 Tab 到 */
+  #lobby:not(.gone) ~ *:not(model-viewer):not(#floor):not(#noise){ visibility:hidden; }
+  .lobby-kick{ font-size:12px; letter-spacing:.3em; color:#b8962e; }
+  .lobby-title{ font-family:"Noto Serif TC",Georgia,serif; font-size:clamp(30px,4.4vw,44px); font-weight:300; letter-spacing:.08em; margin:12px 0 8px; }
+  .lobby-sub{ font-size:14px; color:#a9a59c; margin-bottom:18px; letter-spacing:.04em; }
+  .lobby-nav{ display:flex; gap:8px; margin-bottom:30px; flex-wrap:wrap; justify-content:center; }
+  .lobby-nav a{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:#c9c5bc; text-decoration:none;
+    border:1px solid rgba(255,255,255,.16); border-radius:30px; padding:8px 16px; background:transparent; transition:.15s; }
+  .lobby-nav a:hover{ color:#fff; border-color:rgba(255,255,255,.4); }
   .lobby-nav a:hover svg.lic{ animation:licWiggle .55s ease; transform-origin:50% 50%; }
-  .lobby-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(205px, 1fr)); gap:14px; width:min(1060px, 94vw); }
-  .lcard{ font-family:inherit; text-align:left; background:#fff; border:1px solid var(--line); border-radius:16px;
-    overflow:hidden; cursor:pointer; padding:0; transition:transform .18s, box-shadow .18s; box-shadow:0 6px 20px rgba(20,30,50,.07); }
-  .lcard:hover{ transform:translateY(-3px); box-shadow:0 16px 34px rgba(20,30,50,.14); }
-  .lcard img{ width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:linear-gradient(180deg,#f6f8fa,#e9edf1); }
-  .lcard .ln{ font-size:14px; font-weight:500; padding:11px 14px 2px; }
-  .lcard .lt{ font-size:11.5px; color:var(--sub); padding:0 14px 12px; line-height:1.5; }
-  .lcard .lbadge{ display:inline-block; font-size:11px; color:#fff; background:var(--accent); border-radius:20px; padding:2px 8px; margin-left:7px; vertical-align:1px; }
+  .lobby-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(205px, 1fr)); gap:1px; width:min(1060px, 94vw);
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08); }
+  .lcard{ font-family:inherit; text-align:left; background:#0e0f12; border:none; color:#ece9e2;
+    overflow:hidden; cursor:pointer; padding:0; transition:background .18s; }
+  .lcard:hover{ background:#16171b; }
+  .lcard img{ width:100%; aspect-ratio:4/3; object-fit:contain; display:block; background:transparent; padding:10px 14px 0; box-sizing:border-box; }
+  .lcard .ln{ font-family:"Noto Serif TC",Georgia,serif; font-size:15px; font-weight:500; padding:10px 16px 3px; line-height:1.45; }
+  .lcard .lt{ font-size:12px; color:#a9a59c; padding:0 16px 16px; line-height:1.55; }
+  .lcard .lbadge{ display:inline-block; font-family:"Noto Sans TC",sans-serif; font-size:11px; color:#0a0b0d; background:#d9d4c7; border-radius:3px; padding:1px 7px; margin-left:8px; vertical-align:2px; font-weight:500; }
+  .lcard .lbadge.mine{ background:#b8962e; color:#0a0b0d; }
 
   model-viewer{
     width:100%; height:100%; background:transparent;
@@ -302,9 +306,10 @@
   <div id="lobby">
     <div class="lobby-kick">DREAM GARAGE</div>
     <div class="lobby-title">我的夢想車庫</div>
-    <div class="lobby-sub">選一台車開始 360° 配置</div>
+    <div class="lobby-sub">一台真的，九台夢的。選一台開始配置。</div>
     <div class="lobby-nav">
       <a href="intro.html"><svg class="lic" viewBox="0 0 24 24"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg> 功能導覽</a>
+      <a href="sources.html"><svg class="lic" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg> 來源與修改紀錄</a>
       <a href="./"><svg class="lic" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" /></svg> 電影式展示</a>
     </div>
     <div class="lobby-grid" id="lobby-grid"></div>
@@ -535,7 +540,7 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#3d5a96','#5
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, iv:{axis:'z',fwd:1}, body:'carpaint', interior:'interior', wheel:'material', caliper:'brakedisk', calIdx:1,
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
@@ -559,36 +564,36 @@ const CARS = [
 ];
 // 每台車的故事 / 副標 / 亮點（顯示在中央副標 + 「故事與規格」視窗）
 const STORIES = [
-  { tag:'第一代 C-Class · 你的夢想之車', sub:'Mercedes-Benz 第一代 C-Class（1993）',
-    story:'誕生在賓士最不計成本的年代。厚實鈑金、紮實底盤、開不壞的可靠度，讓 W202 成為「過度工程」的代名詞。2.2L 直四沉穩優雅，方正車格歷久彌新——許多人心中第一台、也最想擁有的那台賓士。',
-    hi:['經典方正車格','過度工程·耐用','後輪驅動','夢想入門賓士'] },
-  { tag:'人馬一體的純粹敞篷', sub:'Mazda MX-5 · ND 世代前期輕量後驅跑車',
-    story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅——Mazda 把這種比例叫做「人馬一體」。',
-    hi:['輕量後驅','敞篷','人馬一體','平價跑車經典'] },
-  { tag:'最好開的性能休旅', sub:'Porsche Macan · 2022 年式基本款',
-    story:'把跑車的靈魂塞進休旅車身。底盤調校與轉向手感都是保時捷的水準，日常實用又能在山路上盡情奔馳。',
-    hi:['保時捷底盤','2.0L 渦輪','四輪驅動','實用性能'] },
-  { tag:'豪華與性能兼具的大型休旅', sub:'BMW X5 · F15 世代 xDrive 四驅',
-    story:'BMW 的旗艦休旅。直六渦輪引擎綿密有力，xDrive 四驅穩定可靠，是兼顧家庭、長途與駕駛樂趣的全能選擇。',
-    hi:['直六渦輪','xDrive 四驅','豪華旗艦','全能休旅'] },
-  { tag:'低調的 400 匹性能房車', sub:'Infiniti Q50 Red Sport 400',
-    story:'外型內斂、實力驚人。3.0L 雙渦輪 V6，原廠標 400 hp（約 406 PS）。外觀和一般 Q50 差不多，看不出是性能版。',
-    hi:['400 hp','雙渦輪 V6','低調性能','後驅或四驅'] },
-  { tag:'被低估的豪華七人座', sub:'Mercedes-Benz R-Class · W251 世代 4MATIC',
-    story:'賓士罕見的豪華 MPV。早期是三排六座，2007 年起可選五到七座；3.5L V6 配 4MATIC 四驅。',
-    hi:['三排座椅','4MATIC 四驅','3.5L V6','家庭旗艦'] },
-  { tag:'魂動設計的精緻掀背', sub:'Mazda 3 · 2020 年式掀背（第四代）',
-    story:'把「美」放在第一位的掀背車。第四代把腰線拿掉，車側只靠鈑件曲面反射光影。',
-    hi:['魂動設計','2.5L 直四','前驅或四驅','美型掀背'] },
-  { tag:'美式肌肉車的 V8 本命', sub:'Ford Mustang · S650 世代 GT',
-    story:'1964 年誕生的美式跑車圖騰，第七代 S650。GT 是 5.0L 自然進氣 V8，美規 480 hp，可選六速手排。長車頭短車尾的比例從第一代延續到現在。',
-    hi:['美式肌肉車','5.0L V8','後輪驅動','可選手排'] },
-  { tag:'四門的超跑靈魂', sub:'Mercedes-AMG GT 63 S · X290 四門轎跑',
-    story:'AMG 把 GT 超跑的血統裝進四門轎跑的身體。4.0L V8 雙渦輪，639 PS，原廠宣稱 0-100 只要 3.2 秒。2018 年日內瓦車展發表，溜背線條、無框車門、主動尾翼。',
-    hi:['639 PS V8','0-100 3.2 秒','4MATIC+ 四驅','四門轎跑'] },
-  { tag:'魂動設計的中型休旅', sub:'Mazda CX-5 · 2020 年式 Skyactiv',
-    story:'Mazda 把轎車的操控感搬進休旅車。2.5L 自然進氣配 i-Activ 四驅，沒有渦輪，動力輸出線性、好預測。',
-    hi:['魂動設計','2.5L 自然進氣','i-Activ 四驅','轎車化操控'] }
+  { tag:'第一代 C-Class · 十台裡唯一真的那台', sub:'Mercedes-Benz 第一代 C-Class（1993）· 我的車',
+    story:'十台裡只有這台是我自己的車。第一代 C-Class，2.2L 直四、後驅。畫面上的模型不是我的車本人；內裝是我在 Blender 裡重新拆成 33 個零件、上了 6 種材質做的，進車內可以看到儀表和胡桃木飾板。',
+    hi:['我的車','第一代 C-Class','後輪驅動','2.2L 直四'] },
+  { tag:'雙座敞篷跑車', sub:'Mazda MX-5 · ND 世代前期',
+    story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅。Roadster 從 1989 年到現在，配方一直是輕、小、後驅。',
+    hi:['輕量後驅','敞篷','2.0L 自然進氣','160 PS'] },
+  { tag:'中型性能休旅', sub:'Porsche Macan · 2022 年式基本款',
+    story:'2022 年式基本款，2.0L 渦輪直四、265 PS、四驅。這台模型有完整的方向盤與中控台，可以坐進去看。',
+    hi:['2.0L 渦輪','265 PS','四輪驅動','可進車內'] },
+  { tag:'大型豪華休旅', sub:'BMW X5 · F15 世代 xDrive35i',
+    story:'2015 年式 xDrive35i，3.0L 直六渦輪、306 PS、xDrive 四驅。這台模型的內裝比較簡陋，所以沒有開放看內裝。',
+    hi:['直六渦輪','xDrive 四驅','F15 世代','306 PS'] },
+  { tag:'性能房車', sub:'Infiniti Q50 Red Sport 400',
+    story:'3.0L 雙渦輪 V6，原廠標 400 hp（約 406 PS）。外觀和一般 Q50 幾乎一樣。模型作者自己標註了「不完全準確」。',
+    hi:['400 hp','雙渦輪 V6','後驅或四驅','可進車內'] },
+  { tag:'三排座 MPV', sub:'Mercedes-Benz R-Class · W251 世代 4MATIC',
+    story:'賓士少見的豪華 MPV。早期是三排六座，2007 年起可選五到七座；3.5L V6 配 4MATIC 四驅。這台模型的授權不允許再散布，之後會換掉。',
+    hi:['三排座椅','4MATIC 四驅','3.5L V6','待替換'] },
+  { tag:'掀背車', sub:'Mazda 3 · 2020 年式掀背（第四代）',
+    story:'2020 年式，2.5L 直四，美規 186 hp。第四代把腰線拿掉，車側只靠鈑件曲面反射光影。',
+    hi:['2.5L 直四','前驅或四驅','第四代','可進車內'] },
+  { tag:'美式跑車', sub:'Ford Mustang · S650 世代 GT',
+    story:'1964 年誕生的美式跑車圖騰，第七代 S650。GT 是 5.0L 自然進氣 V8，美規 480 hp，可選六速手排。這台沒有引擎聲音檔，會播合成音。',
+    hi:['5.0L V8','後輪驅動','可選手排','合成引擎聲'] },
+  { tag:'四門轎跑', sub:'Mercedes-AMG GT 63 S · X290 四門轎跑',
+    story:'4.0L V8 雙渦輪，639 PS，原廠宣稱 0-100 只要 3.2 秒。這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆、方向盤停在原點。我把它拆開重組，從 26MB 壓到 1.6MB。',
+    hi:['639 PS V8','0-100 3.2 秒','4MATIC+ 四驅','重組過的模型'] },
+  { tag:'中型休旅', sub:'Mazda CX-5 · 2020 年式 Skyactiv',
+    story:'2.5L 自然進氣、i-Activ 四驅，歐規 194 PS。本來想放 CX-60，但 Sketchfab 上的 CX-60 全是 AI 生成、只有一個材質，換不了色，所以改用這台真實掃描的 CX-5。',
+    hi:['2.5L 自然進氣','i-Activ 四驅','真實掃描模型','194 PS'] }
 ];
 
 let activeCar = 0;
@@ -943,7 +948,7 @@ function buildLobby(){
   CARS.forEach(function(c,i){
     var s=(typeof STORIES!=='undefined'&&STORIES[i])?STORIES[i]:null;
     var b=document.createElement('button'); b.className='lcard';
-    var last=(savedCfg && savedCfg.car===i) ? '<span class="lbadge">上次的配置</span>' : '';
+    var last=(c.mine ? '<span class="lbadge mine">我的車</span>' : '') + ((savedCfg && savedCfg.car===i) ? '<span class="lbadge">上次的配置</span>' : '');
     b.innerHTML='<img loading="lazy" src="thumb-'+c.file.replace(/\.glb$/i,'')+'.webp" alt="'+c.short+'" onerror="this.remove()">'
       +'<div class="ln">'+c.name+last+'</div>'
       +'<div class="lt">'+(s?s.tag:'')+'</div>';
@@ -1017,9 +1022,9 @@ function buildGarage(){
 
 function updateCredit(){
   const el = document.getElementById('credit'); if(!el) return;
-  if(activeCar < 0){ el.innerHTML = '3D 模型來源與授權見各車'; return; }
+  if(activeCar < 0){ el.innerHTML = '<a href="sources.html">3D 模型來源與授權</a>'; return; }
   const c = CARS[activeCar].credit;
-  el.innerHTML = '模型：<a href="'+c.u+'" target="_blank" rel="noopener">'+c.t+'</a> · <a href="'+c.lu+'" target="_blank" rel="noopener">'+c.l+'</a> · 已修改';
+  el.innerHTML = '模型：<a href="'+c.u+'" target="_blank" rel="noopener">'+c.t+'</a> · <a href="'+c.lu+'" target="_blank" rel="noopener">'+c.l+'</a> · 已修改 · <a href="sources.html">全部來源</a>';
 }
 
 function switchCar(i){

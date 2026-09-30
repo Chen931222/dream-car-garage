@@ -16,7 +16,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 電影式展示">
-<meta property="og:description" content="滾動切換 10 台夢想車，鏡頭自動環繞展示。看完再進 360° 配置器自由配色、聽引擎聲、AR 看車。">
+<meta property="og:description" content="一台真的，九台夢的。十台車的 3D 展示，滾動切換、鏡頭自動環繞，再進 360° 配置器配色、聽引擎聲、坐進車內。">
 <meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/">
 <meta property="og:locale" content="zh_TW">
@@ -136,7 +136,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     font-family:"Noto Serif TC",Georgia,serif; font-weight:300;
     font-size:clamp(30px, 5.2vw, 56px); letter-spacing:.1em;
   }
-  #hero-overlay .sub{ font-size:clamp(12px, 1.4vw, 15px); color:var(--dim); margin-top:12px; letter-spacing:.24em; }
+  #hero-overlay .sub{ font-size:clamp(12px, 1.4vw, 15px); color:#c2beb5; margin-top:12px; letter-spacing:.24em; text-shadow:0 1px 8px rgba(0,0,0,.6); }
   #hint{
     position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:20;
     color:var(--dim); font-size:11.5px; letter-spacing:.4em; text-indent:.4em;
@@ -223,7 +223,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     content:''; position:absolute; left:0; top:0; bottom:0; width:100%;
     background:var(--accent); transform-origin:left; transform:scaleX(var(--p,0));
   }
-  #panel .tap-hint{ font-size:10.5px; color:#57534c; letter-spacing:.1em; margin-top:8px; }
+  #panel .tap-hint{ font-size:11px; color:#8d8a82; letter-spacing:.1em; margin-top:8px; }
 
   /* ===== 結尾卡 ===== */
   #outro-panel{
@@ -246,6 +246,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
   #outro-panel p{ font-size:14px; line-height:2; color:var(--dim); }
   #outro-panel .credits{ margin-top:22px; font-size:12px; line-height:2; color:#9a968d; letter-spacing:.02em; }
   #outro-panel .credits a{ color:#bdb8ad; }
+  #outro-panel .src-link{ display:block; margin-top:14px; font-size:13px; color:#c9c5bc; letter-spacing:.04em; text-decoration:underline; text-underline-offset:3px; }
 
   /* ===== 載入畫面 ===== */
   #loader{
@@ -458,9 +459,9 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 
 <!-- 開場標題：固定在畫面上方，車在下方，不重疊 -->
 <div id="hero-overlay">
-  <div class="kick">DREAM GARAGE · CINEMATIC</div>
+  <div class="kick">DREAM GARAGE</div>
   <h1>我的夢想車庫</h1>
-  <div class="sub">滾 動 一 下 ，看 下 一 台 夢 想 之 車</div>
+  <div class="sub">一 台 真 的 ， 九 台 夢 的</div>
 </div>
 <div id="hint">滾動 / 滑動 切換車輛<span class="arrow"></span></div>
 
@@ -470,9 +471,10 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <!-- 結尾卡 -->
 <div id="outro-panel">
   <div class="kicker">Build Yours</div>
-  <h2>打造<em>你的</em>那一台</h2>
-  <p>十台車，自由配色、換輪圈、聽真實引擎聲，還能用手機 AR 停進你家。</p>
+  <h2>換你配一台</h2>
+  <p>十台車，自由配色、換輪圈、聽引擎聲，多數車還能坐進車內。</p>
   <a class="cta" href="garage.html">進入 360° 配置器</a>
+  <a class="src-link" href="sources.html">十台車從哪來、我動了什麼 →</a>
   <a class="cta ghost" href="#" id="btn-restart">重看一次</a>
   <div class="credits" id="credits"></div>
 </div>
@@ -527,36 +529,36 @@ var CARS = [
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } }
 ];
 var STORIES = [
-  { kick:'Mercedes-Benz · 1993', tag:'第一代 C-Class · 你的夢想之車', title:'經典<em>重生</em>',
-    story:'誕生在賓士最不計成本的年代。厚實鈑金、紮實底盤、開不壞的可靠度，讓 W202 成為「過度工程」的代名詞。',
-    story2:'鍍鉻飾條、盾形水箱罩、恰到好處的車身姿態——那是一個時代對品質的承諾。有些車不只是交通工具，而是一段記憶的形狀。' },
-  { kick:'Mazda · Roadster', tag:'人馬一體的純粹敞篷', title:'人馬<em>一體</em>',
+  { kick:'Mercedes-Benz · 1993 · 我的車', tag:'第一代 C-Class，十台裡唯一真的那台', title:'真的那一台',
+    story:'十台裡只有這台是我自己的車。其他九台是夢，這一台要自己洗。',
+    story2:'畫面上的 3D 模型不是我的車本人，是網路上的 CC BY 模型。內裝是我在 Blender 裡重新拆零件、上材質做的。' },
+  { kick:'Mazda · ND', tag:'雙座敞篷跑車', title:'一噸重的敞篷',
     story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅。',
-    story2:'輕、小、後驅。過彎的瞬間，車與人像是同一個生命體——Roadster 從 1989 年到現在，37 年沒改過這個配方。' },
-  { kick:'Porsche · 2022', tag:'最好開的性能休旅', title:'跑車的<em>靈魂</em>',
-    story:'把跑車的靈魂塞進休旅車身。底盤調校與轉向手感都是保時捷的水準。',
-    story2:'日常接送、假日山路，一台車滿足兩種人生。這就是 Macan 站穩性能 SUV 標竿的原因。' },
-  { kick:'BMW · xDrive', tag:'豪華與性能兼具的大型休旅', title:'全能<em>旗艦</em>',
-    story:'BMW 的旗艦休旅。直六渦輪引擎綿密有力，xDrive 四驅穩定可靠。',
-    story2:'兼顧家庭、長途與駕駛樂趣——它不偏科，每一科都拿高分。' },
-  { kick:'Infiniti · Red Sport', tag:'低調的 400 hp 性能房車', title:'西裝<em>暴徒</em>',
-    story:'外型內斂、實力驚人。3.0L 雙渦輪 V6，原廠標 400 hp。',
-    story2:'在路上它是一台安靜的豪華房車；踩下油門的那一秒，才露出真面目。' },
-  { kick:'Mercedes-Benz · MPV', tag:'被低估的豪華七人座', title:'家庭<em>頭等艙</em>',
-    story:'賓士罕見的豪華 MPV。三排座椅、3.5L V6 與 4MATIC 四驅。',
-    story2:'不張揚、不喧嘩，把每一段全家出遊，都變成頭等艙的旅程。' },
-  { kick:'Mazda · Kodo Design', tag:'魂動設計的精緻掀背', title:'移動的<em>藝術品</em>',
-    story:'把「美」放在第一位的掀背車。魂動設計語言讓它在路上像件藝術品。',
+    story2:'Roadster 從 1989 年到現在 37 年，配方一直是輕、小、後驅。' },
+  { kick:'Porsche · 2022', tag:'中型性能休旅', title:'跑車廠做的休旅',
+    story:'2022 年式基本款，2.0L 渦輪直四、265 PS、四驅。',
+    story2:'這台模型有完整的方向盤和中控台，可以坐進去看。' },
+  { kick:'BMW · F15', tag:'大型豪華休旅', title:'直六與四驅',
+    story:'2015 年式 xDrive35i，3.0L 直六渦輪、306 PS、xDrive 四驅。',
+    story2:'這台模型的內裝比較簡陋，所以配置器沒有開放「看內裝」。' },
+  { kick:'Infiniti · Red Sport 400', tag:'性能房車', title:'看不出來的 400 hp',
+    story:'3.0L 雙渦輪 V6，原廠標 400 hp。',
+    story2:'外觀和一般 Q50 幾乎一樣。這台模型的作者自己也標註了「不完全準確」。' },
+  { kick:'Mercedes-Benz · W251', tag:'三排座 MPV', title:'三排座的賓士',
+    story:'3.5L V6、4MATIC 四驅，早期是三排六座。',
+    story2:'這台模型的授權不允許再散布，之後會換掉。' },
+  { kick:'Mazda · 第四代', tag:'掀背車', title:'沒有腰線的掀背',
+    story:'2020 年式，2.5L 直四，美規 186 hp。',
     story2:'第四代把腰線拿掉，車側只靠鈑件曲面反射光影。' },
-  { kick:'Ford · S650 GT', tag:'美式肌肉車的 V8 本命', title:'野馬<em>精神</em>',
-    story:'1964 年誕生的美式跑車圖騰。GT 是 5.0L 自然進氣 V8，美規 480 hp。',
-    story2:'長車頭、短車尾的比例，從第一代延續到第七代。' },
-  { kick:'Mercedes-AMG · X290', tag:'四門的超跑靈魂', title:'壓軸<em>王者</em>',
-    story:'AMG 把 GT 超跑的血統，裝進四門轎跑的身體。4.0L V8 雙渦輪、639 PS，原廠宣稱 0-100 只要 3.2 秒。',
-    story2:'溜背線條、無框車門、主動尾翼。2018 年日內瓦車展發表。' },
-  { kick:'Mazda · Skyactiv', tag:'魂動設計的中型休旅', title:'轎車的<em>手感</em>',
-    story:'Mazda 把轎車的操控感搬進休旅車。2.5L 自然進氣配 i-Activ 四驅，動力線性好預測。',
-    story2:'沒有渦輪，換來的是線性的油門反應與紮實的轉向。' }
+  { kick:'Ford · S650 GT', tag:'美式跑車', title:'5.0 升 V8',
+    story:'1964 年誕生的美式跑車，這是第七代。GT 是 5.0L 自然進氣 V8，美規 480 hp。',
+    story2:'長車頭、短車尾的比例從第一代延續到現在。這台沒有引擎聲音檔，會播合成音。' },
+  { kick:'Mercedes-AMG · X290', tag:'四門轎跑', title:'四門、639 PS',
+    story:'4.0L V8 雙渦輪、639 PS，原廠宣稱 0-100 只要 3.2 秒。2018 年日內瓦車展發表。',
+    story2:'這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆。我把它拆開重組，從 26MB 壓到 1.6MB。' },
+  { kick:'Mazda · 2020', tag:'中型休旅', title:'沒有渦輪的休旅',
+    story:'2.5L 自然進氣、i-Activ 四驅，歐規 194 PS。',
+    story2:'本來想放 CX-60，但 Sketchfab 上的 CX-60 全是 AI 生成、只有一個材質，換不了色。這台是真實掃描的 CX-5。' }
 ];
 var SPECS = [
   [['年份','1993'],['引擎','2.2L 直四'],['馬力','150 PS'],['0–100','10.5 秒'],['驅動','後驅']],
@@ -584,7 +586,7 @@ if(location.protocol==='file:'){ loader.classList.add('done'); fallback.style.di
 document.getElementById('credits').innerHTML =
   '3D 模型來源（皆經修改：重新上色、壓縮、遮蔽車牌）：' + CARS.map(function(c){
     return '<a href="'+c.credit.u+'" target="_blank" rel="noopener">'+c.credit.t+'</a>（<a href="'+c.credit.lu+'" target="_blank" rel="noopener">'+c.credit.l+'</a>）';
-  }).join(' · ') + '。標示 CC BY-NC-SA 的模型，修改後的版本同樣以 CC BY-NC-SA 4.0 提供，僅限非商業使用。';
+  }).join(' · ') + '。標示 CC BY-NC-SA 的模型，修改後的版本同樣以 CC BY-NC-SA 4.0 提供，僅限非商業使用。<a href="sources.html">完整來源與修改紀錄</a>';
 
 /* ---------- 右側縮圖導覽（手機縮成圓點） ---------- */
 var dotsBox = document.getElementById('dots');

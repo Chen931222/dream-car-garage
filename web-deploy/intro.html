@@ -243,6 +243,7 @@
     backdrop-filter:blur(6px); border-radius:20px; padding:6px 13px; }
   /* 釘在手機左側 */
   .callout.at-left{ right:calc(100% - 14px); }
+  @media (max-width:1400px){ .callout .tag, .callout .ln{ display:none; } }
   .callout.at-left .pin{ right:-18px; top:-4px; }
   .callout.at-left .ln{ right:-14px; top:0; width:104px; }
   .callout.at-left .tag{ right:96px; top:-14px; }
@@ -573,7 +574,7 @@
 <div id="hero">
   <div class="kick">DREAM GARAGE · GUIDED TOUR</div>
   <h1>我的夢想車庫</h1>
-  <div class="sub">十台夢想之車 ・ 三分鐘看完它能做什麼</div>
+  <div class="sub">一台真的，九台夢的 ・ 三分鐘看完它怎麼做出來</div>
   <div class="spacer"></div>
 </div>
 <div id="hint">滾動 開始導覽<span class="arrow"></span></div>
@@ -594,8 +595,8 @@
 <!-- 結尾 -->
 <div id="outro">
   <div class="kickpill">BUILD YOURS</div>
-  <div class="slogan">你的<em>夢想之車</em>，等你來配。</div>
-  <p>十台車已經停好，鑰匙就在你手上。</p>
+  <div class="slogan">換你配一台。</div>
+  <p>十台車都停好了。W202 是我自己的車，其他九台是夢。</p>
   <figure class="outro-film" aria-label="Dream Garage Blender 城市開場短片">
     <div class="outro-film__head">
       <strong>Blender 城市開場短片</strong>
@@ -611,14 +612,14 @@
     </figcaption>
   </figure>
   <div class="stats">
-    <span><b>10</b>台夢想車</span>
+    <span><b>10</b>台車</span>
     <span><b>143,360</b>種單車配置組合</span>
   </div>
   <div>
     <a class="cta" href="garage.html">進入 360° 配置器</a>
     <a class="cta ghost" href="./">看電影式展示</a>
   </div>
-  <div class="credits">數據來自車庫真實資料 · 3D 模型 CC-BY（完整名單見展示頁）</div>
+  <div class="credits">數字都從配置器的真實資料算出來 · <a href="sources.html">十台車的來源、授權與修改紀錄</a></div>
 </div>
 
 <script>
@@ -636,59 +637,60 @@
 var SCENES = [
   { id:'hero',  acc:'#d4af37', glow:'212,175,55', screen:'scr-lobby', tab:0, pos:'center' },
   { id:'orbit', acc:'#9fc2e8', glow:'159,194,232', screen:'scr-360',  tab:0, pos:'right', co:'co-1',
-    kick:'01 · 360° Orbit', slogan:'拖一下，<em>看透</em>一整台。',
+    kick:'360° Orbit', slogan:'為什麼不用照片。',
     segs:[
-      '<p>十台真實 3D 車模——從 <b>1993 的 W202</b> 到 <b>630 匹的 AMG GT 63 S</b>——每一台都能 360° 自由旋轉、拉近拉遠，連內裝都能鑽進去看。</p>',
-      '<p>不是照片。拖曳、慣性、光影反射都是<b>即時運算</b>的 3D 實模，角度由你決定。</p>',
-      '<div class="stats"><span><b>10</b>台車</span><span><b>360°</b>環景</span><span><b>內裝</b>視角</span></div>'
+      '<p>十台車都是<b>即時運算的 3D 模型</b>，可以 360° 旋轉、拉近，多數車還能坐進車內。</p>',
+      '<p>一般配置器每換一個選項，就載一張預先算好的圖。選項一多，圖的數量是用乘的：7 色 × 10 輪圈 × 4 質感 × 2 卡鉗＝<b>2,240 張</b>。即時 3D 只要<b>一個模型</b>。</p>',
+      '<div class="stats"><span><b>10</b>台車</span><span><b>1</b>個模型取代 2,240 張圖</span></div>'
     ] },
   { id:'paint', acc:'#e8593f', glow:'232,89,63', screen:'scr-paint', tab:1, pos:'left', co:'co-2',
-    kick:'02 · Paint', slogan:'你的顏色，<em>你</em>決定。',
+    kick:'Paint', slogan:'換色，<br>先換對零件。',
     segs:[
-      '<p><b>七種精選車色</b>、<b>四種內裝配色</b>，點一下即時上漆——金屬感、反光、質地全部跟著變。</p>',
-      '<p>精選不夠？打開調色盤，<b>1,677 萬色</b>隨你調，車身、內裝都能自訂。</p>',
-      '<div class="stats"><span><b>7</b>精選車色</span><span><b>4</b>內裝色</span><span><b>1,677萬</b>自訂色</span></div>'
+      '<p><b>七種車色</b>、<b>四種內裝色</b>，點一下即時上色；調色盤可以自訂任何顏色。</p>',
+      '<p>能不能換色，要看模型有沒有把車身漆分成獨立材質。我一開始拿模型平台回報的材質數篩選，後來發現那是<b>轉檔後的數字</b>，不準。有一整批模型是 AI 生成的，<b>只有一個材質</b>，根本換不了色，全部排除。</p>',
+      '<div class="stats"><span><b>7</b>車色</span><span><b>4</b>內裝色</span><span><b>0</b>台 AI 生成模型</span></div>'
     ] },
   { id:'wheel', acc:'#c2a878', glow:'194,168,120', screen:'scr-wheel', tab:1, pos:'right', co:'co-3',
-    kick:'03 · Wheels & Finish', slogan:'細節，才是<em>本體</em>。',
+    kick:'Wheels & Finish', slogan:'組合數是用乘的。',
     segs:[
-      '<p><b>十款輪圈</b>、亮面消光金屬珍珠<b>四種車漆質感</b>、紅黑<b>兩色卡鉗</b>——通通一鍵切換。</p>',
-      '<p>選項最齊全的車，光外觀就有 <b>2,240 種組合</b>。懶得慢慢配？三套「一鍵套件」直接幫你配到好。</p>',
-      '<div class="stats"><span><b>10</b>輪圈</span><span><b>4</b>質感</span><span><b>2</b>卡鉗色</span><span><b>2,240</b>單車外觀組合</span></div>'
+      '<p><b>十款輪圈</b>、<b>四種車漆質感</b>、<b>兩色卡鉗</b>，還有三套一鍵套件。</p>',
+      '<p>選項最齊全的車，光外觀就有 <b>2,240 種組合</b>，加上六項選配是 143,360 種。不是每台都能換輪圈或卡鉗：要看模型的輪圈、卡鉗是不是獨立零件。</p>',
+      '<div class="stats"><span><b>2,240</b>單車外觀組合</span><span><b>143,360</b>含選配</span></div>'
     ] },
   { id:'scene', acc:'#8fa8d8', glow:'143,168,216', screen:'scr-scene', tab:2, pos:'left', co:'co-4',
-    kick:'04 · Scenes', slogan:'換個<em>天色</em>，再看一次。',
+    kick:'Scenes', slogan:'三種光，<br>同一台車。',
     segs:[
-      '<p>攝影棚、夕陽、夜晚<b>三種場景</b>，用的是<b>真實 HDR 環境光</b>——車漆反射的是真的光。</p>',
-      '<p>同一台車、同一個顏色，在夕陽下和夜裡，是兩種完全不同的心情。</p>',
-      '<div class="stats"><span><b>3</b>種場景</span><span><b>HDR</b>真實光影</span></div>'
+      '<p>攝影棚、夕陽、夜晚三種場景，用的是 Poly Haven 的 <b>HDR 環境光</b>，車漆反射的是那張照片裡的光。</p>',
+      '<p>車款縮圖也用<b>同一套光</b>重新算過。第一版縮圖用了另一種光，放在深色頁面上變成一圈白框，一眼就被看出來。</p>',
+      '<div class="stats"><span><b>3</b>種 HDR 光</span><span><b>10</b>張同光縮圖</span></div>'
     ] },
   { id:'sound', acc:'#d4363c', glow:'212,54,60', screen:'scr-sound', tab:3, pos:'right', co:'co-5',
-    kick:'05 · Engine', slogan:'聽，它<em>醒了</em>。',
+    kick:'Engine', slogan:'有錄音，<br>才說錄音。',
     segs:[
       '<p>按下「<b>發動引擎</b>」，車燈亮起、播放引擎聲，排氣管還會冒煙。</p>',
       '<p>十台車裡有八台有引擎聲音檔。Mustang 和 CX-5 沒有，會改播合成音，畫面上也會說明。</p>',
-      '<div class="stats"><span><b>8</b>台有音檔</span><span><b>2</b>台合成音</span><span><b>排氣煙</b>特效</span></div>'
+      '<div class="stats"><span><b>8</b>台有音檔</span><span><b>2</b>台合成音</span></div>'
     ] },
   { id:'ar', acc:'#45c8e6', glow:'69,200,230', screen:'scr-ar', tab:4, pos:'left', co:'co-6',
-    kick:'06 · AR', slogan:'把它<em>停進</em>你家。',
+    kick:'AR', slogan:'把它停進你家。',
     segs:[
-      '<p>支援 AR 的手機，一鍵把車以<b>實際比例</b>擺進你家車庫、你家巷口。</p>',
-      '<p>電腦上配好，<b>掃個 QR code</b>，手機接手直接 AR 看車。</p>',
-      '<div class="stats"><span><b>AR</b>實境看車</span><span><b>QR</b>一掃即看</span></div>'
+      '<p>支援 AR 的手機，可以把車以<b>實際比例</b>擺進你家車庫或巷口。電腦上配好，掃 QR code 換手機看。</p>',
+      '<p>AR 要看手機支不支援，我還沒在每一種手機上測過。</p>',
+      '<div class="stats"><span><b>AR</b>實境看車</span><span><b>QR</b>換手機看</span></div>'
     ] },
   { id:'share', acc:'#4d94e8', glow:'77,148,232', screen:'scr-share', tab:4, pos:'right', co:'co-7',
-    kick:'07 · Share', slogan:'配好了，<em>傳出去</em>。',
+    kick:'Share', slogan:'配置就是網址。',
     segs:[
-      '<p>你的配置會變成<b>一條連結</b>——車款、車色、輪圈、選配，全部記在網址裡。</p>',
-      '<p>複製連結、分享到 <b>LINE</b>、或讓朋友掃 <b>QR code</b>，打開就是你配的那台。<b>六種選配</b>還會即時試算加價。</p>',
-      '<div class="stats"><span><b>連結</b>含完整配置</span><span><b>LINE</b>/QR 分享</span><span><b>6</b>種選配試算</span></div>'
+      '<p>車款、車色、輪圈、選配，全部記在<b>一條連結</b>的網址裡，不用帳號、不用資料庫。</p>',
+      '<p>複製連結、分享到 <b>LINE</b>、或讓朋友掃 <b>QR code</b>，打開就是你配的那台。</p>',
+      '<div class="stats"><span><b>連結</b>含完整配置</span><span><b>0</b>個帳號</span></div>'
     ] },
   { id:'boom', acc:'#d4af37', glow:'212,175,55', screen:'scr-lobby', tab:0, pos:'center',
-    kick:'08 · All In One', slogan:'這一切，都在<em>同一個車庫</em>。',
+    kick:'Performance', slogan:'一頁只放三個 3D。',
     segs:[
-      '<p>環景、配色、輪圈、場景、聲浪、AR、分享、試算——<b>十個功能、一個頁面、零安裝</b>，打開瀏覽器就開。</p>',
-      '<div class="stats"><span><b>10</b>大功能</span><span><b>0</b>安裝</span><span><b>1</b>個網頁</span></div>'
+      '<p>一頁同時放超過三個 3D 檢視器，Chrome 的繪圖程序會直接卡死。所以首頁只放<b>三個檢視器輪流換車</b>，捲到哪台就換到哪一格。</p>',
+      '<p>模型也都壓過：最大那台 AMG 從 <b>26MB 壓到 1.6MB</b>，整個網站不用安裝任何東西，打開瀏覽器就能看。</p>',
+      '<div class="stats"><span><b>3</b>個檢視器輪替</span><span><b>26→1.6</b>MB</span></div>'
     ] },
   { id:'outro', acc:'#d4af37', glow:'212,175,55', screen:'scr-lobby', tab:0, pos:'center' }
 ];
@@ -720,7 +722,7 @@ var EXP = [
   { i:LX.vol,   z:'引擎聲浪', e:'Engine',   tx:[-332,-128], ty:[ 118,  70] },
   { i:LX.phone, z:'AR 看車',  e:'AR View',  tx:[ 326, 128], ty:[ 120,  70] },
   { i:LX.link,  z:'分享配置', e:'Share',    tx:[-188,-170], ty:[ 232, 205] },
-  { i:LX.calc,  z:'選配試算', e:'Options',  tx:[   0,   0], ty:[ 276, 240] },
+  { i:LX.calc,  z:'選配清單', e:'Options',  tx:[   0,   0], ty:[ 276, 240] },
   { i:LX.clap,  z:'電影式展示', e:'Cinematic', tx:[196,170], ty:[ 230, 205] }
 ];
 var stage = document.getElementById('stage');

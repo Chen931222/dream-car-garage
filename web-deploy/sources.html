@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>來源與修改紀錄 · 我的夢想車庫</title>
+<meta name="description" content="夢想車庫十台車的 3D 模型來源、授權，以及每一台我做了哪些修改。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="來源與修改紀錄 · 我的夢想車庫">
+<meta property="og:description" content="十台車的 3D 模型都不是我做的。這一頁列出每台的作者、授權，以及我動了什麼。">
+<meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+<meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/sources">
+<meta property="og:locale" content="zh_TW">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0c0e; --text:#e8e4da; --dim:#a9a59c; --rule:rgba(255,255,255,.12); --gold:#c9a64a;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ background:var(--bg); }
+  body{ background:var(--bg); color:var(--text); font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
+    font-weight:300; line-height:1.85; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--text); text-underline-offset:3px; }
+  a:hover{ color:#fff; }
+  .wrap{ width:min(980px, 100%); margin:0 auto; padding:0 24px; }
+  nav{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding:22px 0; border-bottom:1px solid var(--rule); font-size:13px; }
+  nav .brand{ letter-spacing:.14em; font-weight:500; text-decoration:none; }
+  nav .links{ display:flex; gap:18px; flex-wrap:wrap; }
+  nav .links a{ color:var(--dim); text-decoration:none; }
+  nav .links a:hover{ color:var(--text); }
+  header{ padding:72px 0 44px; }
+  .kick{ font-size:12px; letter-spacing:.28em; color:var(--gold); }
+  h1{ font-family:"Noto Serif TC",Georgia,serif; font-weight:300; font-size:clamp(30px, 5vw, 50px); letter-spacing:.04em; line-height:1.3; margin:14px 0 22px; }
+  .lede{ max-width:40em; font-size:16px; color:#d4cfc4; }
+  h2{ font-family:"Noto Serif TC",Georgia,serif; font-weight:500; font-size:21px; letter-spacing:.04em; margin:64px 0 18px; }
+  p{ max-width:42em; }
+  p + p{ margin-top:12px; }
+  .small{ font-size:13px; color:var(--dim); }
+
+  table{ width:100%; border-collapse:collapse; font-size:14px; }
+  th{ text-align:left; font-weight:400; font-size:12px; letter-spacing:.12em; color:var(--dim); padding:10px 14px 10px 0; border-bottom:1px solid var(--rule); }
+  td{ vertical-align:top; padding:18px 14px 18px 0; border-bottom:1px solid var(--rule); }
+  td.car{ width:24%; font-family:"Noto Serif TC",Georgia,serif; font-weight:500; font-size:15px; line-height:1.5; }
+  td.car small{ display:block; font-family:"Noto Sans TC",sans-serif; font-weight:300; font-size:12px; color:var(--dim); margin-top:4px; }
+  td.src{ width:28%; }
+  td.src .lic{ display:inline-block; margin-top:6px; font-size:12px; letter-spacing:.04em; border:1px solid var(--rule); padding:0 7px; border-radius:3px; color:#d4cfc4; }
+  td.src .lic.warn{ border-color:#b0563f; color:#e8a894; }
+  td.did ul{ list-style:none; }
+  td.did li{ position:relative; padding-left:14px; }
+  td.did li::before{ content:""; position:absolute; left:0; top:.9em; width:6px; height:1px; background:var(--dim); }
+  .mine{ display:inline-block; font-family:"Noto Sans TC",sans-serif; font-size:11px; font-weight:500; background:var(--gold); color:#0b0c0e; padding:0 6px; border-radius:3px; margin-left:6px; vertical-align:2px; }
+
+  .notes{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:28px 40px; }
+  .notes h3{ font-size:14px; font-weight:500; letter-spacing:.06em; margin-bottom:6px; }
+  .notes p{ font-size:14px; color:#d4cfc4; }
+  footer{ margin:80px 0 0; padding:26px 0 40px; border-top:1px solid var(--rule); font-size:13px; color:var(--dim); }
+
+  @media (max-width:720px){
+    header{ padding:48px 0 28px; }
+    thead{ display:none; }
+    table, tbody, tr, td{ display:block; width:100% !important; }
+    tr{ border-bottom:1px solid var(--rule); padding:18px 0; }
+    td{ border:none; padding:4px 0; }
+    td.car{ font-size:17px; margin-bottom:4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="./">我的夢想車庫</a>
+    <div class="links">
+      <a href="./">電影式展示</a>
+      <a href="garage.html">360° 配置器</a>
+      <a href="intro.html">導覽</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="kick">SOURCES &amp; CHANGES</div>
+    <h1>十台車從哪來，<br>我動了什麼</h1>
+    <p class="lede">這十台車的 3D 模型都不是我建的，全部來自 Sketchfab 上公開授權的模型。我做的是挑模型、修模型、壓縮、上材質，還有整個網站。下面逐台列出作者、授權，以及我改了哪裡。</p>
+  </header>
+
+  <table>
+    <thead><tr><th>車</th><th>模型與授權</th><th>我做的修改</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="car">Mercedes-Benz W202 C220<span class="mine">我的車</span><small>1993 · 十台裡唯一真的那台</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e" target="_blank" rel="noopener">Mercedes-Benz C-Class (W202) sedan</a>，Nieve5677<br><a class="lic" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></td>
+        <td class="did"><ul>
+          <li>原本整個內裝只有一個素色材質，換內裝色時連方向盤、儀表板都一起變色。我在 Blender 把它拆成 33 個零件，分成座椅皮革、方向盤、飾板、地毯、胡桃木 5 種材質，再補一組自己畫的儀表。</li>
+          <li>遮掉模型內建的車牌字樣。</li>
+          <li>畫面上的模型不是我的車本人，顏色和配備不一定一樣。</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td class="car">Mazda MX-5（ND）<small>2015–2018 · ND 前期</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc" target="_blank" rel="noopener">Mazda MX-5 (ND) 2014</a>，Nieve5677<br><a class="lic" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></td>
+        <td class="did"><ul>
+          <li>原始檔 41.6 MB，壓縮到 1.9 MB 左右。</li>
+          <li id="mx5-interior">內裝原本也是單一素色材質，比照 W202 重新拆零件上材質。</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td class="car">Porsche Macan<small>2022 年式基本款</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a" target="_blank" rel="noopener">2022 Porsche Macan</a>，jwustina<br><a class="lic" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></td>
+        <td class="did"><ul>
+          <li>原始檔 11.9 MB，壓縮到 1.1 MB。</li>
+          <li>這台的長軸跟其他車不一樣，車內視角的方向另外校正。</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td class="car">BMW X5（F15）<small>2015 年式 xDrive35i</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8" target="_blank" rel="noopener">2015 BMW X5</a>，Ddiaz Design<br><a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a></td>
+        <td class="did"><ul>
+          <li>壓縮、設定車身與輪圈換色。</li>
+          <li>內裝太簡陋，而且模型比例極小，鏡頭一靠近就被裁掉，所以沒開放看內裝。</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td class="car">Infiniti Q50 Red Sport 400<small>2021</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2" target="_blank" rel="noopener">2021 Infiniti Q50 Red Sport 400 (inaccurate)</a>，Ddiaz Design<br><a class="lic" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></td>
+        <td class="did"><ul>
+          <li>壓縮、設定換色。模型作者自己標註「不完全準確」，我照原樣保留這個說明。</li>
+        </ul></td>
+      </tr>
+      <tr id="row-r350">
+        <td class="car">Mercedes-Benz R350（W251）<small>三排座 MPV</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31" target="_blank" rel="noopener">Mercedes-Benz R-Class</a>，Gerda（koelkastasbers）<br><span class="lic warn">Sketchfab 標準授權</span></td>
+        <td class="did"><ul>
+          <li>這個授權不允許把模型原樣再散布，而網站會把模型檔傳到你的瀏覽器，所以這台會換掉。</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td class="car">Mazda 3 掀背<small>2020 年式</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d" target="_blank" rel="noopener">2020 Mazda 3 Hatchback</a>，Ddiaz Design<br><a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a></td>
+        <td class="did"><ul><li>壓縮、設定車身、輪圈、卡鉗換色。</li></ul></td>
+      </tr>
+      <tr>
+        <td class="car">Ford Mustang GT<small>2024 · S650</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f" target="_blank" rel="noopener">2024 Ford Mustang GT</a>，Ddiaz Design<br><a class="lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a></td>
+        <td class="did"><ul><li>壓縮、設定換色。原本站上把它標成 EcoBoost，模型其實是 GT，已經改回來。</li></ul></td>
+      </tr>
+      <tr>
+        <td class="car">Mercedes-AMG GT 63 S 4-Door<small>X290 · 2018 起</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3" target="_blank" rel="noopener">Mercedes-Benz AMG GT 4-Door Coupe (X290)</a>，ZapupaNekra<br><a class="lic" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></td>
+        <td class="did"><ul>
+          <li>下載下來不是一台組好的車，是遊戲模組的零件包。</li>
+          <li>剔除備用保桿、側裙、兩片車頂、防滾籠；引擎蓋原本浮在引擎室上方，往下移 0.30 公尺；方向盤停在原點，移回駕駛座；輪子只有一顆，複製成四顆。</li>
+          <li>玻璃材質在轉檔時被合併成一個，重新建立透明與深色兩種玻璃。</li>
+          <li>26 MB 壓縮到 1.6 MB。</li>
+          <li id="amg-interior">內裝零件跟外觀的鍍鉻、燈共用同一個材質，所以原本進車內全是白色。</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td class="car">Mazda CX-5<small>2020</small></td>
+        <td class="src"><a href="https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642" target="_blank" rel="noopener">Mazda CX-5 2020</a>，ItsDiyor<br><a class="lic" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></td>
+        <td class="did"><ul>
+          <li>本來想放 CX-60。但 Sketchfab 上的 CX-60 全出自同一個帳號、都是 AI 生成：面數卡在 150 萬上限、只有一個材質、鈑金表面像融化。只有一個材質就換不了色，所以改用這台真實掃描的 CX-5。</li>
+          <li>它是整台掃描成一塊，沒有獨立內裝，所以沒開放看內裝。</li>
+        </ul></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>修改後的檔案怎麼授權</h2>
+  <p>標 CC BY 的模型，修改版沿用 CC BY 4.0，請標示原作者。標 CC BY-NC-SA 的三台（X5、Mazda 3、Mustang），修改版同樣以 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> 提供，只能非商業使用。這個網站是非商業的作品展示。</p>
+
+  <h2>其他素材</h2>
+  <div class="notes">
+    <div><h3>環境光</h3><p>攝影棚、夕陽、夜晚三張 HDR 來自 Poly Haven，CC0。</p></div>
+    <div><h3>內裝貼圖</h3><p>皮革、胡桃木、地毯的貼圖來自 Poly Haven，CC0。W202 的儀表面板是我用程式畫的。</p></div>
+    <div><h3>開場短片</h3><p>我在 Blender 做的。行人是 Renderpeople 的真人掃描模型，只出現在渲染好的影片裡，網站沒有散布模型檔。</p></div>
+    <div><h3>引擎聲</h3><p>八台車的音檔來源我當初沒有留下紀錄，正在補查；查不到出處的會換掉。Mustang 和 CX-5 沒有音檔，播的是瀏覽器即時合成的聲音。</p></div>
+  </div>
+
+  <h2>選模型學到的事</h2>
+  <p>Sketchfab 的 API 會回報每個模型有幾個材質，我一開始拿這個數字篩選：材質越多，零件分得越細，越好換色。後來發現那是 Sketchfab 轉檔後的數字，不是原始檔真的能用的材質數。有一台 3 系列房車（G20）下載下來是 349 個沒有名字的碎片，貼圖還拼在同一張圖上，換車身色會連不相干的零件一起塗到。</p>
+  <p>現在的做法是：一定先下載原始檔，自己打開看材質怎麼分，再決定要不要用。</p>
+
+  <footer>
+    模型授權以 2026 年 9 月在 Sketchfab 查到的為準。有錯誤或遺漏，歡迎告訴我。
+  </footer>
+</div>
+</body>
+</html>
