@@ -27,10 +27,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <!-- model-viewer：載入 .glb、光影反射；鏡頭由本頁引擎驅動 -->
 <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
 
-<!-- 每台車有專屬環境光，先偷偷抓 HDR，換車才不會等 -->
-<link rel="prefetch" href="env-sunset.hdr">
-<link rel="prefetch" href="env-studio.hdr">
-<link rel="prefetch" href="env-night.hdr">
+<!-- 每台車有專屬環境光：HDR 改在開場結束後才預抓（見 leaveIntro），開場期間不搶頻寬 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -121,7 +118,8 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
   }
   #dots button .lb{
     position:absolute; right:calc(100% + 10px); top:50%; transform:translateY(-50%);
-    font-size:11px; letter-spacing:.1em; color:var(--dim); white-space:nowrap;
+    font-size:11px; letter-spacing:.1em; color:#c9c5bc; white-space:nowrap;
+    background:rgba(10,11,13,.72); padding:2px 7px; border-radius:4px;
     opacity:0; transition:.2s; pointer-events:none;
   }
   #dots button:hover .lb, #dots button.active .lb{ opacity:1; }
@@ -246,8 +244,8 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     background:linear-gradient(120deg, #fff, var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, #000));
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   #outro-panel p{ font-size:14px; line-height:2; color:var(--dim); }
-  #outro-panel .credits{ margin-top:22px; font-size:10.5px; line-height:2; color:#55534c; letter-spacing:.04em; }
-  #outro-panel .credits a{ color:#6d6a62; }
+  #outro-panel .credits{ margin-top:22px; font-size:12px; line-height:2; color:#9a968d; letter-spacing:.02em; }
+  #outro-panel .credits a{ color:#bdb8ad; }
 
   /* ===== 載入畫面 ===== */
   #loader{
@@ -337,8 +335,9 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     #dots{ right:8px; gap:11px; }
     #dots button{
       width:8px; height:8px; border-radius:50%; border:none; opacity:1;
-      background:rgba(255,255,255,.22); box-shadow:none;
+      background:rgba(255,255,255,.22); box-shadow:none; position:relative;
     }
+    #dots button::after{ content:''; position:absolute; inset:-8px; }
     #dots button img, #dots button .ic{ display:none; }
     #dots button.active{ background:var(--accent); box-shadow:0 0 8px var(--accent); transform:scale(1.3); }
     #dots button .lb{ display:none; }
@@ -360,7 +359,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <body>
 
 <section id="cinematic-intro" aria-label="Dream Garage 城市電影開場">
-  <video id="intro-video" autoplay muted playsinline preload="auto" poster="dream-garage-opening-poster.jpg">
+  <video id="intro-video" autoplay muted playsinline preload="metadata" poster="dream-garage-opening-poster.jpg">
     <source src="dream-garage-opening.mp4" type="video/mp4">
   </video>
   <div class="cinematic-intro__top">
@@ -384,9 +383,16 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
   var progress=document.getElementById('intro-progress');
   var finished=false;
 
+  function prefetchEnv(){
+    ['env-sunset.hdr','env-studio.hdr','env-night.hdr'].forEach(function(h){
+      var l=document.createElement('link'); l.rel='prefetch'; l.href=h; document.head.appendChild(l);
+    });
+  }
   function leaveIntro(){
     if(finished) return;
     finished=true;
+    try{ sessionStorage.setItem('dg_intro_seen','1'); }catch(e){}
+    prefetchEnv();
     intro.classList.add('leaving');
     try{ video.pause(); }catch(e){}
     setTimeout(function(){ intro.remove(); },950);
@@ -409,6 +415,9 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     progress.style.transform='scaleX('+ratio+')';
   });
   window.addEventListener('keydown',function(e){ if(e.key==='Escape') leaveIntro(); });
+  var seen=false; try{ seen = sessionStorage.getItem('dg_intro_seen')==='1'; }catch(e){}
+  if(seen){ finished=true; try{ video.removeAttribute('autoplay'); video.preload='none'; video.pause(); }catch(e){} intro.remove(); prefetchEnv(); return; }
+  if(window.matchMedia && matchMedia('(min-width:681px)').matches) video.preload='auto';
   startIntro();
 })();
 </script>
@@ -435,10 +444,10 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <div id="topbar">
   <div class="brand"><svg class="lic" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> <b>我的夢想車庫</b></div>
   <div class="tools">
-    <a href="intro.html" title="3 分鐘看完網站能做什麼"><svg class="lic" viewBox="0 0 24 24"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg><span class="bt"> 導覽</span></a>
+    <a href="intro.html" title="3 分鐘看完網站能做什麼" aria-label="功能導覽"><svg class="lic" viewBox="0 0 24 24"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg><span class="bt"> 導覽</span></a>
     <button id="btn-snd" title="切換車輛時播放引擎聲"><svg class="lic" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><line x1="22" x2="16" y1="9" y2="15" /><line x1="16" x2="22" y1="9" y2="15" /></svg><span class="bt"> 引擎聲</span></button>
     <button id="btn-auto" title="自動輪播所有車輛"><svg class="lic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" /></svg><span class="bt"> 自動導覽</span></button>
-    <a href="garage.html"><svg class="lic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg><span class="bt"> 360° 配置器</span></a>
+    <a href="garage.html" aria-label="360° 配置器" title="360° 配置器"><svg class="lic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg><span class="bt"> 360° 配置器</span></a>
   </div>
 </div>
 
@@ -487,79 +496,79 @@ var ENVS = {
 };
 var CARS = [
   { file:'w202.glb',    short:'W202',    name:'1993 Mercedes-Benz W202 C220', pitch:-90, env:'sunset',
-    body:'carpaint', paint:'#7a1e23', accent:'#d4af37',
-    credit:{ t:'W202 Sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e' } },
-  { file:'mx5.glb',     short:'MX-5',    name:'2026 Mazda MX-5（ND）', pitch:-90, env:'sunset',
+    body:'carpaint', paint:'#7a1e23', accent:'#d4af37', plateMats:['Material__1','Material__2'],
+    credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
+  { file:'mx5.glb',     short:'MX-5',    name:'2015 Mazda MX-5（ND）', pitch:-90, env:'sunset',
     body:'carpaint', paint:'#a01521', accent:'#e8593f',
-    credit:{ t:'Mazda MX-5 (ND) by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc' } },
+    credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { file:'macan.glb',   short:'Macan',   name:'2022 Porsche Macan', pitch:0, env:'studio',
     body:'Color1Mtl', paint:'#0aa1c8', accent:'#45c8e6',
-    credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a' } },
+    credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { file:'x5.glb',      short:'BMW X5',  name:'2015 BMW X5（F15）', pitch:0, env:'studio',
     body:'carpaint', paint:'#e8eaec', accent:'#9fc2e8',
-    credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8' } },
+    credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { file:'q50.glb',     short:'Q50',     name:'2021 Infiniti Q50 Red Sport 400', pitch:0, env:'night',
     body:/carpaint/i, paint:'#aeb4bb', accent:'#d4363c',
-    credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2' } },
-  { file:'r350.glb',    short:'R350',    name:'Mercedes-Benz R350（R-Class）', pitch:0, env:'sunset',
+    credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
+  { file:'r350.glb',    short:'R350',    name:'Mercedes-Benz R350（W251）', pitch:0, env:'sunset',
     body:'rclassnotorious_bodyP', paint:'#1b2c4d', accent:'#8fa8d8',
-    credit:{ t:'Mercedes-Benz R-Class by KOElkast1007', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31' } },
-  { file:'mazda3.glb',  short:'Mazda 3', name:'2026 Mazda 3', pitch:0, env:'studio',
+    credit:{ t:'Mercedes-Benz R-Class by Gerda (koelkastasbers)', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31', l:'Sketchfab 標準授權', lu:'https://sketchfab.com/licenses' } },
+  { file:'mazda3.glb',  short:'Mazda 3', name:'2020 Mazda 3 掀背', pitch:0, env:'studio',
     body:'Mazda_3MI_1218030001_089', paint:'#62686e', accent:'#c9cdd2',
-    credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d' } },
-  { file:'mustang.glb', short:'Mustang', name:'2026 Ford Mustang EcoBoost 2.3', pitch:0, env:'night',
+    credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
+  { file:'mustang.glb', short:'Mustang', name:'2024 Ford Mustang GT', pitch:0, env:'night',
     body:/2024Coloured_Material|2024PaintA_Material/, paint:'#1666c0', accent:'#4d94e8',
-    credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt' } },
-  { file:'gt43.glb', short:'AMG GT', name:'2026 Mercedes-AMG GT 63 S 4-Door', pitch:0, env:'studio',
+    credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
+  { file:'gt43.glb', short:'AMG GT', name:'Mercedes-AMG GT 63 S 4-Door Coupé', pitch:0, env:'studio',
     body:'gtishka_body', paint:'#2b2e33', accent:'#3ecf9e',
-    credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3' } },
+    credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { file:'cx5.glb', short:'CX-5', name:'2020 Mazda CX-5', pitch:0, env:'studio',
     body:'Paint_Color', paint:'#2f4d6b', accent:'#e09a4a',
-    credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642' } }
+    credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } }
 ];
 var STORIES = [
   { kick:'Mercedes-Benz · 1993', tag:'第一代 C-Class · 你的夢想之車', title:'經典<em>重生</em>',
     story:'誕生在賓士最不計成本的年代。厚實鈑金、紮實底盤、開不壞的可靠度，讓 W202 成為「過度工程」的代名詞。',
     story2:'鍍鉻飾條、盾形水箱罩、恰到好處的車身姿態——那是一個時代對品質的承諾。有些車不只是交通工具，而是一段記憶的形狀。' },
   { kick:'Mazda · Roadster', tag:'人馬一體的純粹敞篷', title:'人馬<em>一體</em>',
-    story:'全球最暢銷的雙座敞篷跑車。沒有多餘的電子輔助，只有最純粹的駕駛樂趣。',
-    story2:'輕、小、後驅。過彎的瞬間，車與人像是同一個生命體——這就是 Roadster 六十年不變的信仰。' },
-  { kick:'Porsche · SUV', tag:'最好開的性能休旅', title:'跑車的<em>靈魂</em>',
+    story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅。',
+    story2:'輕、小、後驅。過彎的瞬間，車與人像是同一個生命體——Roadster 從 1989 年到現在，37 年沒改過這個配方。' },
+  { kick:'Porsche · 2022', tag:'最好開的性能休旅', title:'跑車的<em>靈魂</em>',
     story:'把跑車的靈魂塞進休旅車身。底盤調校與轉向手感都是保時捷的水準。',
     story2:'日常接送、假日山路，一台車滿足兩種人生。這就是 Macan 站穩性能 SUV 標竿的原因。' },
   { kick:'BMW · xDrive', tag:'豪華與性能兼具的大型休旅', title:'全能<em>旗艦</em>',
     story:'BMW 的旗艦休旅。直六渦輪引擎綿密有力，xDrive 四驅穩定可靠。',
     story2:'兼顧家庭、長途與駕駛樂趣——它不偏科，每一科都拿高分。' },
-  { kick:'Infiniti · Red Sport', tag:'低調的 400 匹性能房車', title:'西裝<em>暴徒</em>',
-    story:'外型內斂、實力驚人。3.0L 雙渦輪 V6 榨出 400 匹馬力。',
+  { kick:'Infiniti · Red Sport', tag:'低調的 400 hp 性能房車', title:'西裝<em>暴徒</em>',
+    story:'外型內斂、實力驚人。3.0L 雙渦輪 V6，原廠標 400 hp。',
     story2:'在路上它是一台安靜的豪華房車；踩下油門的那一秒，才露出真面目。' },
   { kick:'Mercedes-Benz · MPV', tag:'被低估的豪華七人座', title:'家庭<em>頭等艙</em>',
-    story:'賓士罕見的豪華 MPV。寬敞的六到七人空間、平順的 V6 與 4MATIC 四驅。',
+    story:'賓士罕見的豪華 MPV。三排座椅、3.5L V6 與 4MATIC 四驅。',
     story2:'不張揚、不喧嘩，把每一段全家出遊，都變成頭等艙的旅程。' },
   { kick:'Mazda · Kodo Design', tag:'魂動設計的精緻掀背', title:'移動的<em>藝術品</em>',
     story:'把「美」放在第一位的掀背車。魂動設計語言讓它在路上像件藝術品。',
-    story2:'光影在鈑件上流動的樣子，是 Mazda 設計師雕出來的。內裝質感更直逼豪華品牌。' },
-  { kick:'Ford · S650', tag:'美式肌肉的入門傳奇', title:'野馬<em>精神</em>',
-    story:'超過一甲子的美式跑車圖騰。EcoBoost 2.3L 渦輪直四榨出 315 匹，配上經典後驅底盤。',
-    story2:'長車頭、短車尾的肌肉線條——不用 V8 也能享受純粹的美式駕馭樂趣。' },
+    story2:'第四代把腰線拿掉，車側只靠鈑件曲面反射光影。' },
+  { kick:'Ford · S650 GT', tag:'美式肌肉車的 V8 本命', title:'野馬<em>精神</em>',
+    story:'1964 年誕生的美式跑車圖騰。GT 是 5.0L 自然進氣 V8，美規 480 hp。',
+    story2:'長車頭、短車尾的比例，從第一代延續到第七代。' },
   { kick:'Mercedes-AMG · X290', tag:'四門的超跑靈魂', title:'壓軸<em>王者</em>',
-    story:'AMG 把 GT 超跑的血統，裝進四門轎跑的身體。手工 4.0L V8 雙渦輪、630 匹馬力、0-100 僅 3.2 秒。',
-    story2:'溜背線條、無框車門、主動尾翼——能載一家人的車裡，它是最快的那一批。優雅與暴力，同時在線。' },
+    story:'AMG 把 GT 超跑的血統，裝進四門轎跑的身體。4.0L V8 雙渦輪、639 PS，原廠宣稱 0-100 只要 3.2 秒。',
+    story2:'溜背線條、無框車門、主動尾翼。2018 年日內瓦車展發表。' },
   { kick:'Mazda · Skyactiv', tag:'魂動設計的中型休旅', title:'轎車的<em>手感</em>',
     story:'Mazda 把轎車的操控感搬進休旅車。2.5L 自然進氣配 i-Activ 四驅，動力線性好預測。',
-    story2:'沒有渦輪的暴力，換來的是紮實的轉向與魂動鈑金上流動的光影——同級距裡幾乎沒有對手。' }
+    story2:'沒有渦輪，換來的是線性的油門反應與紮實的轉向。' }
 ];
 var SPECS = [
-  [['年份','1993'],['引擎','2.2L 直四'],['馬力','150 hp'],['0–100','10.5 秒'],['驅動','後驅']],
-  [['年份','2016+'],['引擎','2.0L 直四'],['馬力','184 hp'],['0–100','6.5 秒'],['車重','1060 kg'],['驅動','後驅']],
-  [['年份','2022'],['引擎','2.9L V6 雙渦輪'],['馬力','440 hp'],['0–100','4.5 秒'],['驅動','四驅']],
-  [['年份','2015'],['引擎','3.0L 直六渦輪'],['馬力','306 hp'],['0–100','6.5 秒'],['驅動','xDrive']],
-  [['年份','2014+'],['引擎','3.0L V6 雙渦輪'],['馬力','400 hp'],['0–100','4.9 秒'],['驅動','後驅']],
-  [['年份','2006–12'],['引擎','3.5L V6'],['馬力','272 hp'],['座位','6–7 人'],['驅動','4MATIC']],
-  [['年份','2019+'],['引擎','2.5L 直四'],['馬力','191 hp'],['0–100','7.0 秒'],['驅動','前驅']],
-  [['年份','2026'],['引擎','2.3T EcoBoost'],['馬力','315 hp'],['0–100','5.1 秒'],['驅動','後驅']],
-  [['年份','2026'],['引擎','4.0L V8 雙渦輪'],['馬力','630 hp'],['0–100','3.2 秒'],['驅動','4MATIC+']],
-  [['年份','2020'],['引擎','2.5L Skyactiv-G'],['馬力','194 hp'],['0–100','8.9 秒'],['驅動','i-Activ 四驅']]
+  [['年份','1993'],['引擎','2.2L 直四'],['馬力','150 PS'],['0–100','10.5 秒'],['驅動','後驅']],
+  [['年份','2015–18'],['引擎','2.0L 直四'],['馬力','160 PS'],['0–100','7.3 秒'],['車重','1,000 kg'],['驅動','後驅']],
+  [['年份','2022'],['引擎','2.0L 直四渦輪'],['馬力','265 PS'],['0–100','6.4 秒'],['驅動','四驅']],
+  [['年份','2015'],['引擎','3.0L 直六渦輪'],['馬力','306 PS'],['0–100','6.5 秒'],['驅動','xDrive']],
+  [['年份','2021'],['引擎','3.0L V6 雙渦輪'],['馬力','406 PS'],['驅動','後驅或四驅']],
+  [['年份','2006–13'],['引擎','3.5L V6'],['馬力','272 PS'],['座位','6 座起'],['驅動','4MATIC']],
+  [['年份','2020'],['引擎','2.5L 直四'],['馬力','189 PS'],['驅動','前驅或四驅']],
+  [['年份','2024'],['引擎','5.0L V8'],['馬力','487 PS'],['驅動','後驅']],
+  [['年份','2018 起'],['引擎','4.0L V8 雙渦輪'],['馬力','639 PS'],['0–100','3.2 秒'],['驅動','4MATIC+']],
+  [['年份','2020'],['引擎','2.5L Skyactiv-G'],['馬力','194 PS'],['0–100','9.2 秒'],['驅動','i-Activ 四驅']]
 ];
 
 var N = CARS.length;
@@ -573,20 +582,22 @@ if(location.protocol==='file:'){ loader.classList.add('done'); fallback.style.di
 
 /* ---------- 版權 ---------- */
 document.getElementById('credits').innerHTML =
-  '3D 模型（CC BY）：' + CARS.map(function(c){
-    return '<a href="'+c.credit.u+'" target="_blank" rel="noopener">'+c.credit.t+'</a>';
-  }).join(' · ');
+  '3D 模型來源（皆經修改：重新上色、壓縮、遮蔽車牌）：' + CARS.map(function(c){
+    return '<a href="'+c.credit.u+'" target="_blank" rel="noopener">'+c.credit.t+'</a>（<a href="'+c.credit.lu+'" target="_blank" rel="noopener">'+c.credit.l+'</a>）';
+  }).join(' · ') + '。標示 CC BY-NC-SA 的模型，修改後的版本同樣以 CC BY-NC-SA 4.0 提供，僅限非商業使用。';
 
 /* ---------- 右側縮圖導覽（手機縮成圓點） ---------- */
 var dotsBox = document.getElementById('dots');
 CARS.forEach(function(c,i){
   var b=document.createElement('button');
-  b.innerHTML='<img src="thumb-'+c.file.replace('.glb','')+'.webp" alt="'+c.short+'"><span class="lb">'+c.short+'</span>';
+  b.setAttribute('aria-label', c.name);
+  b.innerHTML='<img src="thumb-'+c.file.replace('.glb','')+'.webp" alt=""><span class="lb">'+c.short+'</span>';
   b.onclick=function(){ goTo(i); };
   dotsBox.appendChild(b);
 });
 (function(){
   var b=document.createElement('button');
+  b.setAttribute('aria-label', '結尾：打造你的那一台');
   b.innerHTML='<i class="ic"><svg class="lic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg></i><span class="lb">Build Yours</span>';
   b.onclick=function(){ goTo(OUTRO); };
   dotsBox.appendChild(b);
@@ -655,6 +666,11 @@ function paintCar(mv, car){
         m.pbrMetallicRoughness.setBaseColorFactor(col);
         m.pbrMetallicRoughness.setMetallicFactor(0.6);
         m.pbrMetallicRoughness.setRoughnessFactor(0.38);
+      }
+      if(car.plateMats && car.plateMats.indexOf(n)>=0){   // 模型內建車牌字樣（模型商名稱）→ 壓成空白深色牌
+        m.pbrMetallicRoughness.setBaseColorFactor([0.05,0.055,0.06,1]);
+        m.pbrMetallicRoughness.setMetallicFactor(0.3);
+        m.pbrMetallicRoughness.setRoughnessFactor(0.5);
       }
     });
   }catch(e){}
@@ -750,6 +766,7 @@ function stopEngine(){ if(_eng){ try{ _eng.pause(); }catch(e){} _eng=null; } }
 function playEngine(i){
   if(!sndOn || i<0 || i>=N) return;
   stopEngine();
+  if(/^(mustang|cx5)[.]glb$/.test(CARS[i].file)) return;   // 這兩台沒有音檔，不發請求
   var a = new Audio('snd-'+CARS[i].file.replace(/\.glb$/i,'.mp3'));
   a.volume = 0.75;
   _eng = a;
