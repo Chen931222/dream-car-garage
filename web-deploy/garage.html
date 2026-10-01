@@ -207,6 +207,12 @@
   body.scene-dark #car-tag{ color:#8b97a3; }
   body.scene-dark .garage button{ color:#8b97a3; }
   body.scene-dark .garage button:hover, body.scene-dark .garage button.active{ color:#fff; }
+  /* 暗棚／夜晚：署名、分隔點、縮圖列換成深色版，維持 4.5:1 以上 */
+  body.scene-dark .credit{ background:rgba(10,11,13,.78); color:#b9bec5; }
+  body.scene-dark .credit a{ color:#d7dbe0; }
+  body.scene-dark .brand .sep{ color:#8b97a3; }
+  body.scene-dark .garage{ background:rgba(12,13,16,.72); }
+  body.scene-dark .garage button{ color:#aab3bd; }
 
   /* 覆蓋視窗：故事與規格 / 個人化 */
   .sheet{ position:absolute; inset:0; z-index:8; background:rgba(248,250,251,.72); backdrop-filter:blur(8px);
@@ -503,10 +509,10 @@ const OPTIONS = [
 ];
 // 車漆質感（改 metalness/roughness；avoid 太亮會放大低面數稜角）
 const FINISHES = [
-  { name:'亮面', metal:0.5,  rough:0.4  },
-  { name:'消光', metal:0.12, rough:0.82 },
-  { name:'金屬', metal:0.9,  rough:0.45 },
-  { name:'珍珠', metal:0.55, rough:0.26 },
+  { name:'亮面', metal:0.5,  rough:0.32, coat:1   },
+  { name:'消光', metal:0.12, rough:0.82, coat:0   },
+  { name:'金屬', metal:0.9,  rough:0.4,  coat:0.6 },
+  { name:'珍珠', metal:0.55, rough:0.26, coat:1   },
 ];
 // 一鍵配置套件：套用 車身色/質感/卡鉗/輪圈/選配（index 對應上面各陣列）
 const PACKAGES = [
@@ -516,7 +522,10 @@ const PACKAGES = [
 ];
 const SCENES = [
   // env = 真實 HDR 環境圖（Poly Haven CC0）：車漆反射真實光影，質感遠勝內建 neutral
-  { name:'攝影棚', bg:'radial-gradient(circle at 50% 38%, #fdfcf9 0%, #f2f0eb 60%, #e7e4dd 100%)', exposure:1.05, shadow:1.1, env:'env-studio.hdr' },
+  // 暗棚：深色背景＋同一張柔光箱 HDR，AgX 色調、接觸陰影加深（2026-10 攝影棚改版的預設）
+  { name:'暗棚', bg:'radial-gradient(ellipse 70% 42% at 50% 64%, #2a2b2e 0%, #17181a 55%, #0b0b0c 100%)', exposure:1.3, shadow:1.6, soft:0.35, env:'env-studio.hdr', dark:true, tone:'agx' },
+  // 白棚：淺色中性背景，看車色最準
+  { name:'白棚', bg:'radial-gradient(circle at 50% 38%, #fdfcf9 0%, #f2f0eb 60%, #e7e4dd 100%)', exposure:1.05, shadow:1.1, env:'env-studio.hdr' },
   { name:'夕陽',   bg:'linear-gradient(160deg, #ffe6bf 0%, #ffb583 45%, #b9795c 100%)',             exposure:1.15, shadow:1.3, env:'env-sunset.hdr' },
   { name:'夜晚',   bg:'linear-gradient(160deg, #1b2233 0%, #11151f 55%, #090c12 100%)',             exposure:2.2, shadow:1.6, env:'env-night.hdr', dark:true },
 ];
@@ -539,7 +548,7 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#5a6169','#1
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
@@ -591,7 +600,8 @@ const STORIES = [
 ];
 
 let activeCar = 0;
-const state = { ext:0, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, opts:[], finish:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[] };
+const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, opts:[], finish:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[] };
 
 const mv = document.getElementById('mv');
 
@@ -693,6 +703,7 @@ var LIC = {
 function applyScene(i){ state.scene=i; var s=SCENES[i]; document.body.style.background=s.bg;
   mv.setAttribute('exposure', s.exposure); mv.setAttribute('shadow-intensity', s.shadow);
   mv.setAttribute('environment-image', s.env || 'neutral');
+  mv.setAttribute('tone-mapping', s.tone || 'neutral'); mv.setAttribute('shadow-softness', s.soft || 0.6);
   document.body.classList.toggle('scene-dark', !!s.dark);
   if(typeof saveCfg==='function') saveCfg();
   var sb=document.getElementById('scene-btn'); if(sb) sb.innerHTML=LIC.scene+' '+s.name; }
@@ -1029,7 +1040,8 @@ function switchCar(i){
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
   _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation();
-  state.ext = 0; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.opts = []; state.finish = 0;
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.opts = []; state.finish = 0;
+  if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
   if (typeof interiorView !== 'undefined' && interiorView) exitInterior();
@@ -1105,6 +1117,8 @@ function onModelLoad(){
   bodySel.onchange = ()=>{ state.bodyMats = [+bodySel.value]; applyExterior(); };
   intSel.onchange  = ()=>{ state.intMats  = [+intSel.value];  applyInterior(); };
   if(carCfg && carCfg.calIdx!=null) state.caliperColor=carCfg.calIdx;  // 碟煞的車預設黑色（低調）
+  if(carCfg.realColor && state.extHex===null && state.ext===DEFAULT_EXT) state.extHex = carCfg.realColor.hex;   // 真的那台：預設用原車色
+  mats.forEach(function(m){ if(m.name==='tire'){ m.pbrMetallicRoughness.setBaseColorFactor([0.02,0.02,0.022,1]); m.pbrMetallicRoughness.setRoughnessFactor(0.85); } });
   applyExterior(); applyInterior(); applyCaliper(); applyWheel(); fixGlass(); hidePlates(); applyLights(); applyExhaust(); buildHotspots();
   if(typeof pendingCfg!=='undefined' && pendingCfg){
     var c=pendingCfg; pendingCfg=null;
@@ -1118,7 +1132,7 @@ function onModelLoad(){
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
   }
-  hideLoader();
+  refresh(); hideLoader();
 }
 // 用「模型物件是否換新」來判斷載入完成，比 load 事件更可靠
 // （eager + 本機檔案時，load 事件常在腳本掛上監聽器前就觸發了）
@@ -1199,6 +1213,8 @@ function applyExterior(){
     var f=(typeof FINISHES!=='undefined'&&FINISHES[state.finish])?FINISHES[state.finish]:{metal:0.5,rough:0.45};
     m.pbrMetallicRoughness.setMetallicFactor(f.metal);
     m.pbrMetallicRoughness.setRoughnessFactor(f.rough);
+    // 透明漆層：車漆上那一層亮光（攝影棚的長條高光就是打在這層）
+    if(m.setClearcoatFactor){ m.setClearcoatFactor(f.coat!=null ? f.coat : 0.8); if(m.setClearcoatRoughnessFactor) m.setClearcoatRoughnessFactor(0.06); }
   });
 }
 function applyInterior(){
@@ -1267,7 +1283,8 @@ function refresh(){
   (state.opts||[]).forEach(function(i){ if(OPTIONS[i]){ optTotal+=OPTIONS[i].add; optRows+=row('選配', OPTIONS[i].name); } });
   document.querySelectorAll('#opt-list input[type=checkbox]').forEach(function(cb){ cb.checked = (state.opts||[]).indexOf(+cb.dataset.i)>=0; });
   var _fb=document.getElementById('finish-row'); if(_fb) Array.prototype.forEach.call(_fb.children,function(x,xi){ x.className=(xi===state.finish?'active':''); });
-  const extName = state.extHex ? ('自訂 '+state.extHex) : EXTERIOR[state.ext].name;
+  var _rc = (activeCar>=0 && CARS[activeCar] && CARS[activeCar].realColor) || null;
+  const extName = state.extHex ? ((_rc && state.extHex===_rc.hex) ? _rc.name : ('自訂 '+state.extHex)) : EXTERIOR[state.ext].name;
   const intName = state.intHex ? ('自訂 '+state.intHex) : INTERIOR[state.int].name;
   const specs = (activeCar>=0 && SPECS[activeCar]) ? '<h3 style="margin-top:18px">車輛規格</h3>'+SPECS[activeCar].map(s=>'<div class="spec-row"><span>'+s[0]+'</span><span>'+s[1]+'</span></div>').join('')+'<p class="spec-src">規格來源：原廠技術資料、Wikipedia、auto-data.net，2026 年 9 月查核。找不到可靠來源的欄位不列。</p>' : '';
   document.getElementById('sec-sum').innerHTML =
