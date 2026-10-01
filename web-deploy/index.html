@@ -270,6 +270,8 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     color:#f5f2ea; transition:opacity .9s cubic-bezier(.4,0,.2,1);
   }
   #cinematic-intro.leaving{ opacity:0; pointer-events:none; }
+  /* 開場還蓋著的時候，底下的介面整個藏起來：看不到的按鈕不該能被 Tab 到；淡出時再顯示，才有交叉淡入 */
+  #cinematic-intro:not(.leaving) ~ *{ visibility:hidden; }
   #cinematic-intro video{
     position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
     object-position:center center; background:#000;
