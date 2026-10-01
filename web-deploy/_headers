@@ -1,0 +1,9 @@
+# 轉盤影格的網址帶版本號（?v=），可以放心快取久一點
+/tt/*
+  Cache-Control: public, max-age=2592000
+
+/dream-garage-opening.mp4
+  Cache-Control: public, max-age=86400
+
+/dream-garage-opening-720.mp4
+  Cache-Control: public, max-age=86400
