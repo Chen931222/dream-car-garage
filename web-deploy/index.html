@@ -16,7 +16,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 電影式展示">
-<meta property="og:description" content="一台真的，八台夢的。九台車的 3D 展示，滾動切換、鏡頭自動環繞，再進 360° 配置器配色、聽引擎聲、坐進車內。">
+<meta property="og:description" content="一台真的，八台夢的。九台車在攝影棚裡的 360° 轉盤，滾動換車、拖曳旋轉，再進配置器配色、聽引擎聲、坐進車內。">
 <meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/">
 <meta property="og:locale" content="zh_TW">
@@ -24,8 +24,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <meta name="twitter:title" content="我的夢想車庫 · 電影式展示">
 <meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 
-<!-- model-viewer：載入 .glb、光影反射；鏡頭由本頁引擎驅動 -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<!-- 車是 Blender 攝影棚預先渲染的 360 轉盤影格（每台 36 張、每 10° 一張），不用 model-viewer -->
 
 <!-- 每台車有專屬環境光：HDR 改在開場結束後才預抓（見 leaveIntro），開場期間不搶頻寬 -->
 
@@ -60,11 +59,14 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 
   /* ===== 3D 車（3 格輪替池） ===== */
   .car-viewer{
-    position:fixed; top:0; left:-12vw; width:124vw; height:100vh;
-    z-index:1; opacity:0; pointer-events:none;
-    --poster-color:transparent;
+    position:fixed; inset:0; z-index:1; opacity:0; pointer-events:none;
     will-change:opacity, transform;
   }
+  /* 影格邊緣用遮罩融進黑底：左右各留一段漸層，往旁邊挪也不會露出圖框 */
+  .car-viewer img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 56%;
+    -webkit-mask-image:radial-gradient(ellipse closest-side at 50% 56%, #000 58%, transparent 100%);
+            mask-image:radial-gradient(ellipse closest-side at 50% 56%, #000 58%, transparent 100%); }
+  body.dragging{ cursor:grabbing; }
 
   /* ===== 進度條（車輛進度） ===== */
   #progress-bar{
@@ -343,7 +345,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     #dots button.active{ background:var(--accent); box-shadow:0 0 8px var(--accent); transform:scale(1.3); }
     #dots button .lb{ display:none; }
     #hero-overlay{ top:9vh; }
-    .car-viewer{ left:0; width:100vw; }   /* 手機不做左右位移，畫布=螢幕寬，取景才不會被切 */
+    .car-viewer img{ inset:auto; top:20vh; left:50%; width:118vw; height:auto; aspect-ratio:16/9; transform:translateX(-50%); object-fit:fill; }   /* 手機直式：圖框跟影格一樣大，邊緣遮罩才會淡掉 */
     #panel{
       top:auto; bottom:3.5vh; left:4vw; right:4vw; width:auto; transform:none;
       padding:18px 20px; max-height:44vh; overflow-y:auto;
@@ -393,7 +395,6 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
     if(finished) return;
     finished=true;
     try{ sessionStorage.setItem('dg_intro_seen','1'); }catch(e){}
-    prefetchEnv();
     intro.classList.add('leaving');
     try{ video.pause(); }catch(e){}
     setTimeout(function(){ intro.remove(); },950);
@@ -417,7 +418,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
   });
   window.addEventListener('keydown',function(e){ if(e.key==='Escape') leaveIntro(); });
   var seen=false; try{ seen = sessionStorage.getItem('dg_intro_seen')==='1'; }catch(e){}
-  if(seen){ finished=true; try{ video.removeAttribute('autoplay'); video.preload='none'; video.pause(); }catch(e){} intro.remove(); prefetchEnv(); return; }
+  if(seen){ finished=true; try{ video.removeAttribute('autoplay'); video.preload='none'; video.pause(); }catch(e){} intro.remove(); return; }
   if(window.matchMedia && matchMedia('(min-width:681px)').matches) video.preload='auto';
   startIntro();
 })();
@@ -454,7 +455,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 
 <div id="dots"></div>
 
-<!-- 3 個 model-viewer 由 JS 建立 -->
+<!-- 3 個轉盤格子由 JS 建立 -->
 <div id="viewers"></div>
 
 <!-- 開場標題：固定在畫面上方，車在下方，不重疊 -->
@@ -599,35 +600,19 @@ CARS.forEach(function(c,i){
 })();
 var dots = dotsBox.children;
 
-/* ---------- 3 格輪替的 model-viewer 池 ----------
-   重要教訓：一頁疊超過 3 個 model-viewer 會凍死 Chrome 的渲染程序，
-   所以只建 3 個，car % 3 決定格子，相鄰三台必落在不同格。 */
-var SLOT_N = 3;
+/* ---------- 3 格輪替的轉盤池 ----------
+   每台車 36 張影格（tt/<車>/00..35.webp），切到哪台就預載哪台與前後一台。
+   影格 0 是前 3/4，往後每張車子轉 10°。 */
+var SLOT_N = 3, FR = 36;
 var viewerBox = document.getElementById('viewers');
 var slots = [];
+function frameURL(k, i){ return 'tt/'+CARS[k].file.replace(/\.glb$/i,'')+'/'+String(((i%FR)+FR)%FR).padStart(2,'0')+'.webp'; }
 (function(){
   for(var s=0;s<SLOT_N;s++){
-    var mv = document.createElement('model-viewer');
-    mv.className='car-viewer';
-    mv.setAttribute('loading','eager');   // 疊放的 fixed viewer 會騙過預設懶載入判定，一定要 eager
-    mv.setAttribute('interaction-prompt','none');
-    mv.setAttribute('shadow-intensity','0.9');
-    mv.setAttribute('shadow-softness','0.7');
-    mv.setAttribute('environment-image','neutral');
-    mv.setAttribute('exposure','1.05');
-    mv.setAttribute('tone-mapping','neutral');
-    mv.setAttribute('interpolation-decay','100');
-    mv.setAttribute('camera-orbit','-26deg 76deg 130%');
-    mv.setAttribute('field-of-view','30deg');
-    viewerBox.appendChild(mv);
-    var slot = { el:mv, car:-1, swapping:false, swapT:0 };
-    (function(slot){
-      slot.el.addEventListener('load', function(){
-        slot.swapping = false;
-        if(slot.car>=0) paintCar(slot.el, CARS[slot.car]);
-      });
-    })(slot);
-    slots.push(slot);
+    var el = document.createElement('div'); el.className='car-viewer'; el.setAttribute('aria-hidden','true');
+    var a = document.createElement('img'); a.className='a'; a.alt=''; a.decoding='async'; a.draggable=false;
+    el.appendChild(a); viewerBox.appendChild(el);
+    slots.push({ el:el, a:a, car:-1, loaded:false, got:0, ia:-1 });
   }
 })();
 function slotFor(k){ return slots[((k%SLOT_N)+SLOT_N)%SLOT_N]; }
@@ -635,19 +620,37 @@ function assignSlot(k){
   if(k<0||k>=N) return;
   var s = slotFor(k);
   if(s.car===k) return;
-  s.car = k;
-  s.swapping = true;    // src 換掉後 model-viewer 會先繼續畫舊車，載好前不能露臉
-  s.swapT = Date.now();
-  var c = CARS[k];
+  s.car = k; s.loaded = false; s.got = 0; s.ia = -1;
   s.el.style.opacity = 0;
-  s.el.setAttribute('alt', c.name);
-  s.el.setAttribute('orientation','0deg '+(c.pitch||0)+'deg 0deg');
-  var E = ENVS[c.env] || ENVS.studio;            // 每台車專屬環境光
-  s.el.setAttribute('environment-image', E.file);
-  s.el.setAttribute('exposure', E.exp);
-  s.el.setAttribute('shadow-intensity', E.shadow);
-  s.el.setAttribute('src', c.file);
+  for(var i=0;i<FR;i++){
+    (function(i, kk){
+      var im = new Image();
+      im.onload = im.onerror = function(){
+        if(s.car!==kk) return;
+        s.got++;
+        if(kk===0 && s===slots[0]) setLoadPct(s.got/FR);
+        if(s.got>=FR) s.loaded = true;
+      };
+      im.src = frameURL(kk, i);
+    })(i, k);
+  }
 }
+/* 停留角度：車頭朝文字卡的反方向。偶數台文字卡在左 → 影格 7（車頭朝右）；奇數台文字卡在右 → 影格 0（車頭朝左） */
+function baseFrame(k){ return (k%2===0) ? 7 : 0; }
+function showFrame(s, i){
+  i = ((i%FR)+FR)%FR;
+  if(s.ia!==i){ s.a.src = frameURL(s.car, i); s.ia = i; }
+}
+/* 拖曳旋轉（滑鼠或觸控水平拖）：放開後車停在新的角度，自動環繞從那裡接著轉 */
+var userRot = 0, _dragX = null, _dragRot = 0;
+window.addEventListener('pointerdown', function(e){
+  if(e.target.closest && e.target.closest('#panel, #topbar, #dots, #outro-panel, #cinematic-intro, a, button')) return;
+  if(step>=N || heroActive) return;
+  _dragX = e.clientX; _dragRot = userRot; document.body.classList.add('dragging');
+});
+window.addEventListener('pointermove', function(e){ if(_dragX!==null) userRot = _dragRot - (e.clientX - _dragX) / 24; });   // 每拖 24px 轉一格（10°）
+window.addEventListener('pointerup', function(){ _dragX = null; document.body.classList.remove('dragging'); });
+window.addEventListener('pointercancel', function(){ _dragX = null; document.body.classList.remove('dragging'); });
 /* 上漆（sRGB → linear） */
 function s2l(c){ c/=255; return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
 function paintCar(mv, car){
@@ -800,7 +803,7 @@ function goTo(n){
   prevStep = step;
   prevT = stepT;
   step = n;
-  stepT = 0; transT = 0;
+  stepT = 0; transT = 0; userRot = 0;
   lastNav = performance.now();
   if(heroActive) dismissHero();
   applyTheme(step);
@@ -845,31 +848,28 @@ function tick(now){
   for(var s=0;s<SLOT_N;s++){
     var slot = slots[s];
     if(slot.car<0){ slot.el.style.opacity=0; continue; }
-    /* 換車保險絲：load 事件沒來但 loaded 為真且超過 1.5 秒，視同完成 */
-    if(slot.swapping && slot.el.loaded && Date.now()-slot.swapT>1500){
-      slot.swapping=false; paintCar(slot.el, CARS[slot.car]);
-    }
-    if(slot.swapping || !slot.el.loaded){ slot.el.style.opacity=0; continue; }
+    if(!slot.loaded){ slot.el.style.opacity=0; continue; }
 
-    var op=0, cam=null;
+    var op=0, frame=null, sc=1;
     if(slot.car===showCar){
-      cam = camFor(slot.car, stepT);
-      if(isMobile()) cam.r += 8;                         // 窄螢幕再稍微拉遠一點點
-
-      op = (transT<FLY_SEC) ? easeOut(transT/FLY_SEC) : 1;
-      if(step===OUTRO){ op = 0.45; cam.r += 30; }        // 結尾：拉遠變背景
+      var e = easeOut(transT/FLY_SEC);
+      var sweep = (transT<FLY_SEC) ? Math.round((1-e)*6) : 0;          // 到站：6 格快速掃進定位
+      frame = baseFrame(slot.car) - sweep*(slot.car%2===0 ? 1 : -1) + Math.round(userRot);
+      sc = (isMobile() ? 0.9 + 0.1*e : 0.74 + 0.08*e) + Math.min(stepT, 30)*0.001;   // 推近，停留時再極慢推近；桌面縮小讓出文字卡
+      op = (transT<FLY_SEC) ? e : 1;
+      if(step===OUTRO){ op = 0.3; sc = isMobile() ? 0.92 : 0.7; }       // 結尾：拉遠變背景
     } else if(slot.car===prevStep && prevStep<N && transT<FLY_SEC*0.7){
       var eo = transT/(FLY_SEC*0.7);
-      cam = camFor(slot.car, prevT + transT);             // 沿著原本的環繞姿態繼續轉
-      cam.r += eo*70;                                     // 往後拉遠離場
+      frame = slot.ia;                                                  // 離場：維持原角度，縮小淡出
+      sc = 1 - 0.1*eo;
       op = 1-easeOut(eo);
     }
-    if(cam){
-      var xs = (isMobile()||heroActive) ? 0 : (slot.car%2===0 ? 8 : -8);   // 桌面：車閃開文字卡；手機/開場置中
-      var ys = heroActive ? 7 : (isMobile() ? -6 : 0);                      // 開場車往下讓標題、手機車往上讓底卡
+    if(frame!==null){
+      var xs = (isMobile()||heroActive) ? 0 : (slot.car%2===0 ? 7 : -7);   // 桌面：車閃開文字卡；手機/開場置中
+      var ys = heroActive ? 6 : (isMobile() ? 2 : 0);                       // 開場車往下讓標題；手機車放在頂欄與底卡之間
       slot.el.style.opacity = op.toFixed(3);
-      slot.el.style.transform = 'translate('+xs+'vw,'+ys+'vh)';
-      slot.el.cameraOrbit = cam.th.toFixed(2)+'deg '+cam.ph.toFixed(2)+'deg '+cam.r.toFixed(1)+'%';
+      slot.el.style.transform = 'translate('+xs+'vw,'+ys+'vh) scale('+sc.toFixed(4)+')';
+      showFrame(slot, frame);
     } else {
       slot.el.style.opacity = 0;
     }
@@ -939,17 +939,15 @@ document.getElementById('btn-restart').onclick = function(e){ e.preventDefault()
 applyTheme(0);
 showCard(0, 0, true);   // 預先放好第一台的介紹卡（開場收掉後立刻能用）
 assignSlot(0); assignSlot(1);
-slots[0].el.addEventListener('progress', function(e){
-  if(slots[0].car!==0) return;
-  var pct = Math.round(e.detail.totalProgress*100);
+function setLoadPct(p){
+  var pct = Math.round(p*100);
   document.getElementById('load-bar').style.width = pct+'%';
   document.getElementById('load-pct').textContent = '載入車庫 '+pct+'%';
-});
-slots[0].el.addEventListener('error', function(){ loader.classList.add('done'); fallback.style.display='flex'; });
+}
 var waited=0;
 var poll=setInterval(function(){
   waited+=300;
-  if(slots[0].el.loaded){
+  if(slots[0].loaded){
     clearInterval(poll);
     document.getElementById('load-bar').style.width='100%';
     loader.classList.add('done');
