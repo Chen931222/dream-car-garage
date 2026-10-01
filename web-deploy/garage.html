@@ -9,13 +9,13 @@
 <!-- 分享預覽卡（貼到 LINE / FB 時顯示標題＋縮圖）-->
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 360° 環景配置器">
-<meta property="og:description" content="10 台夢想車，自由配色、換內裝、聽引擎聲，還能用手機 AR 在你家看車。">
+<meta property="og:description" content="9 台車，自由配色、換內裝、聽引擎聲，還能用手機 AR 在你家看車。">
 <meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/garage">
 <meta property="og:locale" content="zh_TW">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="我的夢想車庫 · 360° 環景配置器">
-<meta name="twitter:description" content="10 台夢想車，自由配色、換內裝、聽引擎聲，還能用手機 AR 在你家看車。">
+<meta name="twitter:description" content="9 台車，自由配色、換內裝、聽引擎聲，還能用手機 AR 在你家看車。">
 <meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 
 <!-- model-viewer：Google 的 3D 模型網頁元件，負責載入 .glb、360 旋轉、光影與反射 -->
@@ -306,7 +306,7 @@
   <div id="lobby">
     <div class="lobby-kick">DREAM GARAGE</div>
     <div class="lobby-title">我的夢想車庫</div>
-    <div class="lobby-sub">一台真的，九台夢的。選一台開始配置。</div>
+    <div class="lobby-sub">一台真的，八台夢的。選一台開始配置。</div>
     <div class="lobby-nav">
       <a href="intro.html"><svg class="lic" viewBox="0 0 24 24"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg> 功能導覽</a>
       <a href="sources.html"><svg class="lic" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg> 來源與修改紀錄</a>
@@ -527,7 +527,6 @@ const SPECS = [
   [['年份','2022'],['引擎','2.0L 直列四缸渦輪'],['馬力','265 PS'],['0–100 km/h','約 6.4 秒'],['驅動','四輪驅動']],
   [['年份','2015（xDrive35i）'],['引擎','3.0L 直六渦輪'],['馬力','306 PS'],['0–100 km/h','約 6.5 秒'],['驅動','xDrive 四驅']],
   [['年份','2021'],['引擎','3.0L V6 雙渦輪'],['馬力','406 PS（400 hp）'],['驅動','後驅或四驅']],
-  [['年份','2006–2013'],['引擎','3.5L V6'],['馬力','272 PS'],['0–100 km/h','約 8.1–8.3 秒（依軸距）'],['座位','6 座（2007 起可選 5–7 座）'],['驅動','4MATIC 四驅']],
   [['年份','2020'],['引擎','2.5L 直列四缸'],['馬力','189 PS（186 hp）'],['驅動','前驅或四驅']],
   [['年份','2024（S650 世代）'],['引擎','5.0L V8 自然進氣'],['馬力','487 PS（480 hp）'],['變速','6 速手排／10 速自排'],['驅動','後輪驅動']],
   [['年份','2018 起（X290 世代）'],['引擎','4.0L V8 雙渦輪'],['馬力','639 PS'],['0–100 km/h','約 3.2 秒（原廠宣稱）'],['變速','AMG 9 速'],['驅動','4MATIC+ 四驅']],
@@ -536,7 +535,7 @@ const SPECS = [
 const BASE_PRICE = 0;                       // 經典老車就不標原廠價了，純算選配
 // 每台車的主題強調色（比首頁的亮色版更深，亮背景上才夠力）
 // 注意：一定要宣告在 buildGarage() 首次呼叫之前，const 不會 hoist
-const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#3d5a96','#5a6169','#1257a4','#1f7a5f','#8e3b2e'];
+const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#5a6169','#1257a4','#1f7a5f','#8e3b2e'];
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
@@ -550,8 +549,6 @@ const CARS = [
     credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'disk', calIdx:1,
     credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'Mercedes-Benz R350（W251）',  short:'R350', file:'r350.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'rclassnotorious_bodyP', interior:/interiorssss|prim_int|secondary_interior|perf_in|alckant/i, wheel:'rclassnotorious_wheel123',
-    credit:{ t:'Mercedes-Benz R-Class by Gerda (koelkastasbers)', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31', l:'Sketchfab 標準授權', lu:'https://sketchfab.com/licenses' } },
   { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
@@ -564,8 +561,8 @@ const CARS = [
 ];
 // 每台車的故事 / 副標 / 亮點（顯示在中央副標 + 「故事與規格」視窗）
 const STORIES = [
-  { tag:'第一代 C-Class · 十台裡唯一真的那台', sub:'Mercedes-Benz 第一代 C-Class（1993）· 我的車',
-    story:'十台裡只有這台是我自己的車。第一代 C-Class，2.2L 直四、後驅。畫面上的模型不是我的車本人；內裝是我在 Blender 裡重新拆成 33 個零件、上了 6 種材質做的，進車內可以看到儀表和胡桃木飾板。',
+  { tag:'第一代 C-Class · 九台裡唯一真的那台', sub:'Mercedes-Benz 第一代 C-Class（1993）· 我的車',
+    story:'九台裡只有這台是我自己的車。第一代 C-Class，2.2L 直四、後驅。畫面上的模型不是我的車本人；內裝是我在 Blender 裡重新拆成 33 個零件、上了 6 種材質做的，進車內可以看到儀表和胡桃木飾板。',
     hi:['我的車','第一代 C-Class','後輪驅動','2.2L 直四'] },
   { tag:'雙座敞篷跑車', sub:'Mazda MX-5 · ND 世代前期',
     story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅。Roadster 從 1989 年到現在，配方一直是輕、小、後驅。',
@@ -579,9 +576,6 @@ const STORIES = [
   { tag:'性能房車', sub:'Infiniti Q50 Red Sport 400',
     story:'3.0L 雙渦輪 V6，原廠標 400 hp（約 406 PS）。外觀和一般 Q50 幾乎一樣。模型作者自己標註了「不完全準確」。',
     hi:['400 hp','雙渦輪 V6','後驅或四驅','可進車內'] },
-  { tag:'三排座 MPV', sub:'Mercedes-Benz R-Class · W251 世代 4MATIC',
-    story:'賓士少見的豪華 MPV。早期是三排六座，2007 年起可選五到七座；3.5L V6 配 4MATIC 四驅。這台模型的授權不允許再散布，之後會換掉。',
-    hi:['三排座椅','4MATIC 四驅','3.5L V6','待替換'] },
   { tag:'掀背車', sub:'Mazda 3 · 2020 年式掀背（第四代）',
     story:'2020 年式，2.5L 直四，美規 186 hp。第四代把腰線拿掉，車側只靠鈑件曲面反射光影。',
     hi:['2.5L 直四','前驅或四驅','第四代','可進車內'] },
@@ -781,7 +775,7 @@ lightsBtn.onclick=function(){ state.lights=!state.lights; applyLights(); applyEx
 
 /* 引擎啟動音效：播 snd-<檔名>.mp3（Freesound／Commons 的授權錄音，出處見 sources.html）。
    多數不是同款車，SND_NOTE 寫出錄音實際是哪台車，提示時照實顯示。 */
-var SND_NOTE = {"w202": "90 年代 C-Class 實錄", "mx5": "初代 MX-5 錄音，不是 ND", "macan": "VW Golf GTI 2.0 渦輪，同系列引擎，不是 Macan", "x5": "1988 BMW 320 直六，不是 N55", "q50": "Nissan VQ35 V6，不是 VR30", "r350": "Mercedes E320 V6，上一代引擎", "mazda3": "Mazda 3 錄音，世代不明", "mustang": "Mustang V8，世代不明", "gt43": "S63 AMG 雙渦輪 V8，不是 GT 63", "cx5": "2015 CX-5 車內錄音"};
+var SND_NOTE = {"w202": "90 年代 C-Class 實錄", "mx5": "初代 MX-5 錄音，不是 ND", "macan": "VW Golf GTI 2.0 渦輪，同系列引擎，不是 Macan", "x5": "1988 BMW 320 直六，不是 N55", "q50": "Nissan VQ35 V6，不是 VR30", "mazda3": "Mazda 3 錄音，世代不明", "mustang": "Mustang V8，世代不明", "gt43": "S63 AMG 雙渦輪 V8，不是 GT 63", "cx5": "2015 CX-5 車內錄音"};
 var _engineAudio=null;
 function stopEngine(){ if(_engineAudio){ try{ _engineAudio.pause(); }catch(e){} _engineAudio=null; } }
 function playEngine(){

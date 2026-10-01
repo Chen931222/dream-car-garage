@@ -16,7 +16,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 電影式展示">
-<meta property="og:description" content="一台真的，九台夢的。十台車的 3D 展示，滾動切換、鏡頭自動環繞，再進 360° 配置器配色、聽引擎聲、坐進車內。">
+<meta property="og:description" content="一台真的，八台夢的。九台車的 3D 展示，滾動切換、鏡頭自動環繞，再進 360° 配置器配色、聽引擎聲、坐進車內。">
 <meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/">
 <meta property="og:locale" content="zh_TW">
@@ -461,7 +461,7 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <div id="hero-overlay">
   <div class="kick">DREAM GARAGE</div>
   <h1>我的夢想車庫</h1>
-  <div class="sub">一 台 真 的 ， 九 台 夢 的</div>
+  <div class="sub">一 台 真 的 ， 八 台 夢 的</div>
 </div>
 <div id="hint">滾動 / 滑動 切換車輛<span class="arrow"></span></div>
 
@@ -472,9 +472,9 @@ if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)){
 <div id="outro-panel">
   <div class="kicker">Build Yours</div>
   <h2>換你配一台</h2>
-  <p>十台車，自由配色、換輪圈、聽引擎聲，多數車還能坐進車內。</p>
+  <p>九台車，自由配色、換輪圈、聽引擎聲，多數車還能坐進車內。</p>
   <a class="cta" href="garage.html">進入 360° 配置器</a>
-  <a class="src-link" href="sources.html">十台車從哪來、我動了什麼 →</a>
+  <a class="src-link" href="sources.html">九台車從哪來、我動了什麼 →</a>
   <a class="cta ghost" href="#" id="btn-restart">重看一次</a>
   <div class="credits" id="credits"></div>
 </div>
@@ -512,9 +512,6 @@ var CARS = [
   { file:'q50.glb',     short:'Q50',     name:'2021 Infiniti Q50 Red Sport 400', pitch:0, env:'night',
     body:/carpaint/i, paint:'#aeb4bb', accent:'#d4363c',
     credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { file:'r350.glb',    short:'R350',    name:'Mercedes-Benz R350（W251）', pitch:0, env:'sunset',
-    body:'rclassnotorious_bodyP', paint:'#1b2c4d', accent:'#8fa8d8',
-    credit:{ t:'Mercedes-Benz R-Class by Gerda (koelkastasbers)', u:'https://sketchfab.com/3d-models/mercedes-benz-r-class-d68a20ea5fac4e0897b7fb978fdf6e31', l:'Sketchfab 標準授權', lu:'https://sketchfab.com/licenses' } },
   { file:'mazda3.glb',  short:'Mazda 3', name:'2020 Mazda 3 掀背', pitch:0, env:'studio',
     body:'Mazda_3MI_1218030001_089', paint:'#62686e', accent:'#c9cdd2',
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
@@ -529,8 +526,8 @@ var CARS = [
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } }
 ];
 var STORIES = [
-  { kick:'Mercedes-Benz · 1993 · 我的車', tag:'第一代 C-Class，十台裡唯一真的那台', title:'真的那一台',
-    story:'十台裡只有這台是我自己的車。其他九台是夢，這一台要自己洗。',
+  { kick:'Mercedes-Benz · 1993 · 我的車', tag:'第一代 C-Class，九台裡唯一真的那台', title:'真的那一台',
+    story:'九台裡只有這台是我自己的車。其他八台是夢，這一台要自己洗。',
     story2:'畫面上的 3D 模型不是我的車本人，是網路上的 CC BY 模型。內裝是我在 Blender 裡重新拆零件、上材質做的。' },
   { kick:'Mazda · ND', tag:'雙座敞篷跑車', title:'一噸重的敞篷',
     story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅。',
@@ -544,9 +541,6 @@ var STORIES = [
   { kick:'Infiniti · Red Sport 400', tag:'性能房車', title:'看不出來的 400 hp',
     story:'3.0L 雙渦輪 V6，原廠標 400 hp。',
     story2:'外觀和一般 Q50 幾乎一樣。這台模型的作者自己也標註了「不完全準確」。' },
-  { kick:'Mercedes-Benz · W251', tag:'三排座 MPV', title:'三排座的賓士',
-    story:'3.5L V6、4MATIC 四驅，早期是三排六座。',
-    story2:'這台模型的授權不允許再散布，之後會換掉。' },
   { kick:'Mazda · 第四代', tag:'掀背車', title:'沒有腰線的掀背',
     story:'2020 年式，2.5L 直四，美規 186 hp。',
     story2:'第四代把腰線拿掉，車側只靠鈑件曲面反射光影。' },
@@ -566,7 +560,6 @@ var SPECS = [
   [['年份','2022'],['引擎','2.0L 直四渦輪'],['馬力','265 PS'],['0–100','6.4 秒'],['驅動','四驅']],
   [['年份','2015'],['引擎','3.0L 直六渦輪'],['馬力','306 PS'],['0–100','6.5 秒'],['驅動','xDrive']],
   [['年份','2021'],['引擎','3.0L V6 雙渦輪'],['馬力','406 PS'],['驅動','後驅或四驅']],
-  [['年份','2006–13'],['引擎','3.5L V6'],['馬力','272 PS'],['座位','6 座起'],['驅動','4MATIC']],
   [['年份','2020'],['引擎','2.5L 直四'],['馬力','189 PS'],['驅動','前驅或四驅']],
   [['年份','2024'],['引擎','5.0L V8'],['馬力','487 PS'],['驅動','後驅']],
   [['年份','2018 起'],['引擎','4.0L V8 雙渦輪'],['馬力','639 PS'],['0–100','3.2 秒'],['驅動','4MATIC+']],
@@ -599,7 +592,7 @@ CARS.forEach(function(c,i){
 });
 (function(){
   var b=document.createElement('button');
-  b.setAttribute('aria-label', '結尾：打造你的那一台');
+  b.setAttribute('aria-label', '結尾：換你配一台');
   b.innerHTML='<i class="ic"><svg class="lic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg></i><span class="lb">Build Yours</span>';
   b.onclick=function(){ goTo(OUTRO); };
   dotsBox.appendChild(b);
