@@ -23,7 +23,7 @@
 - `web-deploy/snd-*.mp3`：引擎聲，4–8 秒
 - `web-deploy/env-*.hdr`：三張環境光
 - `web-deploy/dream-garage-opening.mp4`：開場影片，1080p、10.8 秒
-- 根目錄的 `dream-car.html`、`w202-3d-scroll.html` 等是早期的開發版本，沒有部署
+- 根目錄的 `dream-car.html` 是早期的單檔開發版本，沒有部署
 
 ## 幾個做法
 

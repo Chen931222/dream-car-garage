@@ -20,3 +20,18 @@ glb-backup-nodraco/
 
 # 打包產物
 *.zip
+
+# 本機開發殘渣（2026-08-24 已從版本庫移除，只留在本機）
+/fixds.mjs
+/gen-thumbs.mjs
+/index.html
+/mustang-thumb.jpg
+/mustang.json
+/package.json
+/package-lock.json
+/thumb-save-server.py
+/thumb-server.js
+/thumburl.txt
+/w202-3d-scroll.html
+/*.bat
+/backups/
