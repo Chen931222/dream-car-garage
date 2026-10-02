@@ -83,10 +83,9 @@ window.__dgFonts = function(){
   /* ===== 進度條（車輛進度） ===== */
   #progress-bar{
     position:fixed; top:0; left:0; width:100%; height:2px; z-index:40;
-    background:linear-gradient(90deg, var(--accent), #fff3);
+    height:1px; background:var(--accent);
     transform-origin:left center; transform:scaleX(0);
-    transition:transform .7s cubic-bezier(.3,.7,.3,1);
-    box-shadow:0 0 10px var(--accent);
+    transition:transform .8s cubic-bezier(.22,1,.36,1);
   }
 
   /* ===== 頂欄 ===== */
@@ -95,22 +94,21 @@ window.__dgFonts = function(){
     display:flex; justify-content:space-between; align-items:center;
     padding:20px 30px; pointer-events:none;
   }
-  #topbar .brand{ font-size:13px; letter-spacing:.28em; color:var(--text); }
-  #topbar .brand b{ font-weight:500; }
+  #topbar .brand{ font-size:13px; letter-spacing:.04em; color:var(--text); display:flex; align-items:center; gap:8px; }
+  #topbar .brand b{ font-family:"Noto Serif TC",Georgia,serif; font-weight:500; font-size:16px; letter-spacing:.06em; }
   #topbar .tools{ display:flex; gap:8px; }
   #topbar .tools > *{
-    pointer-events:auto; font-family:inherit; font-size:12.5px; letter-spacing:.12em; text-decoration:none;
-    color:var(--text); border:1px solid rgba(255,255,255,.22); border-radius:30px;
-    padding:9px 18px; background:rgba(10,11,13,.4); backdrop-filter:blur(8px);
-    cursor:pointer; transition:.2s;
+    pointer-events:auto; font-family:inherit; font-size:14px; font-weight:400; letter-spacing:.02em; text-decoration:none;
+    color:var(--text); border:none; border-bottom:1px solid transparent; border-radius:0;
+    min-height:40px; padding:0 4px; background:none; display:inline-flex; align-items:center; gap:6px;
+    cursor:pointer; transition:border-color .2s, color .2s;
   }
-  #topbar .tools > *:hover{ border-color:var(--accent); color:var(--accent); }
-  #btn-auto.on, #btn-snd.on{ border-color:var(--accent); color:var(--accent); box-shadow:0 0 12px color-mix(in srgb, var(--accent) 40%, transparent); }
+  #topbar .tools{ gap:22px; }
+  #topbar .tools > *:hover{ border-bottom-color:var(--accent); }
+  #btn-auto.on, #btn-snd.on{ color:var(--accent); }
   /* Lucide 內嵌 icon（取代 emoji） */
   svg.lic{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2;
     stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; }
-  @keyframes licWiggle{ 0%,100%{ transform:rotate(0) } 30%{ transform:rotate(-14deg) } 65%{ transform:rotate(9deg) } }
-  #topbar .tools > *:hover svg.lic{ animation:licWiggle .55s ease; transform-origin:50% 50%; }
 
   /* ===== 右側車輛縮圖導覽（手機縮成圓點） ===== */
   #dots{
@@ -127,8 +125,7 @@ window.__dgFonts = function(){
   #dots button .ic{ font-style:normal; font-size:15px; line-height:1; }
   #dots button:hover{ opacity:.9; }
   #dots button.active{
-    opacity:1; border-color:var(--accent); transform:scale(1.08);
-    box-shadow:0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+    opacity:1; border-color:var(--accent);
   }
   #dots button .lb{
     position:absolute; right:calc(100% + 10px); top:50%; transform:translateY(-50%);
@@ -145,38 +142,29 @@ window.__dgFonts = function(){
     transition:opacity .7s ease, transform .7s ease;
   }
   #hero-overlay.gone{ opacity:0; transform:translateY(-30px); }
-  #hero-overlay .kick{ font-size:12px; letter-spacing:.6em; text-indent:.6em; color:var(--accent); margin-bottom:14px; }
+  #hero-overlay .kick{ font-size:12px; letter-spacing:.24em; text-indent:.24em; color:var(--accent); margin-bottom:14px; }
   #hero-overlay h1{
     font-family:"Noto Serif TC",Georgia,serif; font-weight:300;
-    font-size:clamp(30px, 5.2vw, 56px); letter-spacing:.1em;
+    font-size:clamp(34px, 5.6vw, 72px); letter-spacing:.03em; line-height:1.15;
   }
-  #hero-overlay .sub{ font-size:clamp(12px, 1.4vw, 15px); color:#c2beb5; margin-top:12px; letter-spacing:.24em; text-shadow:0 1px 8px rgba(0,0,0,.6); }
+  #hero-overlay .sub{ font-size:clamp(15px, 1.5vw, 18px); color:#c2beb5; margin-top:14px; letter-spacing:.04em; }
   #hint{
     position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:20;
-    color:var(--dim); font-size:11.5px; letter-spacing:.4em; text-indent:.4em;
+    color:var(--dim); font-size:13px; letter-spacing:.06em;
     text-align:center; transition:opacity .5s;
   }
   #hint .arrow{
     display:block; margin:10px auto 0; width:1px; height:30px;
-    background:linear-gradient(180deg, var(--accent), transparent);
-    animation:drip 2s ease-in-out infinite;
-  }
-  @keyframes drip{
-    0%{ transform:scaleY(0); transform-origin:top; opacity:1; }
-    60%{ transform:scaleY(1); transform-origin:top; opacity:1; }
-    100%{ transform:scaleY(1); transform-origin:top; opacity:0; }
+    background:var(--accent); opacity:.6;
   }
 
   /* ===== 文字卡：桌面在側邊、手機在底部 ===== */
   #panel{
     position:fixed; z-index:10; top:50%; transform:translateY(-50%);
     left:6vw; width:min(420px, 38vw);
-    padding:26px 28px;
-    border:1px solid color-mix(in srgb, var(--accent) 26%, transparent);
-    border-radius:6px;
-    background:linear-gradient(160deg, rgba(14,14,17,.78), rgba(14,14,17,.55));
-    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    box-shadow:0 20px 56px rgba(0,0,0,.5);
+    padding:28px 30px 24px;
+    border-radius:2px;
+    background:rgba(12,12,13,.9);
     opacity:0; pointer-events:none;
     transition:opacity .5s ease;
     cursor:pointer;
@@ -184,47 +172,38 @@ window.__dgFonts = function(){
   #panel.show{ opacity:1; pointer-events:auto; }
   #panel.side-right{ left:auto; right:max(6vw, 88px); text-align:right; }  /* 至少讓出右側縮圖欄 */
   #panel .kicker{
-    font-size:11.5px; letter-spacing:.44em; color:var(--accent);
-    text-transform:uppercase; margin-bottom:12px;
+    font-size:13px; letter-spacing:.04em; color:var(--accent); margin-bottom:14px;
   }
   #panel h2{
     font-family:"Noto Serif TC",Georgia,serif;
     font-size:clamp(24px, 3.6vw, 40px); font-weight:300; line-height:1.3; margin-bottom:10px;
   }
-  #panel h2 em{
-    font-style:normal;
-    background:linear-gradient(120deg, #fff, var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, #000));
-    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-  }
-  #panel p{ font-size:clamp(13px, 1.3vw, 15px); line-height:2; color:var(--dim); }
-  #panel .divider{ width:54px; height:1px; margin:14px 0;
-    background:linear-gradient(90deg, var(--accent), transparent); }
-  #panel.side-right .divider{ margin-left:auto; background:linear-gradient(270deg, var(--accent), transparent); }
+  #panel h2 em{ font-style:normal; font-weight:500; }
+  #panel p{ font-size:clamp(15px, 1.2vw, 16px); line-height:1.9; color:#a29d93; }
+  #panel .divider{ width:40px; height:1px; margin:16px 0; background:var(--accent); }
+  #panel.side-right .divider{ margin-left:auto; }
   #panel .inner{ transition:opacity .35s ease; }
   #panel .inner.fading{ opacity:0; }
 
   .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 4px; }
   #panel.side-right .chips{ justify-content:flex-end; }
-  .chips span{
-    font-size:11.5px; color:var(--text); letter-spacing:.04em;
-    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.13);
-    padding:5px 12px; border-radius:30px;
-  }
-  .chips span b{ font-weight:400; color:var(--accent); margin-right:5px; }
+  /* 規格：車誌的資料框 */
+  .specs{ border-top:1px solid rgba(236,233,226,.16); margin:4px 0 6px; text-align:left; }
+  .specs div{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:8px 0; border-bottom:1px solid rgba(236,233,226,.16); }
+  .specs dt{ font-size:14px; color:#a29d93; }
+  .specs dd{ font-family:"Noto Serif TC",Georgia,serif; font-weight:500; font-size:17px; color:var(--text); }
 
   .cta{
     display:inline-block; margin-top:16px; text-decoration:none;
-    font-size:13px; letter-spacing:.14em; color:#0d0d10; font-weight:500;
-    background:linear-gradient(120deg, #fff, var(--accent));
-    border-radius:30px; padding:11px 24px; transition:.2s;
-    box-shadow:0 6px 26px color-mix(in srgb, var(--accent) 40%, transparent);
+    font-size:15px; letter-spacing:.02em; color:#121008; font-weight:500;
+    background:var(--accent); border-radius:2px; padding:13px 22px; transition:filter .2s;
   }
-  .cta:hover{ filter:brightness(1.1); transform:translateY(-1px); }
+  .cta:hover{ filter:brightness(1.08); }
   .cta.ghost{
-    color:var(--text); background:none; border:1px solid rgba(255,255,255,.3);
-    box-shadow:none; margin-left:10px;
+    color:var(--text); background:none; border-radius:0; padding:13px 2px 4px;
+    border-bottom:1px solid rgba(255,255,255,.28); margin-left:22px;
   }
-  .cta.ghost:hover{ border-color:var(--accent); color:var(--accent); }
+  .cta.ghost:hover{ border-bottom-color:var(--accent); filter:none; }
 
   /* 卡片輪播指示（3 條小槓）＋提示 */
   #card-dots{ display:flex; gap:6px; margin-top:18px; }
@@ -237,27 +216,22 @@ window.__dgFonts = function(){
     content:''; position:absolute; left:0; top:0; bottom:0; width:100%;
     background:var(--accent); transform-origin:left; transform:scaleX(var(--p,0));
   }
-  #panel .tap-hint{ font-size:11px; color:#8d8a82; letter-spacing:.1em; margin-top:8px; }
+  #panel .tap-hint{ font-size:13px; color:#8d8a82; margin-top:10px; }
 
   /* ===== 結尾卡 ===== */
   #outro-panel{
     position:fixed; z-index:10; top:50%; left:50%; transform:translate(-50%,-50%);
     width:min(560px, 90vw); text-align:center;
-    padding:34px 34px 26px;
-    border:1px solid color-mix(in srgb, var(--accent) 26%, transparent);
-    border-radius:6px;
-    background:linear-gradient(160deg, rgba(14,14,17,.8), rgba(14,14,17,.6));
-    backdrop-filter:blur(10px);
-    box-shadow:0 20px 56px rgba(0,0,0,.5);
+    padding:38px 36px 30px;
+    border-radius:2px;
+    background:rgba(12,12,13,.9);
     opacity:0; pointer-events:none; transition:opacity .5s ease;
   }
   #outro-panel.show{ opacity:1; pointer-events:auto; }
-  #outro-panel .kicker{ font-size:11.5px; letter-spacing:.44em; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
+  #outro-panel .kicker{ font-size:13px; letter-spacing:.04em; color:var(--accent); margin-bottom:14px; }
   #outro-panel h2{ font-family:"Noto Serif TC",Georgia,serif; font-size:clamp(26px,4vw,40px); font-weight:300; margin-bottom:10px; }
-  #outro-panel h2 em{ font-style:normal;
-    background:linear-gradient(120deg, #fff, var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, #000));
-    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-  #outro-panel p{ font-size:14px; line-height:2; color:var(--dim); }
+  #outro-panel h2 em{ font-style:normal; font-weight:500; }
+  #outro-panel p{ font-size:15px; line-height:1.9; color:#a29d93; }
   #outro-panel .credits{ margin-top:22px; font-size:12px; line-height:2; color:#9a968d; letter-spacing:.02em; }
   #outro-panel .credits a{ color:#bdb8ad; }
   #outro-panel .src-link{ display:block; margin-top:14px; font-size:13px; color:#c9c5bc; letter-spacing:.04em; text-decoration:underline; text-underline-offset:3px; }
@@ -269,12 +243,11 @@ window.__dgFonts = function(){
     transition:opacity .9s ease;
   }
   #loader.done{ opacity:0; pointer-events:none; }
-  #loader .badge{ font-size:13px; letter-spacing:.5em; text-indent:.5em; color:var(--accent); }
+  #loader .badge{ font-size:13px; letter-spacing:.24em; text-indent:.24em; color:var(--accent); }
   #loader .bar-outer{ width:min(260px,60vw); height:1px; background:rgba(212,175,55,.18); }
-  #loader .bar-inner{ width:0%; height:100%;
-    background:linear-gradient(90deg, var(--accent), #fff);
-    box-shadow:0 0 10px var(--accent); transition:width .25s ease; }
-  #loader .pct{ font-size:11.5px; letter-spacing:.3em; color:var(--dim); }
+  #loader .bar-inner{ width:100%; height:100%; transform:scaleX(0);
+    background:var(--accent); transform-origin:left; transition:transform .25s ease; }
+  #loader .pct{ font-size:13px; letter-spacing:.04em; color:var(--dim); }
 
   /* ===== Blender 城市電影開場 ===== */
   #cinematic-intro{
@@ -305,8 +278,8 @@ window.__dgFonts = function(){
   .cinematic-intro__top{ top:clamp(18px,4vh,46px); }
   .cinematic-intro__bottom{ bottom:clamp(22px,5vh,58px); align-items:flex-end; }
   .cinematic-intro__brand{
-    font-size:11px; letter-spacing:.3em; text-indent:.3em; color:#f2d576;
-    text-shadow:0 2px 16px rgba(0,0,0,.75);
+    font-size:12px; letter-spacing:.24em; text-indent:.24em; color:#f2d576;
+    text-shadow:0 1px 10px rgba(0,0,0,.75);
   }
   .cinematic-intro__title small{
     display:block; margin-bottom:8px; color:#d4af37; font-size:10px;
@@ -318,18 +291,16 @@ window.__dgFonts = function(){
     text-shadow:0 4px 24px rgba(0,0,0,.8);
   }
   #intro-skip{
-    border:1px solid rgba(255,255,255,.34); border-radius:30px;
-    background:rgba(5,6,8,.35); color:#fff; padding:10px 17px;
-    font:300 11px/1 "Noto Sans TC",sans-serif; letter-spacing:.18em;
-    backdrop-filter:blur(10px); cursor:pointer; transition:.2s;
+    border:none; border-radius:2px;
+    background:rgba(8,8,9,.72); color:#fff; padding:0 14px; min-height:40px;
+    font:400 14px/1 "Noto Sans TC",sans-serif; letter-spacing:.04em; cursor:pointer; transition:background .2s;
   }
-  #intro-skip:hover{ border-color:#d4af37; color:#f2d576; }
+  #intro-skip:hover{ background:rgba(8,8,9,.92); }   /* 影片亮處也要讀得到：實心深底，不用霧化 */
   #intro-play{
     position:absolute; z-index:3; left:50%; top:50%; transform:translate(-50%,-50%);
-    display:none; border:1px solid rgba(255,255,255,.5); border-radius:999px;
-    background:rgba(0,0,0,.46); color:#fff; padding:15px 24px;
-    font:300 12px/1 "Noto Sans TC",sans-serif; letter-spacing:.2em;
-    backdrop-filter:blur(10px); cursor:pointer;
+    display:none; border:none; border-radius:2px;
+    background:#d4af37; color:#121008; padding:15px 26px;
+    font:500 15px/1 "Noto Sans TC",sans-serif; letter-spacing:.04em; cursor:pointer;
   }
   #cinematic-intro.awaiting-play #intro-play{ display:block; }
   #cinematic-intro.buffering #intro-progress{ transform:scaleX(1); animation:introBuf 1.2s ease-in-out infinite alternate; }
@@ -341,7 +312,7 @@ window.__dgFonts = function(){
   }
   #intro-progress{
     display:block; width:100%; height:100%; transform:scaleX(0); transform-origin:left;
-    background:linear-gradient(90deg,#d4af37,#fff1ad); box-shadow:0 0 12px #d4af37;
+    background:#d4af37;
   }
 
   #fallback-msg{
@@ -352,8 +323,9 @@ window.__dgFonts = function(){
 
   @media (max-width:680px){
     #topbar{ padding:12px 14px; }
-    #topbar .brand{ font-size:10.5px; letter-spacing:.16em; }
-    #topbar .tools > *{ padding:8px 12px; font-size:11.5px; }
+    #topbar .brand b{ font-size:15px; }
+    #topbar .tools{ gap:6px; }
+    #topbar .tools > *{ min-width:40px; min-height:40px; justify-content:center; padding:0; }
     #topbar .tools .bt{ display:none; }   /* 手機按鈕只留圖示，三顆才擠得下 */
     #dots{ right:8px; gap:11px; }
     #dots button{
@@ -362,7 +334,7 @@ window.__dgFonts = function(){
     }
     #dots button::after{ content:''; position:absolute; inset:-8px; }
     #dots button img, #dots button .ic{ display:none; }
-    #dots button.active{ background:var(--accent); box-shadow:0 0 8px var(--accent); transform:scale(1.3); }
+    #dots button.active{ background:var(--accent); transform:scale(1.25); }
     #dots button .lb{ display:none; }
     #hero-overlay{ top:9vh; }
     .car-viewer canvas{ inset:auto; top:20vh; left:50%; width:118vw; height:auto; aspect-ratio:16/9; transform:translateX(-50%); object-fit:fill; }   /* 手機直式：圖框跟影格一樣大，邊緣遮罩才會淡掉 */
@@ -371,10 +343,10 @@ window.__dgFonts = function(){
       padding:18px 20px; max-height:44vh; overflow-y:auto;
     }
     #panel.side-right{ left:4vw; right:4vw; text-align:left; }
-    #panel.side-right .divider{ margin-left:0; background:linear-gradient(90deg, var(--accent), transparent); }
+    #panel.side-right .divider{ margin-left:0; }
     #panel.side-right .chips, #panel.side-right #card-dots{ justify-content:flex-start; }
-    .cta{ padding:10px 18px; font-size:12.5px; }
-    .cta.ghost{ margin-left:8px; }
+    .cta{ padding:12px 18px; font-size:14px; }
+    .cta.ghost{ margin-left:16px; padding:12px 2px 4px; }
     #hint{ bottom:calc(3.5vh + 2px); display:none; }
   }
 </style>
@@ -558,9 +530,8 @@ window.__dgFonts = function(){
 
 <!-- 開場標題：固定在畫面上方，車在下方，不重疊 -->
 <div id="hero-overlay">
-  <div class="kick">DREAM GARAGE</div>
   <h1>我的夢想車庫</h1>
-  <div class="sub">一 台 真 的 ， 八 台 夢 的</div>
+  <div class="sub">一台真的，八台夢的。</div>
 </div>
 <div id="hint">滾動 / 滑動 切換車輛<span class="arrow"></span></div>
 
@@ -569,8 +540,8 @@ window.__dgFonts = function(){
 
 <!-- 結尾卡 -->
 <div id="outro-panel">
-  <div class="kicker">Build Yours</div>
-  <h2>換你配一台</h2>
+  <div class="kicker">開始</div>
+  <h2>換你配一台。</h2>
   <p>九台車，自由配色、換輪圈、聽引擎聲，多數車還能坐進車內。</p>
   <a class="cta" href="garage.html">進入 360° 配置器</a>
   <a class="src-link" href="sources.html">九台車從哪來、我動了什麼 →</a>
@@ -693,7 +664,7 @@ CARS.forEach(function(c,i){
 (function(){
   var b=document.createElement('button');
   b.setAttribute('aria-label', '結尾：換你配一台');
-  b.innerHTML='<i class="ic"><svg class="lic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg></i><span class="lb">Build Yours</span>';
+  b.innerHTML='<i class="ic"><svg class="lic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg></i><span class="lb">開始</span>';
   b.onclick=function(){ goTo(OUTRO); };
   dotsBox.appendChild(b);
 })();
@@ -895,9 +866,9 @@ function camFor(i, t){
 function cardHTML(i, c){
   var st=STORIES[i], sp=SPECS[i], car=CARS[i];
   if(c===0) return '<div class="kicker">'+st.kick+'</div><h2>'+st.title+'</h2><div class="divider"></div><p>'+car.name+'。'+st.tag+'。</p>';
-  if(c===1) return '<div class="kicker">Story</div><p>'+st.story+'</p><p style="margin-top:8px">'+st.story2+'</p>';
-  var chips = sp.map(function(kv){ return '<span><b>'+kv[0]+'</b>'+kv[1]+'</span>'; }).join('');
-  return '<div class="kicker">Spec</div><div class="chips">'+chips+'</div><a class="cta" href="garage.html?car='+i+'">進入 360° 配置 →</a>';
+  if(c===1) return '<div class="kicker">故事</div><p>'+st.story+'</p><p style="margin-top:8px">'+st.story2+'</p>';
+  var rows = sp.map(function(kv){ return '<div><dt>'+kv[0]+'</dt><dd>'+kv[1]+'</dd></div>'; }).join('');
+  return '<div class="kicker">規格</div><dl class="specs">'+rows+'</dl><a class="cta" href="garage.html?car='+i+'">配這一台 →</a>';
 }
 var panel = document.getElementById('panel');
 var panelInner = document.getElementById('panel-inner');
@@ -1132,7 +1103,7 @@ window.addEventListener('dg-intro-left', function(){
 });
 function setLoadPct(p){
   var pct = Math.round(p*100);
-  document.getElementById('load-bar').style.width = pct+'%';
+  document.getElementById('load-bar').style.transform = 'scaleX('+(pct/100)+')';
   document.getElementById('load-pct').textContent = '載入車庫 '+pct+'%';
 }
 var waited=0;
@@ -1140,7 +1111,7 @@ var poll=setInterval(function(){
   waited+=300;
   if(slots[0].loaded){
     clearInterval(poll);
-    document.getElementById('load-bar').style.width='100%';
+    document.getElementById('load-bar').style.transform='scaleX(1)';
     loader.classList.add('done');
     stepT = 0; transT = 0;      // 開場：第一台做飛入
   } else if(waited>=45000){

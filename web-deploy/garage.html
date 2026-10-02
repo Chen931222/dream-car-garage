@@ -134,7 +134,7 @@
   /* 底部設定 dock：霧面底襯，色點清楚、與車身分隔 */
   .info{ position:absolute; left:0; right:0; bottom:152px; z-index:4; text-align:center; pointer-events:none; }
   .dock{ display:inline-block; pointer-events:auto; background:rgba(255,255,255,.9); backdrop-filter:blur(12px);
-    border:1px solid rgba(0,0,0,.07); border-radius:20px; padding:14px 28px 12px; box-shadow:0 10px 34px rgba(20,30,50,.13); }
+    border-radius:14px; padding:14px 28px 12px; box-shadow:0 8px 28px rgba(0,0,0,.18); }   /* 浮在 3D 上：只用陰影，不再加細框（細框＋大柔光＝幽靈卡） */
   .color-rows{ display:flex; justify-content:center; gap:30px; flex-wrap:wrap; }
   .color-row{ display:flex; flex-direction:column; align-items:center; gap:9px; }
   .color-row .lab{ font-size:11px; color:var(--sub); letter-spacing:.18em; }
@@ -158,11 +158,11 @@
     cursor:pointer; letter-spacing:.04em; white-space:nowrap; transition:.15s;
     display:flex; flex-direction:column; align-items:center; gap:5px; padding:2px; }
   .garage button img{ width:66px; height:44px; object-fit:cover; border-radius:9px; display:block;
-    border:2px solid transparent; opacity:.72; transition:.18s; box-shadow:0 3px 10px rgba(20,30,50,.12); }
+    border:2px solid transparent; opacity:.72; transition:.18s; box-shadow:0 3px 10px rgba(0,0,0,.12); }
   .garage button:hover{ color:var(--ink); }
   .garage button:hover img{ opacity:1; }
   .garage button.active{ color:var(--ink); font-weight:500; }
-  .garage button.active img{ opacity:1; border-color:var(--accent); box-shadow:0 5px 16px rgba(20,30,50,.22); }
+  .garage button.active img{ opacity:1; border-color:var(--accent); box-shadow:0 5px 16px rgba(0,0,0,.22); }
 
   /* 控制鈕（置中、在換車列上方）*/
   /* width:max-content 必加：left:50% 定位的 flex 容器可用寬度只有畫面一半，沒設會提早折行 */
@@ -219,7 +219,7 @@
     display:none; align-items:center; justify-content:center; padding:20px; }
   .sheet.show{ display:flex; }
   .card{ width:540px; max-width:90vw; max-height:86vh; overflow-y:auto; background:#fff; border:1px solid var(--line);
-    border-radius:16px; padding:36px 38px 32px; box-shadow:0 30px 70px rgba(20,30,50,.18); position:relative; }
+    border-radius:16px; padding:36px 38px 32px; box-shadow:0 30px 70px rgba(0,0,0,.18); position:relative; }
   .card .x{ position:absolute; top:14px; right:16px; width:34px; height:34px; border:none; background:none; font-size:18px; color:var(--sub); cursor:pointer; }
   .card h2{ font-size:26px; font-weight:200; letter-spacing:.03em; }
   .card .csub{ font-size:13px; color:var(--sub); margin-top:6px; letter-spacing:.04em; }

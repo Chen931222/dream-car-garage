@@ -2,13 +2,14 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>我的夢想車庫 · 功能導覽</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
+<meta name="description" content="夢想車庫的每個功能為什麼這樣做：即時 3D、換色、四種光線、授權引擎聲、分享連結、首頁的攝影棚轉盤。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a54c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 功能導覽">
-<meta property="og:description" content="3 分鐘看完夢想車庫能做什麼：360° 環景、自由配色、引擎聲、AR 看車、一鍵分享。">
+<meta property="og:description" content="九台車、一個配置器。每個功能為什麼這樣做，以及做的時候踩過的坑。">
 <meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/intro">
 <meta property="og:locale" content="zh_TW">
@@ -18,935 +19,555 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@200;300;400;500&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="tt/w202/028.webp?v=144a">
 <style>
+  /* =====================================================================
+     導覽頁：車誌版面（2026-10-02 改版）
+     每一幕＝一張真實截圖＋襯線標題＋圖說＋一段內文。
+     圖都是配置器與首頁轉盤的實際畫面（tour/*.webp、tt/*），沒有畫出來的假介面。
+     只有一個強調色（黃銅），不發光、不漸層、不霧化。
+     ===================================================================== */
   *{ margin:0; padding:0; box-sizing:border-box; }
   :root{
-    --bg:#0a0b0d;
-    --acc:#d4af37;             /* 每一幕切換 */
-    --text:#ece9e2;
-    --dim:#8d8a82;
-    --vh:100vh;
-    /* 手機 mockup 螢幕裡沿用配置器（garage.html）的亮色語言 */
-    --app-ink:#1d2126; --app-sub:#9aa0a8; --app-line:rgba(0,0,0,.09); --app-acc:#0a66c2;
+    --bg:#0c0c0d;
+    --ink:#ece9e2;
+    --ink-soft:#a29d93;          /* 對 --bg 7.3:1 */
+    --ink-faint:#7d796f;         /* 圖說、頁碼：對 --bg 4.6:1 */
+    --rule:rgba(236,233,226,.16);
+    --accent:#c9a54c;            /* 黃銅，全頁唯一的顏色 */
+    --font-display:"Noto Serif TC", "Songti TC", Georgia, serif;
+    --font-body:"Noto Sans TC", -apple-system, "Segoe UI", sans-serif;
+    --top:68px;                  /* 頂欄高度 */
+    --ease:cubic-bezier(.22,1,.36,1);
   }
   html,body{ height:100%; overflow:hidden; overscroll-behavior:none; }
-  body{
-    background:var(--bg); color:var(--text);
-    font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif; font-weight:300;
-    -webkit-font-smoothing:antialiased;
-  }
-  #stage{ position:fixed; inset:0; overflow:hidden; }
-
-  /* ===== 背景光暈：兩層交叉淡入淡出換色 ===== */
-  .glow{ position:absolute; inset:0; transition:opacity 1.1s ease; pointer-events:none; }
-  #stage .haze{ position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(ellipse 60% 30% at 50% 88%, rgba(255,255,255,.04), transparent 70%); }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--font-body); font-weight:400;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  a{ color:inherit; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 
   /* ===== 頂欄 ===== */
-  #topbar{
-    position:fixed; top:0; left:0; right:0; z-index:40;
-    display:flex; justify-content:space-between; align-items:center;
-    padding:20px 30px; pointer-events:none;
-  }
-  #topbar .brand{ font-size:13px; letter-spacing:.28em; color:var(--text); }
-  #topbar .brand b{ font-weight:500; }
-  #topbar .tools{ display:flex; gap:8px; }
-  #topbar .tools > *{
-    pointer-events:auto; font-family:inherit; font-size:12.5px; letter-spacing:.12em; text-decoration:none;
-    color:var(--text); border:1px solid rgba(255,255,255,.22); border-radius:30px;
-    padding:9px 18px; background:rgba(10,11,13,.4); backdrop-filter:blur(8px);
-    cursor:pointer; transition:.2s;
-  }
-  #topbar .tools > *:hover{ border-color:var(--acc); color:var(--acc); }
-  #btn-auto.on{ border-color:var(--acc); color:var(--acc); box-shadow:0 0 12px color-mix(in srgb, var(--acc) 40%, transparent); }
-  /* Lucide 內嵌 icon（取代 emoji） */
-  svg.lic{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2;
-    stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; }
-  @keyframes licWiggle{ 0%,100%{ transform:rotate(0) } 30%{ transform:rotate(-14deg) } 65%{ transform:rotate(9deg) } }
-  #topbar .tools > *:hover svg.lic{ animation:licWiggle .55s ease; transform-origin:50% 50%; }
+  #topbar{ position:fixed; top:0; left:0; right:0; z-index:40; height:var(--top);
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:0 clamp(16px,3vw,40px); border-bottom:1px solid var(--rule); background:var(--bg); }
+  #topbar .brand{ display:flex; align-items:baseline; gap:14px; text-decoration:none; }
+  #topbar .brand b{ font-family:var(--font-display); font-weight:500; font-size:17px; letter-spacing:.06em; }
+  #topbar .brand span{ font-size:13px; color:var(--ink-soft); }
+  #topbar .tools{ display:flex; align-items:center; gap:clamp(14px,2.4vw,28px); }
+  .tbtn{ display:inline-flex; align-items:center; gap:7px; min-height:44px; padding:0 2px;
+    font:inherit; font-size:14px; color:var(--ink); background:none; border:none; cursor:pointer; text-decoration:none; }
+  .tbtn span{ border-bottom:1px solid transparent; transition:border-color .2s; }
+  .tbtn:hover span{ border-bottom-color:var(--accent); }
+  .tbtn[aria-pressed="true"]{ color:var(--accent); }
+  svg.lic{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8;
+    stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  #progress{ position:fixed; top:calc(var(--top) - 1px); left:0; right:0; height:1px; z-index:41;
+    background:var(--accent); transform-origin:left; transform:scaleX(0); transition:transform .8s var(--ease); }
 
-  #progress-bar{
-    position:fixed; top:0; left:0; width:100%; height:2px; z-index:41;
-    background:linear-gradient(90deg, var(--acc), #fff3);
-    transform-origin:left center; transform:scaleX(0);
-    transition:transform .7s cubic-bezier(.3,.7,.3,1), background .6s;
-    box-shadow:0 0 10px var(--acc);
-  }
+  /* ===== 右側目錄（桌面） ===== */
+  #toc{ position:fixed; right:clamp(12px,1.6vw,26px); top:50%; transform:translateY(-50%); z-index:30;
+    display:flex; flex-direction:column; }
+  #toc button{ width:28px; height:28px; border:none; background:none; cursor:pointer; position:relative; }
+  #toc button::before{ content:''; position:absolute; left:8px; right:8px; top:13px; height:1px; background:var(--ink-faint);
+    transition:background .3s, left .3s; }
+  #toc button.on::before{ background:var(--accent); left:2px; }
+  #toc button .lb{ position:absolute; right:34px; top:50%; transform:translateY(-50%); white-space:nowrap;
+    font-size:12px; color:var(--ink-soft); opacity:0; transition:opacity .2s; pointer-events:none; }
+  #toc button:hover .lb, #toc button:focus-visible .lb{ opacity:1; }
 
-  /* ===== 右側圓點 ===== */
-  #dots{
-    position:fixed; right:18px; top:50%; transform:translateY(-50%);
-    z-index:40; display:flex; flex-direction:column; gap:13px;
-  }
-  /* 點擊範圍 24px（WCAG target-size），看得到的圓點仍是 8px：用 ::before 畫 */
-  #dots{ gap:0; }
-  #dots button{
-    width:24px; height:24px; border:none; cursor:pointer; background:none;
-    padding:0; position:relative; transition:.25s;
-  }
-  #dots button::before{ content:''; position:absolute; left:8px; top:8px; width:8px; height:8px; border-radius:50%;
-    background:rgba(255,255,255,.22); transition:.25s; }
-  #dots button.active::before{ background:var(--acc); box-shadow:0 0 8px var(--acc); transform:scale(1.3); }
-  #dots button .lb{
-    position:absolute; right:20px; top:50%; transform:translateY(-50%);
-    font-size:11px; letter-spacing:.1em; color:var(--dim); white-space:nowrap;
-    opacity:0; transition:.2s; pointer-events:none;
-  }
-  #dots button:hover .lb, #dots button.active .lb{ opacity:1; }
+  /* ===== 幕 ===== */
+  .sc{ position:fixed; left:0; right:0; top:var(--top); bottom:0; z-index:10;
+    display:grid; grid-template-columns:minmax(0,7fr) minmax(0,4fr); column-gap:clamp(32px,5vw,88px); align-items:center;
+    padding:clamp(24px,5vh,64px) clamp(60px,7vw,120px) clamp(24px,5vh,64px) clamp(24px,5vw,88px);
+    opacity:0; visibility:hidden; transition:opacity .5s ease, visibility 0s linear .5s; }
+  .sc.on{ opacity:1; visibility:visible; transition:opacity .7s ease .15s, visibility 0s; }
+  .sc.flip{ grid-template-columns:minmax(0,4fr) minmax(0,7fr); }
+  .sc.flip .fig{ order:2; }
 
-  /* ===== 手機 mockup（全場主角） ===== */
-  #phone-wrap{
-    position:fixed; left:50%; top:50%; z-index:10;
-    transform:translate(-50%,-50%);
-    transition:transform 1.1s cubic-bezier(.16,1,.3,1), opacity .8s ease;
-  }
-  #stage.at-hero ~ #phone-wrap{ opacity:0; pointer-events:none; }
-  #stage.ph-right #phone-wrap{ transform:translate(calc(-50% + 23vw),-50%); }
-  #stage.ph-left  #phone-wrap{ transform:translate(calc(-50% - 23vw),-50%); }
-  #phone{
-    width:252px; height:520px; border-radius:40px; position:relative;
-    background:linear-gradient(160deg,#2a2c31,#101114);
-    border:1px solid rgba(255,255,255,.14);
-    box-shadow:0 40px 90px rgba(0,0,0,.65), 0 0 0 6px #0d0e11, 0 0 60px color-mix(in srgb, var(--acc) 14%, transparent);
-    padding:10px;
-  }
-  #phone .notch{
-    position:absolute; top:10px; left:50%; transform:translateX(-50%);
-    width:86px; height:20px; background:#0d0e11; border-radius:0 0 13px 13px; z-index:5;
-  }
-  #phone .screen{
-    width:100%; height:100%; border-radius:31px; overflow:hidden; position:relative;
-    background:radial-gradient(circle at 50% 40%, #ffffff 0%, #f5f7f9 70%, #eef1f4 100%);
-    color:var(--app-ink); font-weight:400;
-  }
-  .scr{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease; padding:34px 14px 46px; pointer-events:none; }
-  .scr.on{ opacity:1; }
-  .scr .ahead{ font-size:.62rem; letter-spacing:.18em; color:var(--app-sub); text-align:center; }
-  .scr .atitle{ font-size:.82rem; font-weight:500; text-align:center; margin:2px 0 10px; }
+  /* 圖：唯一的「作者級」動作——換幕時像印版一樣從左往右顯影 */
+  .fig{ margin:0; min-width:0; }
+  .fig .plate{ position:relative; overflow:hidden; background:#111113;
+    clip-path:inset(0 100% 0 0); transition:clip-path 1.1s var(--ease) .1s; }
+  .sc.on .fig .plate{ clip-path:inset(0 0 0 0); }
+  .fig img{ display:block; width:100%; height:auto; }
+  .sc > .fig > .plate > img{ max-height:calc(100vh - var(--top) - 150px); object-fit:contain; }
+  .fig figcaption{ margin-top:12px; font-size:13px; line-height:1.7; color:var(--ink-faint); max-width:46em; }
+  .fig figcaption b{ font-weight:500; color:var(--ink-soft); }
 
-  /* 螢幕：車庫大廳 */
-  .lob-grid{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-  .lob-grid .lc{ background:#fff; border:1px solid var(--app-line); border-radius:9px; overflow:hidden;
-    box-shadow:0 3px 9px rgba(20,30,50,.08); }
-  .lob-grid img{ width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
-  .lob-grid .n{ font-size:.5rem; padding:4px 6px 5px; color:var(--app-ink); font-weight:500; }
+  /* 多張圖的版型 */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:3px; background:var(--bg); }
+  .grid2 .cell{ position:relative; }
+  .grid2 .cell img{ aspect-ratio:2/1; object-fit:cover; }
+  .grid2 .tag{ position:absolute; left:10px; bottom:8px; font-size:12px; color:#f2efe8; }
+  .grid2 .cell.light .tag{ color:#2a2622; }
+  .strip3{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+  .strip3 img{ aspect-ratio:4/3; object-fit:cover; object-position:42% 55%; }
+  .sheet{ display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
+  .sheet .cell{ position:relative; }
+  .sheet img{ aspect-ratio:16/10; object-fit:cover; object-position:50% 58%; }
+  .sheet .deg{ position:absolute; right:7px; bottom:5px; font-size:11px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
 
-  /* 螢幕：360 環景 */
-  .orbit-box{ position:relative; margin-top:26px; }
-  .orbit-box img{ width:100%; border-radius:12px; display:block; box-shadow:0 10px 26px rgba(20,30,50,.18); }
-  .orbit-ring{ margin:18px auto 0; width:120px; height:34px; border:1.5px dashed color-mix(in srgb, var(--app-acc) 55%, #fff);
-    border-radius:50%; position:relative; animation:orbspin 6s linear infinite; }
-  @keyframes orbspin{ 0%{ transform:rotate(0) } 50%{ transform:rotate(7deg) } 100%{ transform:rotate(0) } }
-  .orbit-hint{ font-size:.6rem; color:var(--app-sub); text-align:center; margin-top:10px; letter-spacing:.12em; }
-  .drag-dot{ position:absolute; width:22px; height:22px; border-radius:50%; background:rgba(10,102,194,.25);
-    border:1.5px solid var(--app-acc); left:18%; top:52%; animation:dragmove 3s ease-in-out infinite; }
-  @keyframes dragmove{ 0%,100%{ left:18%; } 50%{ left:70%; } }
+  /* 文字欄 */
+  .txt{ min-width:0; max-width:30em; }
+  .kicker{ font-size:13px; color:var(--accent); margin-bottom:18px; display:flex; gap:12px; align-items:baseline; }
+  .kicker i{ font-style:normal; color:var(--ink-faint); font-variant-numeric:tabular-nums; }
+  .ttl{ font-family:var(--font-display); font-weight:300; font-size:clamp(30px,3.3vw,50px); line-height:1.28;
+    letter-spacing:.02em; text-wrap:balance; margin-bottom:26px; }
+  .body{ position:relative; min-height:9.5em; }
+  .body p{ font-size:16px; line-height:1.9; color:var(--ink-soft); }
+  .body p b{ color:var(--ink); font-weight:500; }
+  .seg{ transition:opacity .35s ease; }
+  .seg.fading{ opacity:0; }
+  /* 規格欄：車誌的資料框，不是數字卡 */
+  .specs{ border-top:1px solid var(--rule); }
+  .specs div{ display:flex; justify-content:space-between; align-items:baseline; gap:16px;
+    padding:10px 0; border-bottom:1px solid var(--rule); }
+  .specs dt{ font-size:14px; color:var(--ink-soft); }
+  .specs dd{ font-family:var(--font-display); font-weight:500; font-size:20px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .pager{ display:flex; align-items:center; gap:6px; margin-top:22px; }
+  .pager button{ width:34px; height:24px; border:none; background:none; cursor:pointer; position:relative; }
+  .pager button::before{ content:''; position:absolute; left:2px; right:2px; top:11px; height:2px; background:var(--rule); }
+  .pager button.on::before{ background:var(--accent); }
+  .pager .more{ margin-left:10px; font:inherit; font-size:13px; color:var(--ink-faint); width:auto; height:44px; padding:0 4px; }
+  .pager .more::before{ display:none; }
+  .pager .more:hover{ color:var(--ink); }
 
-  /* 螢幕：配色 */
-  .paint-car{ position:relative; margin-top:8px; }
-  .paint-car img{ width:100%; border-radius:12px; display:block; }
-  .sw-row{ display:flex; justify-content:center; gap:7px; margin-top:14px; flex-wrap:wrap; }
-  .sw{ width:20px; height:20px; border-radius:50%; border:1px solid rgba(0,0,0,.22); box-shadow:0 1px 3px rgba(0,0,0,.2); }
-  .sw.sel{ box-shadow:0 0 0 2px #fff, 0 0 0 3.5px var(--app-ink); }
-  .sw.rainbow{ background:conic-gradient(red,#ff0,#0f0,cyan,blue,magenta,red); }
-  .sw-lab{ font-size:.55rem; color:var(--app-sub); text-align:center; margin-top:8px; letter-spacing:.14em; }
+  /* ===== 開場 ===== */
+  #s-hero{ grid-template-columns:1fr; grid-template-rows:auto 1fr; align-items:start; padding-top:clamp(28px,7vh,80px); }
+  #s-hero .head{ max-width:44em; }
+  #s-hero h1{ font-family:var(--font-display); font-weight:300; font-size:clamp(40px,6.2vw,92px); line-height:1.12; letter-spacing:.02em; }
+  #s-hero .sub{ margin-top:18px; font-size:clamp(15px,1.4vw,18px); line-height:1.8; color:var(--ink-soft); max-width:34em; }
+  #s-hero .fig{ align-self:end; justify-self:end; width:min(78vw, 1100px, calc((100vh - var(--top) - 300px) * 1.78)); margin-right:-2vw; }
+  #s-hero .fig .plate{ background:none; }
+  #s-hero .fig img{ -webkit-mask-image:radial-gradient(ellipse closest-side at 50% 56%, #000 60%, transparent 100%);
+    mask-image:radial-gradient(ellipse closest-side at 50% 56%, #000 60%, transparent 100%); }
+  #s-hero .fig figcaption{ text-align:right; margin-top:-8px; }
+  #hint{ position:fixed; left:clamp(24px,5vw,88px); bottom:clamp(20px,4vh,40px); z-index:20;
+    font-size:13px; color:var(--ink-faint); display:flex; align-items:center; gap:10px; transition:opacity .4s; }
+  #hint svg.lic{ width:15px; height:15px; }
 
-  /* 螢幕：輪圈 */
-  .wheel-hero{ width:120px; height:120px; margin:14px auto 0; border-radius:50%; position:relative;
-    background:
-      radial-gradient(circle at 50% 50%, #16181b 0 17%, transparent 17.5%),
-      repeating-conic-gradient(#c8ccd0 0 16deg, #6d7278 16deg 22deg, #eef0f2 22deg 36deg);
-    border:9px solid #2a2d31; box-shadow:0 12px 28px rgba(20,30,50,.28), inset 0 0 0 3px #9aa0a8;
-    animation:wheelspin 9s linear infinite; }
-  @keyframes wheelspin{ to{ transform:rotate(360deg); } }
-  .fin-row{ display:flex; justify-content:center; gap:5px; margin-top:14px; }
-  .fin-row span{ font-size:.55rem; border:1px solid var(--app-line); background:#fff; color:var(--app-ink);
-    border-radius:20px; padding:3px 8px; }
-  .fin-row span.on{ background:var(--app-ink); color:#fff; }
+  /* ===== 結尾 ===== */
+  #s-outro .txt{ max-width:32em; }
+  #s-outro video{ display:block; width:100%; aspect-ratio:16/9; max-height:calc(100vh - var(--top) - 150px); background:#000; }
+  .cta-row{ display:flex; flex-wrap:wrap; align-items:center; gap:14px 26px; margin-top:28px; }
+  .cta{ display:inline-flex; align-items:center; gap:10px; min-height:48px; padding:0 22px;
+    background:var(--accent); color:#16130c; text-decoration:none; font-size:15px; font-weight:500; border-radius:2px;
+    transition:background .2s; }
+  .cta:hover{ background:#d8b65e; }
+  .cta svg.lic{ width:16px; height:16px; }
+  .link{ font-size:15px; color:var(--ink); text-decoration:none; border-bottom:1px solid var(--rule); padding-bottom:2px; }
+  .link:hover{ border-bottom-color:var(--accent); }
+  .fine{ margin-top:22px; font-size:13px; line-height:1.8; color:var(--ink-faint); }
+  .fine a{ color:var(--ink-soft); }
 
-  /* 螢幕：場景 */
-  .scene-list{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
-  .scene-item{ height:64px; border-radius:11px; position:relative; overflow:hidden;
-    box-shadow:0 5px 14px rgba(20,30,50,.16); border:1.5px solid transparent; }
-  .scene-item.on{ border-color:var(--app-acc); }
-  .scene-item img{ position:absolute; right:6px; bottom:2px; width:52%; opacity:.94; }
-  .scene-item .sn{ position:absolute; left:10px; top:8px; font-size:.6rem; font-weight:500; letter-spacing:.14em; }
-  .sc-studio{ background:radial-gradient(circle at 50% 38%, #fbfcfd 0%, #eef1f4 60%, #e4e7ec 100%); color:#1d2126; }
-  .sc-sunset{ background:linear-gradient(160deg, #ffe6bf 0%, #ffb583 45%, #b9795c 100%); color:#4a2c18; }
-  .sc-night{ background:linear-gradient(160deg, #1b2233 0%, #11151f 55%, #090c12 100%); color:#cfd6e4; }
+  /* ===== 手機底部導覽 ===== */
+  #mnav{ display:none; }
 
-  /* 螢幕：引擎聲 */
-  .snd-btn{ margin:20px auto 0; width:max-content; font-size:.66rem; font-weight:500; color:#fff;
-    background:var(--app-ink); border-radius:22px; padding:8px 16px; box-shadow:0 6px 16px rgba(20,30,50,.3); }
-  .eq{ display:flex; justify-content:center; align-items:flex-end; gap:4px; height:46px; margin-top:18px; }
-  .eq i{ width:5px; border-radius:3px; background:var(--app-acc); animation:eqb 1s ease-in-out infinite; }
-  .eq i:nth-child(1){ height:30%; animation-delay:0s }   .eq i:nth-child(2){ height:75%; animation-delay:.12s }
-  .eq i:nth-child(3){ height:50%; animation-delay:.24s } .eq i:nth-child(4){ height:92%; animation-delay:.06s }
-  .eq i:nth-child(5){ height:60%; animation-delay:.3s }  .eq i:nth-child(6){ height:82%; animation-delay:.18s }
-  .eq i:nth-child(7){ height:40%; animation-delay:.36s } .eq i:nth-child(8){ height:66%; animation-delay:.09s }
-  @keyframes eqb{ 0%,100%{ transform:scaleY(.45) } 50%{ transform:scaleY(1) } }
-  .puffs{ position:relative; height:26px; margin-top:8px; }
-  .puffs i{ position:absolute; left:50%; bottom:0; width:12px; height:12px; border-radius:50%;
-    background:radial-gradient(circle, rgba(150,150,158,.55), transparent 68%); animation:puff 2.2s linear infinite; }
-  .puffs i:nth-child(2){ animation-delay:.7s } .puffs i:nth-child(3){ animation-delay:1.4s }
-  @keyframes puff{ 0%{ transform:translate(-50%,0) scale(.4); opacity:0 } 20%{ opacity:.8 } 100%{ transform:translate(-30%,-24px) scale(2.2); opacity:0 } }
-
-  /* 螢幕：AR */
-  .ar-frame{ position:relative; margin-top:14px; height:210px; border-radius:12px; overflow:hidden;
-    background:linear-gradient(180deg,#dfe6ea 0%, #cdd6db 58%, #aab3ab 58%, #98a196 100%); }
-  .ar-frame img{ position:absolute; left:50%; bottom:12%; width:72%; transform:translateX(-50%);
-    filter:drop-shadow(0 10px 10px rgba(0,0,0,.3)); }
-  .ar-frame .corner{ position:absolute; width:20px; height:20px; border:2.5px solid #fff; opacity:.9; }
-  .ar-frame .c1{ top:8px; left:8px; border-right:none; border-bottom:none; border-radius:4px 0 0 0; }
-  .ar-frame .c2{ top:8px; right:8px; border-left:none; border-bottom:none; border-radius:0 4px 0 0; }
-  .ar-frame .c3{ bottom:8px; left:8px; border-right:none; border-top:none; border-radius:0 0 0 4px; }
-  .ar-frame .c4{ bottom:8px; right:8px; border-left:none; border-top:none; border-radius:0 0 4px 0; }
-  .ar-pill{ position:absolute; top:10px; left:50%; transform:translateX(-50%); font-size:.55rem; color:#fff;
-    background:rgba(0,0,0,.45); backdrop-filter:blur(4px); border-radius:20px; padding:3px 10px; letter-spacing:.1em; }
-
-  /* 螢幕：分享 */
-  .qr{ width:104px; height:104px; margin:12px auto 0; background:#fff; border:1px solid var(--app-line);
-    border-radius:10px; box-shadow:0 5px 14px rgba(20,30,50,.14); display:grid;
-    grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(7,1fr); gap:2px; padding:9px; }
-  .qr i{ background:#1d2126; border-radius:1.5px; }
-  .qr i.o{ background:transparent; }
-  .share-link{ margin:12px auto 0; width:88%; font-size:.52rem; color:var(--app-sub); background:#fff;
-    border:1px solid var(--app-line); border-radius:8px; padding:6px 8px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .line-btn{ margin:8px auto 0; width:88%; text-align:center; font-size:.62rem; font-weight:500; color:#fff;
-    background:#06c755; border-radius:8px; padding:7px 0; }
-
-  /* 手機底部分頁列 */
-  #ph-tabs{
-    position:absolute; left:10px; right:10px; bottom:10px; z-index:6; height:36px;
-    background:rgba(255,255,255,.86); backdrop-filter:blur(8px);
-    border-top:1px solid var(--app-line); border-radius:0 0 31px 31px;
-    display:flex; align-items:center; justify-content:space-around;
-  }
-  #ph-tabs span{ display:flex; align-items:center; color:#99a0a8; opacity:.55; transition:.3s; }
-  #ph-tabs span svg.lic{ width:15px; height:15px; }
-  #ph-tabs span.on{ opacity:1; color:var(--app-acc); transform:scale(1.18); }
-
-  /* ===== 標籤指線 callout ===== */
-  .callout{
-    position:absolute; z-index:12; opacity:0; pointer-events:none;
-    transition:opacity .6s ease; transition-delay:0s;
-  }
-  .callout.show{ opacity:1; transition-delay:1s; }
-  .callout .pin{ position:absolute; width:9px; height:9px; border-radius:50%; background:var(--acc);
-    box-shadow:0 0 0 4px color-mix(in srgb, var(--acc) 25%, transparent), 0 0 12px var(--acc); }
-  .callout .ln{ position:absolute; height:1px; background:linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 25%, transparent)); }
-  .callout .tag{ position:absolute; white-space:nowrap; font-size:11.5px; letter-spacing:.08em; color:var(--text);
-    border:1px solid color-mix(in srgb, var(--acc) 45%, transparent); background:rgba(10,11,13,.72);
-    backdrop-filter:blur(6px); border-radius:20px; padding:6px 13px; }
-  /* 釘在手機左側 */
-  .callout.at-left{ right:calc(100% - 14px); }
-  @media (max-width:1400px){ .callout .tag, .callout .ln{ display:none; } }
-  .callout.at-left .pin{ right:-18px; top:-4px; }
-  .callout.at-left .ln{ right:-14px; top:0; width:104px; }
-  .callout.at-left .tag{ right:96px; top:-14px; }
-  /* 釘在手機右側 */
-  .callout.at-right{ left:calc(100% - 14px); }
-  .callout.at-right .pin{ left:-18px; top:-4px; }
-  .callout.at-right .ln{ left:-14px; top:0; width:104px; background:linear-gradient(270deg, var(--acc), color-mix(in srgb, var(--acc) 25%, transparent)); }
-  .callout.at-right .tag{ left:96px; top:-14px; }
-
-  /* ===== 每幕的文字區（kicker + 大標語 + 文字卡） ===== */
-  .scene-txt{
-    position:fixed; z-index:20; top:50%; transform:translateY(-50%);
-    width:min(430px, 36vw); opacity:0; pointer-events:none;
-    transition:opacity .7s ease, transform .7s ease;
-  }
-  .scene-txt.side-left{ left:7vw; }
-  .scene-txt.side-right{ right:max(7vw, 60px); text-align:right; }
-  .scene-txt.show{ opacity:1; pointer-events:auto; }
-  .kickpill{
-    display:inline-block; font-size:11px; letter-spacing:.34em; text-indent:.34em; color:var(--acc);
-    border:1px solid color-mix(in srgb, var(--acc) 40%, transparent); border-radius:30px;
-    padding:6px 14px 6px 16px; margin-bottom:16px; text-transform:uppercase;
-  }
-  .slogan{
-    font-family:"Noto Serif TC",Georgia,serif; font-weight:300;
-    font-size:clamp(30px, 3.6vw, 52px); line-height:1.32; letter-spacing:.04em; margin-bottom:20px;
-  }
-  .slogan em{
-    font-style:italic;
-    background:linear-gradient(120deg, #fff, var(--acc) 55%, color-mix(in srgb, var(--acc) 55%, #000));
-    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-  }
-  .tcard{
-    position:relative; text-align:left;
-    border:1px solid color-mix(in srgb, var(--acc) 26%, transparent); border-radius:6px;
-    background:linear-gradient(160deg, rgba(14,14,17,.78), rgba(14,14,17,.55));
-    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    box-shadow:0 20px 56px rgba(0,0,0,.5);
-    padding:22px 24px 18px; cursor:pointer; overflow:hidden;
-  }
-  .scene-txt.side-right .tcard{ text-align:right; }
-  .tcard .segbar{
-    position:absolute; top:0; left:0; height:2px; width:100%;
-    background:var(--acc); transform-origin:left; transform:scaleX(0);
-    box-shadow:0 0 8px var(--acc);
-  }
-  .tcard .seg{ transition:opacity .35s ease; }
-  .tcard .seg.fading{ opacity:0; }
-  .tcard p{ font-size:clamp(13px, 1.25vw, 15px); line-height:2; color:var(--dim); }
-  .tcard p b{ color:var(--text); font-weight:400; }
-  .stats{ display:flex; flex-wrap:wrap; gap:7px; margin-top:4px; }
-  .scene-txt.side-right .stats{ justify-content:flex-end; }
-  .stats span{
-    font-size:11.5px; color:var(--text); letter-spacing:.04em;
-    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.13);
-    padding:5px 12px; border-radius:30px;
-  }
-  .stats span b{ font-weight:400; color:var(--acc); margin-right:5px; }
-  .tcard .taphint{ font-size:10.5px; color:#57534c; letter-spacing:.1em; margin-top:10px; }
-
-  /* ===== 開場幕 ===== */
-  #hero{
-    position:fixed; inset:0; z-index:25; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; text-align:center; pointer-events:none;
-    transition:opacity .8s ease, transform .8s ease;
-  }
-  #hero.gone{ opacity:0; transform:translateY(-30px); }
-  #hero .kick{ font-size:12px; letter-spacing:.6em; text-indent:.6em; color:var(--acc); margin-bottom:16px; }
-  #hero h1{ font-family:"Noto Serif TC",Georgia,serif; font-weight:300;
-    font-size:clamp(34px, 5.4vw, 60px); letter-spacing:.1em; }
-  #hero .sub{ font-size:clamp(12px, 1.4vw, 15px); color:var(--dim); margin-top:14px; letter-spacing:.22em; }
-  #hero{ padding-bottom:0; }
-  #hero .spacer{ height:0; }   /* 第一幕手機隱藏（#stage.at-hero），標題直接置中 */
-  #hint{
-    position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:25;
-    color:var(--dim); font-size:11.5px; letter-spacing:.4em; text-indent:.4em;
-    text-align:center; transition:opacity .5s;
-  }
-  #hint .arrow{ display:block; margin:10px auto 0; width:1px; height:30px;
-    background:linear-gradient(180deg, var(--acc), transparent); animation:drip 2s ease-in-out infinite; }
-  @keyframes drip{
-    0%{ transform:scaleY(0); transform-origin:top; opacity:1; }
-    60%{ transform:scaleY(1); transform-origin:top; opacity:1; }
-    100%{ transform:scaleY(1); transform-origin:top; opacity:0; }
+  /* ===== 窄桌面 ===== */
+  @media (max-width:1100px) and (min-width:681px) and (orientation:portrait){
+    .sc, .sc.flip{ grid-template-columns:1fr; grid-template-rows:auto auto; align-content:center; row-gap:28px; }
+    .sc.flip .fig{ order:0; }
+    .fig{ max-width:760px; }
+    .txt{ max-width:40em; }
+    .body{ min-height:6em; }
   }
 
-  /* ===== 爆炸拆解幕 ===== */
-  .exp-card{
-    position:fixed; left:50%; top:50%; z-index:9;
-    width:96px; margin-left:-48px; margin-top:-34px;
-    text-align:center; padding:10px 6px 9px;
-    border:1px solid color-mix(in srgb, var(--acc) 30%, transparent); border-radius:10px;
-    background:linear-gradient(160deg, rgba(16,16,20,.9), rgba(14,14,17,.72));
-    box-shadow:0 14px 34px rgba(0,0,0,.5);
-    opacity:0; transform:translate(0,0) scale(.4); pointer-events:none;
-    transition:transform .9s cubic-bezier(.16,1,.3,1), opacity .6s ease;
-  }
-  .exp-card .ei{ font-size:17px; }
-  .exp-card .ei svg.lic{ width:17px; height:17px; color:var(--acc); }
-  .exp-card .ez{ font-size:11.5px; color:var(--text); margin-top:4px; letter-spacing:.06em; }
-  .exp-card .ee{ font-size:8.5px; color:var(--dim); letter-spacing:.14em; text-transform:uppercase; margin-top:1px; }
-  #stage.exploded .exp-card{ opacity:1; transform:translate(var(--tx), var(--ty)) scale(1); }
-
-  /* ===== 結尾幕 ===== */
-  #outro{
-    position:fixed; z-index:22; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:min(700px, 94vw); text-align:center; opacity:0; pointer-events:none;
-    transition:opacity .7s ease;
-  }
-  #outro.show{ opacity:1; pointer-events:auto; }
-  #outro .slogan{ margin-bottom:14px; }
-  #outro p{ font-size:14px; line-height:2; color:var(--dim); }
-  #outro .stats{ justify-content:center; margin:18px 0 22px; }
-  .cta{
-    display:inline-block; text-decoration:none;
-    font-size:13.5px; letter-spacing:.14em; color:#0d0d10; font-weight:500;
-    background:linear-gradient(120deg, #fff, var(--acc));
-    border-radius:30px; padding:12px 26px; transition:.2s;
-    box-shadow:0 6px 26px color-mix(in srgb, var(--acc) 40%, transparent);
-  }
-  .cta:hover{ filter:brightness(1.1); transform:translateY(-1px); }
-  .cta.ghost{ color:var(--text); background:none; border:1px solid rgba(255,255,255,.3); box-shadow:none; margin-left:10px; }
-  .cta.ghost:hover{ border-color:var(--acc); color:var(--acc); }
-  #outro .credits{ margin-top:24px; font-size:10.5px; color:#55534c; letter-spacing:.06em; }
-  .outro-film{
-    width:min(520px, 88vw); margin:16px auto 18px; padding:10px;
-    text-align:left; border:1px solid rgba(255,255,255,.14); border-radius:16px;
-    background:linear-gradient(150deg,rgba(18,18,23,.88),rgba(9,9,12,.7));
-    box-shadow:0 18px 50px rgba(0,0,0,.46); backdrop-filter:blur(12px);
-  }
-  .outro-film__head{
-    display:flex; align-items:center; justify-content:space-between; gap:14px;
-    padding:2px 4px 9px; color:var(--text);
-  }
-  .outro-film__head strong{ font-size:11.5px; font-weight:400; letter-spacing:.16em; }
-  .outro-film__head span{ font-size:9px; color:var(--acc); letter-spacing:.2em; }
-  .outro-film video{
-    display:block; width:100%; max-height:29vh; aspect-ratio:16/9; object-fit:cover;
-    border-radius:10px; background:#050507; box-shadow:0 10px 28px rgba(0,0,0,.46);
-  }
-  .outro-film figcaption{
-    display:flex; justify-content:space-between; gap:12px; align-items:center;
-    padding:9px 4px 1px; color:var(--dim); font-size:10px; line-height:1.6;
-  }
-  .outro-film figcaption a{ color:var(--acc); text-decoration:none; white-space:nowrap; }
-  .outro-film figcaption a:hover{ text-decoration:underline; }
-
-  /* 窄桌面：爆炸卡半徑收斂，避免飛出畫面 */
-  @media (max-width:980px) and (min-width:681px){
-    #stage.exploded .exp-card{ transform:translate(calc(var(--tx)*0.62), calc(var(--ty)*0.78)) scale(.9); }
-  }
-
-  /* ===== 手機版 ===== */
+  /* ===== 手機：上圖下文，什麼都不疊 ===== */
   @media (max-width:680px){
-    #topbar{ padding:12px 14px; }
-    #topbar .brand{ font-size:10.5px; letter-spacing:.16em; }
-    #topbar .tools > *{ padding:8px 12px; font-size:11.5px; }
-    #topbar .tools .bt{ display:none; }
-    #dots{ right:0; gap:0; }
-    #dots button .lb{ display:none; }
-    #phone-wrap{ transform:translate(-50%,-56%) scale(.72); }
-    #stage.ph-right #phone-wrap, #stage.ph-left #phone-wrap{ transform:translate(-50%,-56%) scale(.72); }
-    .callout{ display:none; }
-    .scene-txt{
-      top:auto; bottom:3vh; left:4vw !important; right:4vw !important; width:auto; transform:none;
-      text-align:left !important;
-    }
-    .scene-txt .kickpill{ position:fixed; top:54px; left:50%; transform:translateX(-50%); margin:0; }
-    .scene-txt .slogan{
-      position:fixed; top:86px; left:4vw; right:4vw; text-align:center;
-      font-size:clamp(24px, 6.6vw, 32px); margin:0;
-    }
-    .scene-txt .tcard{ max-height:40vh; overflow-y:auto; }
-    .scene-txt.side-right .tcard{ text-align:left; }
-    .scene-txt.side-right .stats{ justify-content:flex-start; }
-    #stage.exploded .exp-card{ transform:translate(var(--mtx), var(--mty)) scale(.82); }
-    #hero .spacer{ height:50vh; }
-    #hint{ bottom:14px; }
-    #outro .cta{ padding:10px 18px; font-size:12.5px; }
-    #outro{ width:96vw; }
-    #outro .slogan{ font-size:clamp(24px,7vw,31px); margin-bottom:6px; }
-    #outro > p{ margin:4px 0; font-size:12px; line-height:1.7; }
-    #outro .stats{ margin:10px 0 14px; }
-    .outro-film{ margin:10px auto 12px; padding:7px; }
-    .outro-film video{ max-height:25vh; }
-    .outro-film figcaption{ font-size:9px; }
+    :root{ --top:56px; }
+    #topbar .brand span{ display:none; }
+    #topbar .brand b{ font-size:16px; }
+    #topbar .tools{ gap:16px; }
+    .tbtn{ font-size:13px; gap:5px; }
+    .tbtn svg.lic{ width:14px; height:14px; }
+    .tbtn .long{ display:none; }
+    #toc{ display:none; }
+    .sc, .sc.flip{ display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start;
+      padding:20px 18px calc(76px + env(safe-area-inset-bottom)); gap:20px; }
+    .sc.flip .fig{ order:0; }
+    .fig figcaption{ font-size:12px; margin-top:8px; }
+    .txt{ max-width:none; display:flex; flex-direction:column; min-height:0; flex:0 1 auto; }
+    .kicker{ margin-bottom:10px; }
+    .ttl{ font-size:clamp(26px,7.4vw,34px); margin-bottom:14px; }
+    .body{ min-height:0; flex:0 1 auto; overflow-y:auto; }
+    .body p{ font-size:15.5px; line-height:1.85; }
+    .specs dd{ font-size:18px; }
+    .pager{ margin-top:12px; }
+    .strip3{ grid-template-columns:1fr 1fr 1fr; }
+    .sheet{ grid-template-columns:repeat(4,1fr); }
+    .sheet .deg{ font-size:10px; right:4px; bottom:2px; }
+    #s-hero{ padding-top:28px; }
+    #s-hero h1{ font-size:clamp(38px,11vw,52px); }
+    #s-hero .fig{ width:auto; margin:12px -18px 0; justify-self:auto; }
+    #s-hero .fig figcaption{ text-align:left; margin:0 18px; }
+    #hint{ display:none; }
+    #s-outro .cta-row{ margin-top:18px; }
+    #s-outro video{ max-height:30vh; object-fit:cover; }
+    #mnav{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:40;
+      height:calc(60px + env(safe-area-inset-bottom)); padding:0 10px env(safe-area-inset-bottom);
+      align-items:center; justify-content:space-between; border-top:1px solid var(--rule); background:var(--bg); }
+    #mnav button{ min-width:88px; height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      font:inherit; font-size:14px; color:var(--ink); background:none; border:none; cursor:pointer; }
+    #mnav button:disabled{ color:var(--ink-faint); opacity:.5; cursor:default; }
+    #mnav .count{ font-size:13px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+  }
+  /* 矮手機（iPhone SE 這類）：圖再收一點 */
+  @media (max-width:680px) and (max-height:720px){
+    .sc .fig img, .grid2 .cell img, .strip3 img, .sheet img{ max-height:24vh; object-fit:cover; }
+    .ttl{ font-size:26px; }
+    .body p{ font-size:15px; line-height:1.75; }
+    #s-outro video{ max-height:19vh; }
+    #s-outro .specs div{ padding:6px 0; }
+    #s-outro .specs dd{ font-size:16px; }
+    #s-outro .fine{ display:none; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .fig .plate{ clip-path:none !important; transition:none; }
+    .sc, .sc.on{ transition:none; }
   }
 </style>
 </head>
 <body>
 
-<div id="stage">
-  <div class="glow" id="glowA"></div>
-  <div class="glow" id="glowB" style="opacity:0"></div>
-  <div class="haze"></div>
-</div>
-
-<div id="progress-bar"></div>
-
-<div id="topbar">
-  <div class="brand"><svg class="lic" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> <b>我的夢想車庫</b> · 導覽</div>
+<header id="topbar">
+  <a class="brand" href="./" aria-label="回首頁"><b>我的夢想車庫</b><span>功能導覽</span></a>
   <div class="tools">
-    <button id="btn-auto" title="自動播放整段導覽"><svg class="lic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" /></svg><span class="bt"> 自動導覽</span></button>
-    <a href="garage.html" title="跳過導覽直接進車庫" aria-label="進入車庫"><svg class="lic" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg><span class="bt"> 進入車庫</span></a>
+    <button class="tbtn" id="btn-auto" type="button" aria-pressed="false" aria-label="自動播放導覽"><svg class="lic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" /></svg><span>自動<span class="long">播放</span></span></button>
+    <a class="tbtn" href="garage.html" aria-label="直接進配置器"><svg class="lic" viewBox="0 0 24 24"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg><span><span class="long">直接</span>進配置器</span></a>
   </div>
-</div>
+</header>
+<div id="progress"></div>
+<nav id="toc" aria-label="導覽目錄"></nav>
 
-<div id="dots"></div>
+<main id="scenes">
 
-<!-- 主角：手機 -->
-<div id="phone-wrap">
-  <div id="phone">
-    <div class="notch"></div>
-    <div class="screen">
-
-      <div class="scr" id="scr-lobby">
-        <div class="ahead">DREAM GARAGE</div>
-        <div class="atitle">我的夢想車庫</div>
-        <div class="lob-grid">
-          <div class="lc"><img src="thumb-w202.webp" alt=""><div class="n">W202 C220</div></div>
-          <div class="lc"><img src="thumb-mx5.webp" alt=""><div class="n">MX-5</div></div>
-          <div class="lc"><img src="thumb-macan.webp" alt=""><div class="n">Macan</div></div>
-          <div class="lc"><img src="thumb-x5.webp" alt=""><div class="n">BMW X5</div></div>
-          <div class="lc"><img src="thumb-q50.webp" alt=""><div class="n">Q50</div></div>
-          <div class="lc"><img src="thumb-mustang.webp" alt=""><div class="n">Mustang</div></div>
-        </div>
-      </div>
-
-      <div class="scr" id="scr-360">
-        <div class="ahead">360° ORBIT</div>
-        <div class="atitle">1993 W202 C220</div>
-        <div class="orbit-box">
-          <img src="thumb-w202.webp" alt="">
-          <div class="drag-dot"></div>
-        </div>
-        <div class="orbit-ring"></div>
-        <div class="orbit-hint">拖 曳 旋 轉 ・ 雙 指 縮 放</div>
-      </div>
-
-      <div class="scr" id="scr-paint">
-        <div class="ahead">PAINT</div>
-        <div class="atitle">自由配色</div>
-        <div class="paint-car"><img src="thumb-mx5.webp" alt=""></div>
-        <div class="sw-row">
-          <div class="sw sel" style="background:#0c0d10"></div>
-          <div class="sw" style="background:#eef0f2"></div>
-          <div class="sw" style="background:#6b7177"></div>
-          <div class="sw" style="background:#aeb4bb"></div>
-          <div class="sw" style="background:#1b2c4d"></div>
-          <div class="sw" style="background:#1f3d33"></div>
-          <div class="sw" style="background:#7a1e23"></div>
-          <div class="sw rainbow"></div>
-        </div>
-        <div class="sw-lab">車 身 色 ・ 點 一 下 上 漆</div>
-      </div>
-
-      <div class="scr" id="scr-wheel">
-        <div class="ahead">WHEELS · FINISH</div>
-        <div class="atitle">輪圈與質感</div>
-        <div class="wheel-hero"></div>
-        <div class="sw-row" style="margin-top:16px">
-          <div class="sw sel" style="background:#c8ccd0"></div>
-          <div class="sw" style="background:#e8edf2"></div>
-          <div class="sw" style="background:#16181b"></div>
-          <div class="sw" style="background:#7d5a2c"></div>
-          <div class="sw" style="background:#b87a73"></div>
-          <div class="sw" style="background:#1f3a6b"></div>
-          <div class="sw" style="background:#c2a878"></div>
-        </div>
-        <div class="fin-row"><span class="on">亮面</span><span>消光</span><span>金屬</span><span>珍珠</span></div>
-      </div>
-
-      <div class="scr" id="scr-scene">
-        <div class="ahead">SCENES</div>
-        <div class="atitle">三種場景</div>
-        <div class="scene-list">
-          <div class="scene-item sc-studio on"><span class="sn">攝影棚</span><img src="thumb-q50.webp" alt=""></div>
-          <div class="scene-item sc-sunset"><span class="sn">夕陽</span><img src="thumb-q50.webp" alt=""></div>
-          <div class="scene-item sc-night"><span class="sn">夜晚</span><img src="thumb-q50.webp" alt=""></div>
-        </div>
-      </div>
-
-      <div class="scr" id="scr-sound">
-        <div class="ahead">ENGINE</div>
-        <div class="atitle">1993 W202 C220</div>
-        <div class="snd-btn"><svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px;vertical-align:-1.5px"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></svg> 發動引擎</div>
-        <div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="puffs"><i></i><i></i><i></i></div>
-        <div class="orbit-hint">引 擎 聲</div>
-      </div>
-
-      <div class="scr" id="scr-ar">
-        <div class="ahead">AR</div>
-        <div class="atitle">在你的空間看車</div>
-        <div class="ar-frame">
-          <span class="ar-pill">AR 模式</span>
-          <img src="thumb-mx5.webp" alt="">
-          <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
-        </div>
-        <div class="orbit-hint" style="margin-top:12px">實 際 比 例 ・ 擺 進 你 家</div>
-      </div>
-
-      <div class="scr" id="scr-share">
-        <div class="ahead">SHARE</div>
-        <div class="atitle">分享你的配置</div>
-        <div class="qr" id="qr-mock"></div>
-        <div class="share-link">dream-car-garage…workers.dev/garage?car=0&ext=6…</div>
-        <div class="line-btn">分享到 LINE</div>
-      </div>
-
-      <div id="ph-tabs">
-        <span data-t="0"><svg class="lic" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span><span data-t="1"><svg class="lic" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg></span><span data-t="2"><svg class="lic" viewBox="0 0 24 24"><path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.9 4.9 1.4 1.4" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.3 17.7-1.4 1.4" /><path d="m19.1 4.9-1.4 1.4" /></svg></span><span data-t="3"><svg class="lic" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><path d="M16 9a5 5 0 0 1 0 6" /><path d="M19.364 18.364a9 9 0 0 0 0-12.728" /></svg></span><span data-t="4"><svg class="lic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg></span>
-      </div>
+  <!-- 0 開場 -->
+  <section class="sc on" id="s-hero" aria-label="開場">
+    <div class="head">
+      <h1>我的夢想車庫</h1>
+      <p class="sub">九台車，一台是我自己的 1993 W202，另外八台是想過的車。這一頁講網站的每個功能為什麼這樣做，以及做的時候踩過的坑。</p>
     </div>
-  </div>
+    <figure class="fig">
+      <div class="plate"><img src="tt/w202/028.webp?v=144a" width="1280" height="720" alt="深綠色 W202 停在暗色攝影棚，地板有倒影"></div>
+      <figcaption>首頁轉盤的其中一張。Blender 攝影棚渲染。</figcaption>
+    </figure>
+  </section>
 
-  <!-- 標籤指線（釘在手機上，每幕一個） -->
-  <div class="callout at-left"  id="co-1" style="top:38%"><span class="pin"></span><span class="ln"></span><span class="tag">拖曳就能 360° 看整台車</span></div>
-  <div class="callout at-right" id="co-2" style="top:64%"><span class="pin"></span><span class="ln"></span><span class="tag">1,677 萬色調色盤</span></div>
-  <div class="callout at-left"  id="co-3" style="top:42%"><span class="pin"></span><span class="ln"></span><span class="tag">10 款輪圈一鍵換</span></div>
-  <div class="callout at-right" id="co-4" style="top:52%"><span class="pin"></span><span class="ln"></span><span class="tag">真實 HDR 環境光影</span></div>
-  <div class="callout at-left"  id="co-5" style="top:47%"><span class="pin"></span><span class="ln"></span><span class="tag">九段授權錄音</span></div>
-  <div class="callout at-right" id="co-6" style="top:40%"><span class="pin"></span><span class="ln"></span><span class="tag">實際比例 AR 擺進家</span></div>
-  <div class="callout at-left"  id="co-7" style="top:44%"><span class="pin"></span><span class="ln"></span><span class="tag">整台配置收進一條網址</span></div>
-</div>
-
-<!-- 開場 -->
-<div id="hero">
-  <div class="kick">DREAM GARAGE · GUIDED TOUR</div>
-  <h1>我的夢想車庫</h1>
-  <div class="sub">一台真的，八台夢的 ・ 三分鐘看完它怎麼做出來</div>
-  <div class="spacer"></div>
-</div>
-<div id="hint">滾動 開始導覽<span class="arrow"></span></div>
-
-<!-- 每幕文字（JS 填內容） -->
-<div class="scene-txt" id="scene-txt">
-  <div class="kickpill" id="kickpill"></div>
-  <div class="slogan" id="slogan"></div>
-  <div class="tcard" id="tcard">
-    <div class="segbar" id="segbar"></div>
-    <div class="seg" id="seg"></div>
-    <div class="taphint">點卡片看下一段 <svg class="lic" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></div>
-  </div>
-</div>
-
-<!-- 爆炸拆解卡（JS 建立） -->
-
-<!-- 結尾 -->
-<div id="outro">
-  <div class="kickpill">BUILD YOURS</div>
-  <div class="slogan">換你配一台。</div>
-  <p>九台車都停好了。W202 是我自己的車，其他八台是夢。</p>
-  <figure class="outro-film" aria-label="Dream Garage Blender 城市開場短片">
-    <div class="outro-film__head">
-      <strong>Blender 城市開場短片</strong>
-      <span>11 SEC · BLENDER</span>
+  <!-- 1 即時 3D -->
+  <section class="sc" id="s-orbit" aria-label="即時 3D">
+    <figure class="fig">
+      <div class="plate"><img src="tour/orbit.webp" width="1880" height="1240" loading="lazy" alt="配置器畫面：W202 在暗棚裡，下方是車色與內裝色的色票"></div>
+      <figcaption><b>配置器的實際畫面。</b>W202 在暗棚，原車綠。拖曳可以轉，雙指可以拉近。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">即時 3D <i>01</i></div>
+      <h2 class="ttl">為什麼不用照片。</h2>
+      <div class="body"><div class="seg"></div></div>
     </div>
-    <video controls playsinline preload="metadata" poster="dream-garage-opening-poster.jpg">
-      <source src="dream-garage-opening.mp4" type="video/mp4">
-      您的瀏覽器不支援影片播放。
-    </video>
-    <figcaption>
-      <span>W202 停在 Dream Garage 門口。車不動，鏡頭繞著它走。這也是首頁的開場。</span>
-      <a href="dream-garage-opening.mp4">另開影片 ↗</a>
-    </figcaption>
-  </figure>
-  <div class="stats">
-    <span><b>9</b>台車</span>
-    <span><b>143,360</b>種單車配置組合</span>
-  </div>
-  <div>
-    <a class="cta" href="garage.html">進入 360° 配置器</a>
-    <a class="cta ghost" href="./">看電影式展示</a>
-  </div>
-  <div class="credits">數字都從配置器的真實資料算出來 · <a href="sources.html">九台車的來源、授權與修改紀錄</a></div>
-</div>
+  </section>
+
+  <!-- 2 換色 -->
+  <section class="sc flip" id="s-paint" aria-label="換色">
+    <figure class="fig">
+      <div class="plate strip3">
+        <img src="tour/paint-red.webp" width="2080" height="1040" loading="lazy" alt="紅色 MX-5">
+        <img src="tour/paint-blue.webp" width="2080" height="1040" loading="lazy" alt="深藍色 MX-5">
+        <img src="tour/paint-silver.webp" width="2080" height="1040" loading="lazy" alt="銀色 MX-5">
+      </div>
+      <figcaption><b>同一個 MX-5 模型，三種車色。</b>太陽石紅、午夜藍、鈦銀。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">換色 <i>02</i></div>
+      <h2 class="ttl">換色，<br>先換對零件。</h2>
+      <div class="body"><div class="seg"></div></div>
+    </div>
+  </section>
+
+  <!-- 3 輪圈與組合數 -->
+  <section class="sc" id="s-wheel" aria-label="輪圈與組合數">
+    <figure class="fig">
+      <div class="plate"><img src="tour/wheel.webp" width="2080" height="1040" loading="lazy" alt="銀色 AMG GT 四門跑車，古銅金輪圈"></div>
+      <figcaption><b>AMG GT，古銅金輪圈。</b>輪圈能不能換，要看模型裡輪圈是不是獨立的零件。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">輪圈與質感 <i>03</i></div>
+      <h2 class="ttl">組合數<br>是用乘的。</h2>
+      <div class="body"><div class="seg"></div></div>
+    </div>
+  </section>
+
+  <!-- 4 光線 -->
+  <section class="sc flip" id="s-scene" aria-label="四種光線">
+    <figure class="fig">
+      <div class="plate grid2">
+        <div class="cell"><img src="tour/scene-0.webp" width="2080" height="1040" loading="lazy" alt="W202 在暗棚"><span class="tag">暗棚</span></div>
+        <div class="cell light"><img src="tour/scene-1.webp" width="2080" height="1040" loading="lazy" alt="W202 在白棚"><span class="tag">白棚</span></div>
+        <div class="cell light"><img src="tour/scene-2.webp" width="2080" height="1040" loading="lazy" alt="W202 在夕陽"><span class="tag">夕陽</span></div>
+        <div class="cell"><img src="tour/scene-3.webp" width="2080" height="1040" loading="lazy" alt="W202 在夜晚"><span class="tag">夜晚</span></div>
+      </div>
+      <figcaption><b>同一台 W202，四種場景。</b>車漆反射的是那張環境照片裡的光。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">光線 <i>04</i></div>
+      <h2 class="ttl">同一台車，<br>四種光線。</h2>
+      <div class="body"><div class="seg"></div></div>
+    </div>
+  </section>
+
+  <!-- 5 引擎聲 -->
+  <section class="sc" id="s-sound" aria-label="引擎聲">
+    <figure class="fig">
+      <div class="plate"><img src="tour/engine.webp" width="2080" height="1200" loading="lazy" alt="W202 車尾，尾燈亮起，下方提示寫著：引擎發動，錄音 90 年代 C-Class 實錄"></div>
+      <figcaption><b>按下發動引擎。</b>尾燈亮起，下方寫出這段錄音是哪台車錄的。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">引擎聲 <i>05</i></div>
+      <h2 class="ttl">代用的聲音，<br>要說是代用。</h2>
+      <div class="body"><div class="seg"></div></div>
+    </div>
+  </section>
+
+  <!-- 6 分享與 AR -->
+  <section class="sc flip" id="s-share" aria-label="分享與 AR">
+    <figure class="fig">
+      <div class="plate" style="max-width:560px"><img src="tour/share.webp" width="1120" height="960" loading="lazy" alt="分享視窗：一個 QR code、一條網址、分享到 LINE 的按鈕"></div>
+      <figcaption><b>分享視窗。</b>QR code 是真的，掃了會開到這台綠色 W202。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">分享與 AR <i>06</i></div>
+      <h2 class="ttl">配置就是網址。</h2>
+      <div class="body"><div class="seg"></div></div>
+    </div>
+  </section>
+
+  <!-- 7 首頁為什麼用照片 -->
+  <section class="sc" id="s-perf" aria-label="首頁的轉盤">
+    <figure class="fig">
+      <div class="plate sheet" id="sheet"></div>
+      <figcaption><b>W202 轉盤的其中 8 張，每 45° 取一張。</b>實際是 144 張，每 2.5° 一張。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">首頁 <i>07</i></div>
+      <h2 class="ttl">看的用照片，<br>玩的用 3D。</h2>
+      <div class="body"><div class="seg"></div></div>
+    </div>
+  </section>
+
+  <!-- 8 結尾 -->
+  <section class="sc flip" id="s-outro" aria-label="開始配車">
+    <figure class="fig">
+      <div class="plate">
+        <video controls playsinline preload="none" poster="dream-garage-opening-poster.jpg" aria-label="開場影片：W202 停在 Dream Garage 門口的夜晚街道">
+          <source src="dream-garage-opening-720.mp4" type="video/mp4">
+        </video>
+      </div>
+      <figcaption><b>首頁的開場影片。</b>W202 停在門口，車不動，鏡頭繞著它走。10.8 秒，Blender 渲染。</figcaption>
+    </figure>
+    <div class="txt">
+      <div class="kicker">開始</div>
+      <h2 class="ttl">換你配一台。</h2>
+      <dl class="specs">
+        <div><dt>車</dt><dd>9 台</dd></div>
+        <div><dt>單車配置組合</dt><dd>143,360</dd></div>
+        <div><dt>授權引擎錄音</dt><dd>9 段</dd></div>
+      </dl>
+      <div class="cta-row">
+        <a class="cta" href="garage.html">進入配置器 <svg class="lic" viewBox="0 0 24 24"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></a>
+        <a class="link" href="./">看首頁的轉盤</a>
+      </div>
+      <p class="fine">數字都從配置器的資料算出來。<a href="sources.html">九台車的模型、聲音來源與授權</a></p>
+    </div>
+  </section>
+
+</main>
+
+<div id="hint"><svg class="lic" viewBox="0 0 24 24"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>滾動或按方向鍵，一次一幕</div>
+
+<nav id="mnav" aria-label="上一幕與下一幕">
+  <button type="button" id="m-prev" aria-label="上一幕"><svg class="lic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>上一幕</button>
+  <span class="count" id="m-count" aria-live="polite">1 / 9</span>
+  <button type="button" id="m-next" aria-label="下一幕">下一幕<svg class="lic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg></button>
+</nav>
 
 <script>
 (function(){
 'use strict';
 
 /* =====================================================================
-   我的夢想車庫 · 功能導覽（電影式步進）
-   一支手機貫穿全場：換幕=換手機裡的畫面。滾輪一下=一幕，
-   文字卡 2~3 段每段 6 秒自動輪播，非自動導覽時停在最後一段。
-   所有數字皆統計自 garage.html 的真實資料（車數/色票/輪圈/選配…）。
+   步進：滾一下（deltaY ≥ 20）或滑一下換一幕，900ms 冷卻。
+   每幕內文 2–3 段，每段 7 秒自動往下；不是自動播放時停在最後一段。
+   數字都對過 garage.html 的資料表（2026-10-02）：
+     車色 7、內裝色 4、輪圈 10、車漆質感 4、卡鉗 2 → 7×4×10×4×2 = 2,240
+     選配 6 項（各可開關）→ 2,240 × 2^6 = 143,360
+     場景 4（暗棚、白棚、夕陽、夜晚），HDR 3 張（暗棚、白棚同一張）
    ===================================================================== */
-
-/* ---------- 幕資料（真實數據） ---------- */
-var SCENES = [
-  { id:'hero',  acc:'#d4af37', glow:'212,175,55', screen:'scr-lobby', tab:0, pos:'center' },
-  { id:'orbit', acc:'#9fc2e8', glow:'159,194,232', screen:'scr-360',  tab:0, pos:'right', co:'co-1',
-    kick:'360° Orbit', slogan:'為什麼不用照片。',
-    segs:[
-      '<p>九台車都是<b>即時運算的 3D 模型</b>，可以 360° 旋轉、拉近，多數車還能坐進車內。</p>',
-      '<p>一般配置器每換一個選項，就載一張預先算好的圖。選項一多，圖的數量是用乘的：7 色 × 10 輪圈 × 4 質感 × 2 卡鉗＝<b>2,240 張</b>。即時 3D 只要<b>一個模型</b>。</p>',
-      '<div class="stats"><span><b>9</b>台車</span><span><b>1</b>個模型取代 2,240 張圖</span></div>'
-    ] },
-  { id:'paint', acc:'#e8593f', glow:'232,89,63', screen:'scr-paint', tab:1, pos:'left', co:'co-2',
-    kick:'Paint', slogan:'換色，<br>先換對零件。',
-    segs:[
-      '<p><b>七種車色</b>、<b>四種內裝色</b>，點一下即時上色；調色盤可以自訂任何顏色。</p>',
-      '<p>能不能換色，要看模型有沒有把車身漆分成獨立材質。我一開始拿模型平台回報的材質數篩選，後來發現那是<b>轉檔後的數字</b>，不準。有一整批模型是 AI 生成的，<b>只有一個材質</b>，根本換不了色，全部排除。</p>',
-      '<div class="stats"><span><b>7</b>車色</span><span><b>4</b>內裝色</span><span><b>0</b>台 AI 生成模型</span></div>'
-    ] },
-  { id:'wheel', acc:'#c2a878', glow:'194,168,120', screen:'scr-wheel', tab:1, pos:'right', co:'co-3',
-    kick:'Wheels & Finish', slogan:'組合數是用乘的。',
-    segs:[
-      '<p><b>十款輪圈</b>、<b>四種車漆質感</b>、<b>兩色卡鉗</b>，還有三套一鍵套件。</p>',
-      '<p>選項最齊全的車，光外觀就有 <b>2,240 種組合</b>，加上六項選配是 143,360 種。不是每台都能換輪圈或卡鉗：要看模型的輪圈、卡鉗是不是獨立零件。</p>',
-      '<div class="stats"><span><b>2,240</b>單車外觀組合</span><span><b>143,360</b>含選配</span></div>'
-    ] },
-  { id:'scene', acc:'#8fa8d8', glow:'143,168,216', screen:'scr-scene', tab:2, pos:'left', co:'co-4',
-    kick:'Scenes', slogan:'三種光，<br>同一台車。',
-    segs:[
-      '<p>暗棚、白棚、夕陽、夜晚四種場景，用的是 Poly Haven 的 <b>HDR 環境光</b>，車漆反射的是那張照片裡的光。白棚是淺色中性背景，看車色最準。</p>',
-      '<p>車款縮圖也用<b>同一套光</b>重新算過。第一版縮圖用了另一種光，放在深色頁面上變成一圈白框，一眼就被看出來。</p>',
-      '<div class="stats"><span><b>3</b>種 HDR 光</span><span><b>9</b>張同光縮圖</span></div>'
-    ] },
-  { id:'sound', acc:'#d4363c', glow:'212,54,60', screen:'scr-sound', tab:3, pos:'right', co:'co-5',
-    kick:'Engine', slogan:'代用的聲音，<br>要說是代用。',
-    segs:[
-      '<p>按下「<b>發動引擎</b>」，車燈亮起、播放引擎聲，排氣管還會冒煙。</p>',
-      '<p>九台車都有引擎聲，全部是 Freesound 和 Wikimedia 上有授權的錄音。但只有 W202 錄的是同款車；其他八台是同系列或同類型的引擎，按下去時畫面會寫出是哪台車錄的。</p>',
-      '<div class="stats"><span><b>9</b>段授權錄音</span><span><b>1</b>段同款車</span></div>'
-    ] },
-  { id:'ar', acc:'#45c8e6', glow:'69,200,230', screen:'scr-ar', tab:4, pos:'left', co:'co-6',
-    kick:'AR', slogan:'把它停進你家。',
-    segs:[
-      '<p>支援 AR 的手機，可以把車以<b>實際比例</b>擺進你家車庫或巷口。電腦上配好，掃 QR code 換手機看。</p>',
-      '<p>AR 要看手機支不支援，我還沒在每一種手機上測過。</p>',
-      '<div class="stats"><span><b>AR</b>實境看車</span><span><b>QR</b>換手機看</span></div>'
-    ] },
-  { id:'share', acc:'#4d94e8', glow:'77,148,232', screen:'scr-share', tab:4, pos:'right', co:'co-7',
-    kick:'Share', slogan:'配置就是網址。',
-    segs:[
-      '<p>車款、車色、輪圈、選配，全部記在<b>一條連結</b>的網址裡，不用帳號、不用資料庫。</p>',
-      '<p>複製連結、分享到 <b>LINE</b>、或讓朋友掃 <b>QR code</b>，打開就是你配的那台。</p>',
-      '<div class="stats"><span><b>連結</b>含完整配置</span><span><b>0</b>個帳號</span></div>'
-    ] },
-  { id:'boom', acc:'#d4af37', glow:'212,175,55', screen:'scr-lobby', tab:0, pos:'center',
-    kick:'Performance', slogan:'看的用照片，<br>玩的用 3D。',
-    segs:[
-      '<p>首頁的車是我用 Blender 在攝影棚場景裡預先渲染的：每台轉一圈拍 <b>144 張</b>，每 2.5° 一張，有真的地板倒影，拖曳就能轉。一開始只拍 36 張，換車時看起來一格一格的，所以加密了四倍；圖分批下載，沒拖過車的人每台只會載到六成左右。即時 3D 放在配置器，留給想換色、坐進車內的人。</p>',
-      '<p>即時 3D 那邊也踩過坑：一頁超過三個 3D 檢視器 Chrome 就會卡死；有兩台車的車身被簡化掉八成多，攝影棚一打光就凹凸不平，後來換回原始模型的車身。</p>',
-      '<div class="stats"><span><b>36</b>張／台</span><span><b>0.7</b>MB／台</span></div>'
-    ] },
-  { id:'outro', acc:'#d4af37', glow:'212,175,55', screen:'scr-lobby', tab:0, pos:'center' }
-];
-var N = SCENES.length;
-var SEG_SEC = 6;
-
-/* ---------- 爆炸拆解卡 ---------- */
-function lx(p){ return '<svg class="lic" viewBox="0 0 24 24">'+p+'</svg>'; }
-var LX = {
-  rot: lx('<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" />'),
-  pal: lx('<circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />'),
-  cog: lx('<path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" /><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" /><path d="M12 2v2" /><path d="M12 22v-2" /><path d="m17 20.66-1-1.73" /><path d="M11 10.27 7 3.34" /><path d="m20.66 17-1.73-1" /><path d="m3.34 7 1.73 1" /><path d="M14 12h8" /><path d="M2 12h2" /><path d="m20.66 7-1.73 1" /><path d="m3.34 17 1.73-1" /><path d="m17 3.34-1 1.73" /><path d="m11 13.73-4 6.93" />'),
-  spark: lx('<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" />'),
-  scene: lx('<path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.9 4.9 1.4 1.4" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.3 17.7-1.4 1.4" /><path d="m19.1 4.9-1.4 1.4" />'),
-  vol: lx('<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><path d="M16 9a5 5 0 0 1 0 6" /><path d="M19.364 18.364a9 9 0 0 0 0-12.728" />'),
-  phone: lx('<rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" />'),
-  link: lx('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />'),
-  calc: lx('<rect width="16" height="20" x="4" y="2" rx="2" /><line x1="8" x2="16" y1="6" y2="6" /><line x1="16" x2="16" y1="14" y2="18" /><path d="M16 10h.01" /><path d="M12 10h.01" /><path d="M8 10h.01" /><path d="M12 14h.01" /><path d="M8 14h.01" /><path d="M12 18h.01" /><path d="M8 18h.01" />'),
-  clap: lx('<path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /><path d="m6.2 5.3 3.1 3.9" /><path d="m12.4 3.4 3.1 4" /><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />'),
-  play: lx('<polygon points="6 3 20 12 6 21 6 3" />'),
-  pause: lx('<rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" />')
+var SEGS = {
+  's-orbit':[
+    '<p>九台車都是<b>即時運算的 3D 模型</b>，可以 360° 旋轉、拉近。九台裡有七台能坐進車內看。</p>',
+    '<p>一般配置器每換一個選項，就換一張預先拍好的圖。選項一多，圖的數量是用乘的。這裡的外觀組合要 <b>2,240 張</b>，即時 3D 只要<b>一個模型</b>。</p>'
+  ],
+  's-paint':[
+    '<p><b>七種車色、四種內裝色</b>，點一下就上色，調色盤也能挑任何顏色。</p>',
+    '<p>能不能換色，要看模型有沒有把車身漆分成獨立材質。我一開始照模型平台寫的材質數去篩，後來發現那是轉檔後的數字，不準。有一批模型是 AI 生成的，<b>整台只有一個材質</b>，換不了色，全部排除。</p>'
+  ],
+  's-wheel':[
+    '<p><b>十款輪圈、四種車漆質感、兩色卡鉗</b>，另外有三套一鍵配好的組合。</p>',
+    '<dl class="specs"><div><dt>車色 × 內裝色 × 輪圈 × 質感 × 卡鉗</dt><dd>2,240</dd></div><div><dt>再加六項選配，各可開關</dt><dd>143,360</dd></div></dl>',
+    '<p>這是選項最齊的車。不是每台都能換輪圈或卡鉗，要看模型裡它們是不是獨立零件。</p>'
+  ],
+  's-scene':[
+    '<p>暗棚、白棚、夕陽、夜晚四種場景，背後是三張 Poly Haven 的 <b>HDR 環境照片</b>，暗棚和白棚共用一張。白棚的背景是淺色中性，看車色最準。</p>',
+    '<p>預設是<b>暗棚</b>。首頁的車是在同一張環境光裡渲染的，從首頁點進來，光線接得上。</p>'
+  ],
+  's-sound':[
+    '<p>按下「<b>發動引擎</b>」，車燈亮起、播放引擎聲，排氣管會冒煙。</p>',
+    '<p>九段錄音都來自 Freesound 和 Wikimedia，授權都查過。但<b>只有 W202 錄的是同款車</b>，其他八台是同系列或同類型的引擎。按下去時畫面會寫出是哪台車錄的。</p>'
+  ],
+  's-share':[
+    '<p>車款、車色、輪圈、選配、場景，全部記在<b>一條網址</b>裡。不用帳號，也沒有資料庫。</p>',
+    '<p>複製連結、分享到 LINE，或讓朋友掃 QR code，打開就是你配的那台。支援 AR 的手機可以把車以實際比例擺進房間。<b>AR 我還沒在實機上測過。</b></p>'
+  ],
+  's-perf':[
+    '<p>首頁的車是預先渲染的照片。每台車在 Blender 的攝影棚裡轉一圈，拍 <b>144 張</b>，每 2.5° 一張，有真的地板倒影。</p>',
+    '<p>一開始只拍 36 張，換車時看得出一格一格，所以加密四倍。圖分批下載，沒動手拖車的人每台只載六成左右。</p>',
+    '<p>即時 3D 留在配置器，給想換色、坐進車內的人。那邊也踩過坑：一頁超過三個 3D 檢視器 Chrome 就會卡死；兩台車的車身被簡化掉八成多，打光就凹凸不平，後來換回原始車身。</p>'
+  ]
 };
-var EXP = [
-  { i:LX.rot,   z:'360° 環景', e:'Orbit',    tx:[-300,-170], ty:[-190,-215] },
-  { i:LX.pal,   z:'自由配色', e:'Paint',    tx:[  -8,   0], ty:[-262,-250] },
-  { i:LX.cog,   z:'輪圈樣式', e:'Wheels',   tx:[ 292, 170], ty:[-192,-215] },
-  { i:LX.spark, z:'車漆質感', e:'Finish',   tx:[-352,-128], ty:[ -40, -80] },
-  { i:LX.scene, z:'三種場景', e:'Scenes',   tx:[ 344, 128], ty:[ -42, -80] },
-  { i:LX.vol,   z:'引擎聲浪', e:'Engine',   tx:[-332,-128], ty:[ 118,  70] },
-  { i:LX.phone, z:'AR 看車',  e:'AR View',  tx:[ 326, 128], ty:[ 120,  70] },
-  { i:LX.link,  z:'分享配置', e:'Share',    tx:[-188,-170], ty:[ 232, 205] },
-  { i:LX.calc,  z:'選配清單', e:'Options',  tx:[   0,   0], ty:[ 276, 240] },
-  { i:LX.clap,  z:'電影式展示', e:'Cinematic', tx:[196,170], ty:[ 230, 205] }
-];
-var stage = document.getElementById('stage');
-EXP.forEach(function(c){
-  var d=document.createElement('div');
-  d.className='exp-card';
-  d.style.setProperty('--tx',  c.tx[0]+'px'); d.style.setProperty('--ty',  c.ty[0]+'px');
-  d.style.setProperty('--mtx', c.tx[1]*0.72+'px'); d.style.setProperty('--mty', c.ty[1]+'px');
-  d.innerHTML='<div class="ei">'+c.i+'</div><div class="ez">'+c.z+'</div><div class="ee">'+c.e+'</div>';
-  stage.appendChild(d);   // 必須在 #stage 裡，CSS 的 #stage.exploded .exp-card 才吃得到
-});
-/* 逐張錯開飛出 */
-(function(){
-  var cards=document.querySelectorAll('.exp-card');
-  cards.forEach(function(c,i){ c.style.transitionDelay=(i*0.07)+'s, '+(i*0.05)+'s'; });
-})();
+var NAMES = ['開場','即時 3D','換色','輪圈與質感','光線','引擎聲','分享與 AR','首頁','開始'];
+var SEG_SEC = 7;
 
-/* ---------- QR 假圖（固定圖樣，不用亂數：只是示意） ---------- */
-(function(){
-  var box=document.getElementById('qr-mock');
-  var pat='1111111010111111110000010100000101101110101011011010111010001101101011101010101110110000010111000001111111101011111110000000011000000101101011110010111000110100100110101100111010110010101010010011101100110001110110111011111110001011010000010110110101011101011011001010001101100111000001010011011111111011010010';
-  for(var i=0;i<196;i++){
-    var d=document.createElement('i');
-    if(pat[i%pat.length]==='0') d.className='o';
-    box.appendChild(d);
-  }
-})();
-
-/* ---------- 右側圓點 ---------- */
-var DOT_NAMES=['開場','360° 環景','自由配色','輪圈質感','三種場景','引擎聲浪','AR 看車','分享配置','十全功能','開始配車'];
-var dotsBox=document.getElementById('dots');
-SCENES.forEach(function(s,i){
-  var b=document.createElement('button');
-  b.setAttribute('aria-label', DOT_NAMES[i]);
-  b.innerHTML='<span class="lb">'+DOT_NAMES[i]+'</span>';
-  b.onclick=function(){ goTo(i); };
-  dotsBox.appendChild(b);
-});
-var dots=dotsBox.children;
-
-/* ---------- 狀態 ---------- */
-var scene=0, segIdx=0, segT=0, sceneT=0;
-var autoPlay=false, lastNav=0, heroDone=false;
-
+var scs = Array.prototype.slice.call(document.querySelectorAll('.sc'));
+var N = scs.length;
+var scene = 0, segIdx = 0, segT = 0, sceneT = 0, autoPlay = false, lastNav = 0;
 function clamp(v,a,b){ return v<a?a : v>b?b : v; }
-function isMobile(){ return window.innerWidth<=680; }
 
-/* ---------- --vh：innerHeight 可能暫時是 0 ---------- */
-function setVH(){
-  if(window.innerHeight<10){ setTimeout(setVH,120); return; }
-  document.documentElement.style.setProperty('--vh', window.innerHeight+'px');
-}
-setVH();
-if(window.ResizeObserver) new ResizeObserver(setVH).observe(document.documentElement);
-window.addEventListener('resize', setVH);
+/* 轉盤接觸表：每 45° 一張（第 0、18、36…126 張） */
+(function(){
+  var box = document.getElementById('sheet'), h = '';
+  for(var k=0;k<8;k++){
+    var f = k*18;
+    h += '<div class="cell"><img src="tt/w202/'+String(f).padStart(3,'0')+'.webp?v=144a" width="1280" height="720" loading="lazy" alt=""><span class="deg">'+(f*2.5)+'°</span></div>';
+  }
+  box.innerHTML = h;
+})();
 
-/* ---------- 背景光暈雙層交叉換色 ---------- */
-var glows=[document.getElementById('glowA'), document.getElementById('glowB')];
-var glowFront=0;
-function glowCSS(rgb){
-  return 'radial-gradient(ellipse 95% 52% at 50% 82%, rgba('+rgb+',.13), transparent 62%),'+
-         'radial-gradient(ellipse 130% 95% at 50% 38%, #15161a, var(--bg) 78%)';
-}
-glows[0].style.background=glowCSS(SCENES[0].glow);
-function setGlow(rgb){
-  var back=1-glowFront;
-  glows[back].style.background=glowCSS(rgb);
-  glows[back].style.opacity=1;
-  glows[glowFront].style.opacity=0;
-  glowFront=back;
-}
-
-/* ---------- 手機螢幕/分頁/位置 ---------- */
-var screens=document.querySelectorAll('.scr');
-var tabs=document.querySelectorAll('#ph-tabs span');
-function applyPhone(s){
-  screens.forEach(function(sc){ sc.classList.toggle('on', sc.id===s.screen); });
-  tabs.forEach(function(t,i){ t.classList.toggle('on', i===s.tab); });
-  stage.classList.toggle('ph-left',  s.pos==='left');
-  stage.classList.toggle('ph-right', s.pos==='right');
-}
-
-/* ---------- callout ---------- */
-function applyCallout(s){
-  document.querySelectorAll('.callout').forEach(function(c){
-    c.classList.toggle('show', !!s.co && c.id===s.co);
+/* 每幕內文：段落與段落指示 */
+scs.forEach(function(sc){
+  var segs = SEGS[sc.id]; if(!segs) return;
+  var body = sc.querySelector('.body');
+  var pg = document.createElement('div'); pg.className = 'pager';
+  segs.forEach(function(_, i){
+    var b = document.createElement('button'); b.type = 'button';
+    b.setAttribute('aria-label', '第 '+(i+1)+' 段，共 '+segs.length+' 段');
+    b.onclick = function(){ showSeg(i); };
+    pg.appendChild(b);
   });
-}
-
-/* ---------- 文字卡 ---------- */
-var txtBox=document.getElementById('scene-txt');
-var segEl=document.getElementById('seg');
-var segbar=document.getElementById('segbar');
-function showSeg(i, instant){
-  var s=SCENES[scene];
-  if(!s.segs) return;
-  segIdx=clamp(i,0,s.segs.length-1); segT=0;
-  if(instant){ segEl.innerHTML=s.segs[segIdx]; return; }
-  segEl.classList.add('fading');
-  setTimeout(function(){ segEl.innerHTML=SCENES[scene].segs ? SCENES[scene].segs[segIdx] : ''; segEl.classList.remove('fading'); },300);
-}
-document.getElementById('tcard').addEventListener('click', function(e){
-  if(e.target.closest('a')) return;
-  var s=SCENES[scene];
-  if(s.segs) showSeg((segIdx+1)%s.segs.length);
+  var more = document.createElement('button'); more.type = 'button'; more.className = 'more'; more.textContent = '下一段';
+  more.onclick = function(){ showSeg((segIdx+1) % segs.length); };
+  pg.appendChild(more);
+  body.parentNode.insertBefore(pg, body.nextSibling);
 });
-function applyText(s){
-  if(s.segs){
-    document.getElementById('kickpill').textContent=s.kick;
-    document.getElementById('slogan').innerHTML=s.slogan;
-    txtBox.classList.toggle('side-left',  s.pos==='right'||s.pos==='center');
-    txtBox.classList.toggle('side-right', s.pos==='left');
-    showSeg(0,true);
-  } else {
-    txtBox.classList.remove('show');
-  }
+function curSegs(){ return SEGS[scs[scene].id]; }
+function showSeg(i, instant){
+  var segs = curSegs(); if(!segs) return;
+  segIdx = clamp(i, 0, segs.length-1); segT = 0;
+  var sc = scs[scene], el = sc.querySelector('.seg');
+  sc.querySelectorAll('.pager button:not(.more)').forEach(function(b, k){ b.classList.toggle('on', k===segIdx); b.setAttribute('aria-current', k===segIdx ? 'true' : 'false'); });
+  var more = sc.querySelector('.pager .more'); if(more) more.textContent = segIdx===segs.length-1 ? '從頭' : '下一段';
+  if(instant){ el.innerHTML = segs[segIdx]; return; }
+  el.classList.add('fading');
+  setTimeout(function(){ el.innerHTML = segs[segIdx]; el.classList.remove('fading'); }, 280);
 }
 
-/* ---------- 幕切換 ---------- */
+/* 目錄（桌面）與手機導覽 */
+var toc = document.getElementById('toc');
+NAMES.forEach(function(n, i){
+  var b = document.createElement('button'); b.type = 'button';
+  b.setAttribute('aria-label', n); b.innerHTML = '<span class="lb">'+n+'</span>';
+  b.onclick = function(){ goTo(i); };
+  toc.appendChild(b);
+});
+var tocBtns = toc.children;
+var mPrev = document.getElementById('m-prev'), mNext = document.getElementById('m-next'), mCount = document.getElementById('m-count');
+mPrev.onclick = function(){ goTo(scene-1); };
+mNext.onclick = function(){ goTo(scene+1); };
+
 function goTo(n){
-  n=clamp(n,0,N-1);
+  n = clamp(n, 0, N-1);
   if(n===scene) return;
-  scene=n; sceneT=0; segT=0; segIdx=0;
-  lastNav=performance.now();
-  var s=SCENES[scene];
-
-  if(scene>0 && !heroDone){ heroDone=true; }
-  document.getElementById('hero').classList.toggle('gone', scene!==0);
-  stage.classList.toggle('at-hero', scene===0);
+  scs[scene].classList.remove('on'); scs[scene].setAttribute('aria-hidden','true');
+  var v = scs[scene].querySelector('video'); if(v && !v.paused) v.pause();
+  scene = n; sceneT = 0; lastNav = performance.now();
+  scs[scene].classList.add('on'); scs[scene].removeAttribute('aria-hidden');
+  showSeg(0, true);
+  for(var i=0;i<tocBtns.length;i++){ tocBtns[i].classList.toggle('on', i===scene); tocBtns[i].setAttribute('aria-current', i===scene ? 'step' : 'false'); }
+  document.getElementById('progress').style.transform = 'scaleX('+(scene/(N-1))+')';
   document.getElementById('hint').style.opacity = scene===0 ? 1 : 0;
-
-  document.documentElement.style.setProperty('--acc', s.acc);
-  setGlow(s.glow);
-  document.getElementById('progress-bar').style.transform='scaleX('+(scene/(N-1))+')';
-  for(var d=0;d<dots.length;d++) dots[d].classList.toggle('active', d===scene);
-
-  applyPhone(s);
-  applyCallout(s);
-  applyText(s);
-  txtBox.classList.remove('show');
-
-  stage.classList.toggle('exploded', s.id==='boom');
-  document.getElementById('outro').classList.toggle('show', s.id==='outro');
-  var ph=document.getElementById('phone-wrap');
-  ph.style.opacity = (s.id==='outro') ? 0.22 : 1;
-
-  if(s.id==='outro' && autoPlay){ setAuto(false); }   // 到最後一幕自動關閉
+  mPrev.disabled = scene===0; mNext.disabled = scene===N-1;
+  mCount.textContent = (scene+1)+' / '+N;
+  if(scene===N-1 && autoPlay) setAuto(false);
 }
 
-/* ---------- 主迴圈 ---------- */
-var lastTick=0, floatT=0;
+/* 主迴圈：段落自動往下 */
+var lastTick = 0;
 function tick(now){
-  var dt=lastTick ? Math.min((now-lastTick)/1000,0.1) : 0.016;
-  lastTick=now;
-  sceneT+=dt; floatT+=dt;
-  var s=SCENES[scene];
-
-  /* 手機漂浮 */
-  var fx=Math.sin(floatT*0.7)*5, fy=Math.cos(floatT*0.9)*7, fr=Math.sin(floatT*0.5)*0.8;
-  document.getElementById('phone').style.transform='translate('+fx.toFixed(1)+'px,'+fy.toFixed(1)+'px) rotate('+fr.toFixed(2)+'deg)';
-
-  /* 文字卡：入幕 0.6 秒後亮起，段落自動輪播 */
-  if(s.segs){
-    if(sceneT>0.6 && !txtBox.classList.contains('show')) txtBox.classList.add('show');
-    if(txtBox.classList.contains('show')){
-      var last = segIdx===s.segs.length-1;
-      if(!(last && !autoPlay)) segT+=dt;          // 非自動導覽：停在最後一段
-      if(segT>=SEG_SEC){
-        if(!last) showSeg(segIdx+1);
-        else if(autoPlay) goTo(scene+1);
-      }
-      segbar.style.transform='scaleX('+clamp(segT/SEG_SEC,0,1)+')';
-      if(last && !autoPlay) segbar.style.transform='scaleX(1)';
-    }
-  } else if(autoPlay){
-    /* 開場/結尾這種沒有卡的幕：自動導覽 5 秒後前進 */
-    if(s.id!=='outro' && sceneT>5) goTo(scene+1);
-  }
-
+  var dt = lastTick ? Math.min((now-lastTick)/1000, 0.1) : 0.016;
+  lastTick = now; sceneT += dt;
+  var segs = curSegs();
+  if(segs){
+    var last = segIdx===segs.length-1;
+    if(!(last && !autoPlay)) segT += dt;
+    if(segT >= SEG_SEC){ if(!last) showSeg(segIdx+1); else if(autoPlay) goTo(scene+1); }
+  } else if(autoPlay && scene===0 && sceneT>4){ goTo(1); }
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
-setInterval(function(){ if(performance.now()-lastTick>250) tick(performance.now()); },150);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden){ segT = 0; lastTick = 0; } });
 
-/* 分頁切回來：重置段落計時，避免瞬間跳段 */
-document.addEventListener('visibilitychange', function(){
-  if(!document.hidden){ segT=0; lastTick=0; }
-});
-
-/* ---------- 輸入 ---------- */
-function navBy(d){
-  var now=performance.now();
-  if(now-lastNav<900) return;
-  goTo(scene+d);
+/* 輸入 */
+function navBy(d){ var now = performance.now(); if(now-lastNav < 900) return; goTo(scene+d); }
+function inScrollable(t){
+  var el = t && t.closest && t.closest('.body');
+  return el && el.scrollHeight > el.clientHeight + 2 ? el : null;
 }
 window.addEventListener('wheel', function(e){
-  if(Math.abs(e.deltaY)<20) return;
-  navBy(e.deltaY>0?1:-1);
-},{passive:true});
-var _tY=null;
-window.addEventListener('touchstart', function(e){ _tY=e.touches[0].clientY; },{passive:true});
+  if(Math.abs(e.deltaY) < 20) return;
+  var sb = inScrollable(e.target);
+  if(sb){ var atEnd = e.deltaY>0 ? sb.scrollTop+sb.clientHeight >= sb.scrollHeight-2 : sb.scrollTop <= 0; if(!atEnd) return; }
+  navBy(e.deltaY>0 ? 1 : -1);
+}, {passive:true});
+var _tY = null, _tSb = null;
+window.addEventListener('touchstart', function(e){ _tY = e.touches[0].clientY; _tSb = inScrollable(e.target); }, {passive:true});
 window.addEventListener('touchend', function(e){
   if(_tY===null) return;
-  var dy=_tY-e.changedTouches[0].clientY; _tY=null;
-  if(Math.abs(dy)<45) return;
-  navBy(dy>0?1:-1);
-},{passive:true});
+  var dy = _tY - e.changedTouches[0].clientY; _tY = null;
+  if(Math.abs(dy) < 50) return;
+  if(_tSb){ var atEnd = dy>0 ? _tSb.scrollTop+_tSb.clientHeight >= _tSb.scrollHeight-2 : _tSb.scrollTop <= 0; if(!atEnd) return; }
+  navBy(dy>0 ? 1 : -1);
+}, {passive:true});
 window.addEventListener('keydown', function(e){
-  if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' '){ e.preventDefault(); navBy(1); }
+  if(e.target && /^(INPUT|TEXTAREA|VIDEO)$/.test(e.target.tagName)) return;
+  if(e.key==='ArrowDown'||e.key==='PageDown'||(e.key===' ' && e.target===document.body)){ e.preventDefault(); navBy(1); }
   if(e.key==='ArrowUp'||e.key==='PageUp'){ e.preventDefault(); navBy(-1); }
 });
 
-/* ---------- 自動導覽 ---------- */
-var autoBtn=document.getElementById('btn-auto');
+/* 自動播放 */
+var autoBtn = document.getElementById('btn-auto');
+var ICON_PLAY = '<svg class="lic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" /></svg>';
+var ICON_PAUSE = '<svg class="lic" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></svg>';
 function setAuto(v){
-  autoPlay=v;
-  autoBtn.classList.toggle('on', v);
-  autoBtn.innerHTML=(v?LX.pause:LX.play)+'<span class="bt"> 自動導覽'+(v?'中':'')+'</span>';
+  autoPlay = v;
+  autoBtn.setAttribute('aria-pressed', v ? 'true' : 'false');
+  autoBtn.setAttribute('aria-label', v ? '暫停自動播放' : '自動播放導覽');
+  autoBtn.innerHTML = (v ? ICON_PAUSE : ICON_PLAY) + (v ? '<span>暫停</span>' : '<span>自動<span class="long">播放</span></span>');
 }
-autoBtn.onclick=function(){ setAuto(!autoPlay); if(autoPlay && scene===0) goTo(1); };
+autoBtn.onclick = function(){ setAuto(!autoPlay); if(autoPlay && scene===0) goTo(1); };
 
-/* ---------- 初始化 ---------- */
-dots[0].classList.add('active'); stage.classList.add('at-hero');
-applyPhone(SCENES[0]);
+/* 初始化 */
+scs.forEach(function(sc, i){ if(i) sc.setAttribute('aria-hidden','true'); });
+tocBtns[0].classList.add('on'); tocBtns[0].setAttribute('aria-current','step');
+mPrev.disabled = true;
 })();
 </script>
 </body>
