@@ -49,6 +49,9 @@
   td.src{ width:28%; }
   td.src .lic{ display:inline-block; margin-top:6px; font-size:12px; letter-spacing:.04em; border:1px solid var(--rule); padding:0 7px; border-radius:3px; color:#d4cfc4; }
   td.src .lic.warn{ border-color:#b0563f; color:#e8a894; }
+  td.did li.doubt{ color:#e8c9a4; }
+  td.did li.doubt b{ font-weight:500; color:#f0d8b8; }
+  td.did code{ font-family:Consolas,"SFMono-Regular",monospace; font-size:12.5px; color:#d4cfc4; }
   td.did ul{ list-style:none; }
   td.did li{ position:relative; padding-left:14px; }
   td.did li::before{ content:""; position:absolute; left:0; top:.9em; width:6px; height:1px; background:var(--dim); }
@@ -101,6 +104,7 @@
         <td class="did"><ul>
           <li>原本整個內裝只有一個素色材質，換內裝色時連方向盤、儀表板都一起變色。我在 Blender 把它拆成 33 個零件，分成座椅皮革、方向盤、飾板、地毯、胡桃木 5 種材質，再補一組自己畫的儀表。</li>
           <li>遮掉模型內建的車牌字樣。</li>
+          <li>把輪子和車身分開，加一段車身往下降 40 mm 的動畫，給配置器的車高滑桿用。前輪頂端到輪拱只有 48 mm，再低就會吃進葉子板。</li>
           <li>畫面上的模型不是我的車本人，顏色和配備不一定一樣。</li>
         </ul></td>
       </tr>
@@ -157,6 +161,8 @@
           <li>26 MB 壓縮到 1.6 MB；加上內裝材質後是 1.9 MB。</li>
           <li id="amg-interior">內裝零件跟外觀的鍍鉻、燈共用同一個材質，原本進車內全是白色，從車外看天窗也是一片白。我把車艙裡的 70 多個零件改指到座椅皮革、方向盤、飾板、鋁飾、螢幕、地毯 6 種材質，外觀的鍍鉻和燈維持原樣。</li>
           <li>這個模型的儀表板是左駕的配置，方向盤卻在右邊。這是原檔的問題，換材質修不了。</li>
+          <li>車身面板本身有皺褶。面數跟原檔一樣，不是壓縮造成的，所以首頁的攝影棚照改用霧面漆、輪圈改原廠銀，配置器的亮面也最多只到霧面。</li>
+          <li class="doubt"><b>來源有疑慮。</b>原檔裡有 41 個零件名稱是 <code>etk800</code>、<code>etk800_interior</code>、<code>etk_engine_i6</code> 這類，那是賽車遊戲 BeamNG 自己的車 ETK 800。上傳者標的是 CC BY 4.0，但他未必有權授權這些零件。拿掉的 R350 也是類似情況；這台我決定先保留，把疑慮寫在這裡。</li>
         </ul></td>
       </tr>
       <tr>

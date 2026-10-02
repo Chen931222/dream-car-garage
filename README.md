@@ -62,6 +62,8 @@ npx wrangler deploy
 | Mercedes-AMG GT 63 S 4-Door | [Mercedes-Benz AMG GT 4-Door Coupe (X290)](https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3) | ZapupaNekra | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Mazda CX-5 | [Mazda CX-5 2020](https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642) | ItsDiyor | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
+AMG GT 的原檔裡有 41 個零件名稱來自賽車遊戲 BeamNG 的 ETK 800，上傳者未必有權授權這些零件；目前保留，疑慮寫在[來源頁](https://dream-car-garage.chenchen931222.workers.dev/sources)。
+
 標 CC BY 的模型，修改版沿用 CC BY 4.0。標 CC BY-NC-SA 的三台（X5、Mazda 3、Mustang），修改版同樣以 CC BY-NC-SA 4.0 提供，只能非商業使用。
 
 ### 其他素材

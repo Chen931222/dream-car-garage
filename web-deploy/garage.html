@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>我的夢想車庫 · 360° 環景配置器</title>
+<meta name="description" content="9 台車，自由配色、換輪圈、聽引擎聲，多數車能坐進車內。配好的車就是一條網址。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
 
 <!-- 分享預覽卡（貼到 LINE / FB 時顯示標題＋縮圖）-->
@@ -144,7 +145,10 @@
   .swatch:hover{ transform:scale(1.12); } .swatch.sel{ box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink); }
   .swatch .tip{ position:absolute; bottom:-25px; left:50%; transform:translateX(-50%); background:var(--ink);
     color:#fff; font-size:11.5px; white-space:nowrap; padding:3px 7px; border-radius:6px; opacity:0; pointer-events:none; transition:.15s; z-index:9; }
-  .swatch:hover .tip{ opacity:1; }
+  .swatch:hover .tip, .swatch:focus-visible .tip{ opacity:1; }
+  button.swatch{ padding:0; appearance:none; -webkit-appearance:none; font:inherit; }
+  .swatch:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+  body.scene-dark .swatch:focus-visible{ outline-color:#eef1f4; }
   .more{ margin-top:13px; }
   .linkbtn{ font-family:inherit; font-size:13px; font-weight:400; color:var(--sub); background:none; border:none;
     cursor:pointer; letter-spacing:.08em; padding:6px 4px; transition:.15s; }
@@ -380,6 +384,15 @@
     #car-chips{ gap:2px 12px; margin-top:6px; }
     #car-chips span{ font-size:12px; }
   }
+
+  /* 車高滑桿（W202 樣張）：只動車身、輪子不動 */
+  .ride-row[hidden]{ display:none; }
+  /* 跟「車身」「內裝」並排當第三欄：面板不變高，不會蓋到車 */
+  .ride-row input[type=range]{ width:140px; height:26px; margin:0; accent-color:var(--ink); cursor:pointer; }
+  .ride-row output{ font-variant-numeric:tabular-nums; color:var(--ink); font-weight:500; }
+  body.scene-dark .ride-row input[type=range]{ accent-color:#eef1f4; }
+  body.scene-dark .ride-row output{ color:#eef1f4; }
+  @media (max-width:680px){ .ride-row input[type=range]{ width:150px; height:22px; } }
 </style>
 </head>
 <body>
@@ -444,6 +457,10 @@
       <div class="color-rows">
         <div class="color-row"><span class="lab" id="lab-ext">車身</span><div class="swatches" id="sw-ext"></div></div>
         <div class="color-row"><span class="lab" id="lab-int">內裝</span><div class="swatches" id="sw-int"></div></div>
+        <div class="color-row ride-row" id="ride-row" hidden>
+          <span class="lab"><label for="ride">車高</label> · <output id="ride-val" for="ride">原廠</output></span>
+          <input type="range" id="ride" min="0" max="40" step="5" value="0" aria-valuetext="原廠高度">
+        </div>
       </div>
       <div class="more"><button class="linkbtn" id="rand-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg> 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 <svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6" /></svg></button></div>
     </div>
@@ -627,7 +644,7 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#5a6169','#1
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
@@ -641,12 +658,23 @@ const CARS = [
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
+  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', id:'amg-gt63', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
   { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
 ];
+/* 分享網址用的車名代號（2026-10-02）：原本用陣列序號，拿掉 R350 時舊的 ?car=6 就指到別台車。
+   代號預設取檔名，檔名跟車款對不上的另外指定（AMG 的檔名是 gt43，車其實是 GT 63）。 */
+CARS.forEach(function(c){ c.id = c.id || c.file.replace(/\.glb$/i, ''); });
+function carIndexOf(v){
+  if(typeof v==='number') return v;
+  if(v===null || v===undefined || v==='') return -1;
+  v = String(v).trim().toLowerCase();
+  if(/^\d+$/.test(v)) return +v;                       // 舊連結：序號
+  for(var i=0;i<CARS.length;i++) if(CARS[i].id===v) return i;
+  return -1;
+}
 // 每台車的故事 / 副標 / 亮點（顯示在中央副標 + 「故事與規格」視窗）
 const STORIES = [
   { tag:'第一代 C-Class · 九台裡唯一真的那台', sub:'Mercedes-Benz 第一代 C-Class（1993）· 我的車',
@@ -687,6 +715,8 @@ const mv = document.getElementById('mv');
 /* ---------- 記住上次配置（存在瀏覽器 localStorage）---------- */
 var savedCfg = null;
 try{ savedCfg = JSON.parse(localStorage.getItem('dg-cfg')||'null'); }catch(e){}
+// savedCfg.car 舊版存序號、新版存代號，這裡統一換回序號（carIndexOf 在上面 CARS 那段）
+if(savedCfg && savedCfg.car!==undefined) savedCfg.car = carIndexOf(savedCfg.car);
 // 開機初始化會連發 refresh()——必須等使用者第一次真的點擊後才開始存，否則預設值會洗掉上次的配置
 var cfgSaveEnabled = false;
 document.addEventListener('pointerdown', function(){ cfgSaveEnabled = true; }, {once:true, capture:true});
@@ -694,9 +724,9 @@ function saveCfg(){
   if(!cfgSaveEnabled) return;
   try{
     localStorage.setItem('dg-cfg', JSON.stringify({
-      car:activeCar, ext:(state.extHex||state.ext), int:(state.intHex||state.int),
+      car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
       cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish,
-      opts:state.opts.slice(), scene:state.scene
+      opts:state.opts.slice(), scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
 }
@@ -972,10 +1002,42 @@ document.getElementById('btn-shot').onclick = function(){
   }catch(e){ toast('截圖失敗：'+e.message); }
 };
 
+
+/* ---------- 車高（2026-10-02，W202 樣張）----------
+   模型裡烘了一段 ride 動畫：第 0 秒是原廠高度，第 1 秒車身往下 max 毫米，輪子不動。
+   滑桿用 model-viewer 的 currentTime 定位（官方 API），動畫本身不播放。 */
+var rideRow = document.getElementById('ride-row'), rideIn = document.getElementById('ride'), rideOut = document.getElementById('ride-val');
+var rideMM = 0, pendingRide = null;
+function rideCar(){ var c = CARS[activeCar]; return c && c.ride ? c.ride : null; }
+function applyRide(v){
+  var r = rideCar(); if(!r) return;
+  rideMM = Math.max(0, Math.min(r.max, Math.round((+v || 0) / 5) * 5));
+  rideIn.value = rideMM;
+  rideOut.textContent = rideMM ? ('−' + rideMM + ' mm') : '原廠';
+  rideIn.setAttribute('aria-valuetext', rideMM ? ('降低 ' + rideMM + ' 毫米') : '原廠高度');
+  if(mv.availableAnimations && mv.availableAnimations.indexOf('ride') >= 0){
+    // 關鍵影格在第 0、1 秒；動畫會循環，剛好停在片尾會被當成下一圈的 0 → 停在片尾前一點
+    var t = Math.min(1, (mv.duration || 1) - 0.002) * rideMM / r.max;
+    var setT = function(){ mv.pause(); mv.currentTime = t; };
+    if(mv.animationName !== 'ride'){
+      // 第一次指定動畫名稱時，model-viewer 會在下一次更新把時間歸零 → 等它更新完再設
+      mv.animationName = 'ride';
+      (mv.updateComplete || Promise.resolve()).then(function(){ requestAnimationFrame(setT); });
+    } else setT();
+  }
+}
+rideIn.addEventListener('input', function(){ applyRide(rideIn.value); saveCfg(); });
+mv.addEventListener('load', function(){
+  var r = rideCar();
+  rideRow.hidden = !r;
+  if(r){ rideIn.max = r.max; applyRide(pendingRide != null ? pendingRide : 0); }
+  else { rideMM = 0; mv.removeAttribute('animation-name'); }
+  pendingRide = null;
+});
 /* ---------- 分享配置：把目前設定編成連結 ---------- */
 function buildShareLink(){
   var p=new URLSearchParams();
-  if(activeCar>=0) p.set('car', activeCar);
+  if(activeCar>=0) p.set('car', CARS[activeCar].id);
   p.set('ext', state.extHex || state.ext);
   p.set('int', state.intHex || state.int);
   if(state.finish) p.set('fin', state.finish);
@@ -983,6 +1045,7 @@ function buildShareLink(){
   if(state.wheelMats.length) p.set('wheel', state.wheelStyle);
   p.set('scene', state.scene);
   if(state.opts && state.opts.length) p.set('opt', state.opts.join('-'));
+  if(rideMM && rideCar()) p.set('ride', rideMM);
   return location.origin+location.pathname+'?'+p.toString();
 }
 document.getElementById('btn-share').onclick = function(){
@@ -1050,6 +1113,8 @@ function enterFromLobby(i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
     pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, opt:(savedCfg.opts||[]).join('-') };
+    pendingRide = savedCfg.ride || 0;
+    if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
   } else if(i!==activeCar){ switchCar(i); }
 }
@@ -1057,7 +1122,7 @@ buildLobby();
 var brandEl=document.querySelector('.brand');
 if(brandEl){ brandEl.onclick=openLobby; brandEl.title='回車庫大廳'; }
 /* 分享連結直接開車，不擋大廳 */
-if(/[?&](car|ext|int|cal|wheel|scene|opt|fin)=/.test(location.search)) closeLobby();
+if(/[?&](car|ext|int|cal|wheel|scene|opt|fin|ride)=/.test(location.search)) closeLobby();
 
 /* ---------- 開啟分享連結時套用設定 ----------
    注意：這個函式會呼叫 switchCar()，而 switchCar 用到 _pitch / interiorView
@@ -1074,8 +1139,9 @@ function parseShareURL(){
   if(p.has('wheel')) cfg.wheel=+p.get('wheel');
   if(p.has('fin')) cfg.fin=+p.get('fin');
   if(p.has('opt')) cfg.opt=p.get('opt');
+  if(p.has('ride')) pendingRide=+p.get('ride')||0;
   if(Object.keys(cfg).length) pendingCfg=cfg;
-  if(p.has('car')){ var ci=+p.get('car'); if(ci>=0 && ci<CARS.length && ci!==activeCar) switchCar(ci); }
+  if(p.has('car')){ var ci=carIndexOf(p.get('car')); if(ci>=0 && ci<CARS.length && ci!==activeCar) switchCar(ci); }
 }
 
 function applyAccent(i){
@@ -1159,9 +1225,10 @@ function buildSwatches(containerId, items, onPick){
   const wrap = document.getElementById(containerId);
   wrap.innerHTML = '';
   items.forEach((it,i)=>{
-    const s = document.createElement('div');
-    s.className = 'swatch'; s.style.background = it.hex; s.dataset.box = containerId; s.dataset.i = i;
-    s.innerHTML = '<span class="tip">'+it.name+'</span>';
+    const s = document.createElement('button');
+    s.type = 'button'; s.className = 'swatch'; s.style.background = it.hex; s.dataset.box = containerId; s.dataset.i = i;
+    s.setAttribute('aria-label', it.name); s.setAttribute('aria-pressed', 'false');
+    s.innerHTML = '<span class="tip" aria-hidden="true">'+it.name+'</span>';
     s.onclick = ()=> onPick(i);
     wrap.appendChild(s);
   });
@@ -1358,6 +1425,7 @@ function refresh(){
     const box=s.dataset.box, i=+s.dataset.i;
     const on=(box==='sw-ext'&&i===state.ext&&!state.extHex)||(box==='sw-int'&&i===state.int&&!state.intHex)||(box==='sw-caliper'&&i===state.caliperColor)||(box==='sw-wheel'&&i===state.wheelStyle);
     s.classList.toggle('sel', on);
+    s.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   // 選配套件（氣壓懸吊等）：勾選的累加加價、列入摘要、同步勾選框
   var optTotal=0, optRows='';

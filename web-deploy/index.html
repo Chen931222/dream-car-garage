@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>我的夢想車庫 · 電影式展示</title>
+<meta name="description" content="一台真的，八台夢的。九台車在攝影棚裡的 360° 轉盤，滾動換車、拖曳旋轉，再進配置器配色、聽引擎聲、坐進車內。">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
 
@@ -588,7 +589,7 @@ var CARS = [
   { file:'mustang.glb', short:'Mustang', name:'2024 Ford Mustang GT', pitch:0, env:'night',
     body:/2024Coloured_Material|2024PaintA_Material/, paint:'#1666c0', accent:'#4d94e8',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { file:'gt43.glb', short:'AMG GT', name:'Mercedes-AMG GT 63 S 4-Door Coupé', pitch:0, env:'studio',
+  { file:'gt43.glb', id:'amg-gt63', short:'AMG GT', name:'Mercedes-AMG GT 63 S 4-Door Coupé', pitch:0, env:'studio',
     body:'gtishka_body', paint:'#2b2e33', accent:'#3ecf9e',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   { file:'cx5.glb', short:'CX-5', name:'2020 Mazda CX-5', pitch:0, env:'studio',
@@ -868,7 +869,7 @@ function cardHTML(i, c){
   if(c===0) return '<div class="kicker">'+st.kick+'</div><h2>'+st.title+'</h2><div class="divider"></div><p>'+car.name+'。'+st.tag+'。</p>';
   if(c===1) return '<div class="kicker">故事</div><p>'+st.story+'</p><p style="margin-top:8px">'+st.story2+'</p>';
   var rows = sp.map(function(kv){ return '<div><dt>'+kv[0]+'</dt><dd>'+kv[1]+'</dd></div>'; }).join('');
-  return '<div class="kicker">規格</div><dl class="specs">'+rows+'</dl><a class="cta" href="garage.html?car='+i+'">配這一台 →</a>';
+  return '<div class="kicker">規格</div><dl class="specs">'+rows+'</dl><a class="cta" href="garage.html?car='+(car.id||car.file.replace(/\.glb$/i,''))+'">配這一台 →</a>';
 }
 var panel = document.getElementById('panel');
 var panelInner = document.getElementById('panel-inner');
