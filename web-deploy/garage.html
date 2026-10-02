@@ -9,14 +9,14 @@
 <!-- 分享預覽卡（貼到 LINE / FB 時顯示標題＋縮圖）-->
 <meta property="og:type" content="website">
 <meta property="og:title" content="我的夢想車庫 · 360° 環景配置器">
-<meta property="og:description" content="9 台車，自由配色、換內裝、聽引擎聲，還能用手機 AR 在你家看車。">
-<meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+<meta property="og:description" content="9 台車，自由配色、換輪圈、聽引擎聲，多數車能坐進車內。配好的車就是一條網址。">
+<meta property="og:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg?v=2">
 <meta property="og:url" content="https://dream-car-garage.chenchen931222.workers.dev/garage">
 <meta property="og:locale" content="zh_TW">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="我的夢想車庫 · 360° 環景配置器">
-<meta name="twitter:description" content="9 台車，自由配色、換內裝、聽引擎聲，還能用手機 AR 在你家看車。">
-<meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg">
+<meta name="twitter:description" content="9 台車，自由配色、換輪圈、聽引擎聲，多數車能坐進車內。配好的車就是一條網址。">
+<meta name="twitter:image" content="https://dream-car-garage.chenchen931222.workers.dev/preview.jpg?v=2">
 
 <!-- model-viewer：Google 的 3D 模型網頁元件，負責載入 .glb、360 旋轉、光影與反射 -->
 <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
@@ -300,6 +300,85 @@
     #floor .horizon{ top:44vh; }
     .hint{ display:none; }
     .credit{ bottom:4px; left:8px; right:8px; font-size:11px; padding:3px 8px; text-align:center; line-height:1.4; }
+  }
+
+  /* ===== 2026-10-02 去 AI 感：跟首頁、導覽頁同一套語言 =====
+     實心面、細線、直角一點；不霧化、不發光、圖示不亂動、不鋪雜訊紋理。
+     暗場景（暗棚、夜晚）時面板跟著變深，不再是一塊白板浮在黑底上。 */
+  #noise{ display:none; }
+  #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(0,0,0,.10), rgba(0,0,0,.035) 52%, transparent 70%); }
+  #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(0,0,0,.14) 30%, rgba(0,0,0,.14) 70%, transparent); }
+  body.scene-dark #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(255,255,255,.055), rgba(255,255,255,.02) 52%, transparent 70%); }
+  body.scene-dark #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.11) 30%, rgba(255,255,255,.11) 70%, transparent); }
+
+  .brand{ letter-spacing:.02em; }
+  .brand b{ font-family:"Noto Serif TC",Georgia,serif; font-size:16px; letter-spacing:.06em; }
+
+  /* 車名下的規格：一行文字，不用膠囊 */
+  #car-chips{ gap:4px 18px; margin-top:10px; }
+  #car-chips span, body.scene-dark #car-chips span{ background:none; border:none; padding:0; border-radius:0;
+    backdrop-filter:none; -webkit-backdrop-filter:none; font-size:13px; letter-spacing:0; }
+  #car-chips span{ color:var(--sub); }
+  body.scene-dark #car-chips span{ color:#a7adb4; }
+  #car-chips span b{ font-weight:500; color:var(--ink); }
+  body.scene-dark #car-chips span b{ color:#eef1f4; }
+
+  /* 色票面板 */
+  .dock{ backdrop-filter:none; -webkit-backdrop-filter:none; background:#fff; border-radius:10px; }
+  .color-row .lab{ font-size:12px; letter-spacing:.06em; }
+  body.scene-dark .dock{ background:#18191b; box-shadow:0 8px 28px rgba(0,0,0,.35); }
+  body.scene-dark .color-row .lab, body.scene-dark .linkbtn{ color:#a7adb4; }
+  body.scene-dark .linkbtn:hover{ color:#fff; }
+  body.scene-dark .swatch{ border-color:rgba(255,255,255,.24); }
+  body.scene-dark .swatch.sel{ box-shadow:0 0 0 2px #18191b, 0 0 0 4px #eef1f4; }
+
+  /* 控制鈕：一條工具列，不是六顆各自浮著的膠囊 */
+  .controls{ gap:2px; padding:4px; background:#fff; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.12); flex-wrap:nowrap; }
+  .controls button{ background:none; border:none; border-radius:6px; padding:8px 12px; min-height:36px; font-size:13px; color:var(--ink); }
+  .controls button:hover{ background:rgba(0,0,0,.05); border:none; }
+  .controls button.on{ box-shadow:none; background:var(--ink); color:#fff; }
+  body.scene-dark .controls{ background:#18191b; box-shadow:0 6px 20px rgba(0,0,0,.35); }
+  body.scene-dark .controls button{ color:#e6e8eb; }
+  body.scene-dark .controls button:hover{ background:rgba(255,255,255,.07); }
+  body.scene-dark .controls button.on{ background:#eef1f4; color:#18191b; }
+  .controls button:hover svg.lic, .actions button:hover svg.lic, .linkbtn:hover svg.lic,
+  .lobby-nav a:hover svg.lic, #rotate-toggle:not(.off) svg.lic{ animation:none; }
+
+  /* 右上動作鈕 */
+  .actions button{ background:#fff; border:none; color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,.10); }
+  body.scene-dark .actions button{ background:#18191b; color:#e6e8eb; box-shadow:none; }
+
+  /* 換車列：縮圖是攝影棚照片，方一點 */
+  .garage button img, .garage button.active img{ border-radius:4px; box-shadow:none; }
+  #rotate-toggle svg.lic{ color:currentColor; }
+  #rotate-toggle.off svg.lic{ color:currentColor; opacity:.4; }
+  #toast{ border-radius:6px; }
+  .credit{ border-radius:4px; }
+
+  /* 大廳 */
+  .lobby-kick{ letter-spacing:.24em; }
+  .lobby-title{ letter-spacing:.03em; }
+  .lobby-nav{ gap:24px; }
+  .lobby-nav a{ border:none; border-radius:0; padding:10px 2px 6px; border-bottom:1px solid rgba(255,255,255,.22); font-size:14px; }
+  .lobby-nav a:hover{ border-bottom-color:#b8962e; }
+  .lcard img{ aspect-ratio:16/9; object-fit:cover; padding:0; }
+
+  /* 載入畫面：預設是暗棚，載入時不要先閃一片白 */
+  #loader{ background:#0c0c0d; }
+  .loader-title{ color:#ece9e2; letter-spacing:.12em; }
+  .spin{ border-color:rgba(255,255,255,.12); border-top-color:#ece9e2; }
+
+  /* 視窗 */
+  .sheet{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(12,12,13,.55); }
+  .card{ border:none; border-radius:12px; }
+  .chips span{ border-radius:4px; }
+
+  @media (max-width:680px){
+    .brand b{ font-size:15px; }
+    .controls{ flex-wrap:wrap; justify-content:center; }
+    .controls button{ padding:7px 9px; font-size:12.5px; min-height:34px; }
+    #car-chips{ gap:2px 12px; margin-top:6px; }
+    #car-chips span{ font-size:12px; }
   }
 </style>
 </head>
