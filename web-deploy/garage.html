@@ -315,7 +315,9 @@
   body.scene-dark #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(255,255,255,.055), rgba(255,255,255,.02) 52%, transparent 70%); }
   body.scene-dark #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.11) 30%, rgba(255,255,255,.11) 70%, transparent); }
 
-  .brand{ letter-spacing:.02em; }
+  .brand{ letter-spacing:.02em; background:none; border:none; padding:0; min-height:24px; font-family:inherit; font-weight:inherit; }   /* 2026-10-03 改成按鈕：鍵盤也能回大廳 */
+  .brand:focus-visible{ outline:2px solid var(--ink); outline-offset:4px; }
+  body.scene-dark .brand:focus-visible{ outline-color:#eef1f4; }
   .brand b{ font-family:"Noto Serif TC",Georgia,serif; font-size:16px; letter-spacing:.06em; }
 
   /* 車名下的規格：一行文字，不用膠囊 */
@@ -436,7 +438,7 @@
   <div id="drop">放開以載入這個 3D 模型</div>
 
   <!-- 品牌（左上）/ 動作鈕（右上）-->
-  <div class="brand"><svg class="lic" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> <b>我的夢想車庫</b> <span class="sep">·</span> 360°</div>
+  <button type="button" class="brand" aria-label="我的夢想車庫，回車庫大廳"><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> <b>我的夢想車庫</b> <span class="sep">·</span> 360°</button>
   <div class="actions">
     <button id="btn-cinema" title="回電影式展示" onclick="location.href='./'"><svg class="lic" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" /></svg></button>
     <button id="btn-cfg" title="個人化設定"><svg class="lic" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg></button>

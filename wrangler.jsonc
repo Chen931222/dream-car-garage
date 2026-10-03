@@ -2,6 +2,8 @@
   "name": "dream-car-garage",
   "compatibility_date": "2025-01-01",
   "assets": {
-    "directory": "./web-deploy"
+    "directory": "./web-deploy",
+    // 打錯網址時回 web-deploy/404.html（原本是一片空白）
+    "not_found_handling": "404-page"
   }
 }

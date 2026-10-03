@@ -1,0 +1,14 @@
+{
+  "name": "dream-car-garage-tools",
+  "private": true,
+  "type": "module",
+  "description": "重壓模型、修內裝用的腳本。網站本身是純靜態檔，不需要這些套件。",
+  "dependencies": {
+    "@gltf-transform/core": "^4.4.0",
+    "@gltf-transform/extensions": "^4.4.0",
+    "@gltf-transform/functions": "^4.4.0",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^1.3.0",
+    "sharp": "^0.34.5"
+  }
+}

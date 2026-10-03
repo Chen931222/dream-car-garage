@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>找不到這一頁 · 我的夢想車庫</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  /* 跟導覽頁同一套：近黑底、襯線標題、單一黃銅色 */
+  :root{ --bg:#0c0c0d; --ink:#ece9e2; --ink-soft:#a29d93; --rule:rgba(236,233,226,.16); --accent:#c9a54c; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ min-height:100%; }
+  body{ background:var(--bg); color:var(--ink); font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; min-height:100vh; }
+  header{ padding:20px clamp(18px,4vw,40px); border-bottom:1px solid var(--rule); }
+  header a{ font-family:"Noto Serif TC",Georgia,serif; font-weight:500; font-size:17px; letter-spacing:.06em; color:var(--ink); text-decoration:none; }
+  main{ flex:1; display:grid; grid-template-columns:minmax(0,5fr) minmax(0,6fr); align-items:center; gap:clamp(24px,5vw,72px);
+    padding:clamp(28px,6vh,72px) clamp(18px,6vw,96px); }
+  .kicker{ font-size:13px; color:var(--accent); margin-bottom:16px; }
+  h1{ font-family:"Noto Serif TC",Georgia,serif; font-weight:300; font-size:clamp(32px,4.6vw,60px); line-height:1.2; letter-spacing:.02em; text-wrap:balance; }
+  p{ margin-top:18px; font-size:16px; line-height:1.9; color:var(--ink-soft); max-width:26em; }
+  .row{ display:flex; flex-wrap:wrap; align-items:center; gap:14px 26px; margin-top:28px; }
+  .cta{ display:inline-flex; align-items:center; min-height:48px; padding:0 22px; background:var(--accent); color:#16130c;
+    text-decoration:none; font-size:15px; font-weight:500; border-radius:2px; }
+  .cta:hover{ background:#d8b65e; }
+  .link{ font-size:15px; color:var(--ink); text-decoration:none; border-bottom:1px solid var(--rule); padding-bottom:2px; }
+  .link:hover{ border-bottom-color:var(--accent); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+  figure{ margin:0; }
+  figure img{ display:block; width:100%; height:auto;
+    -webkit-mask-image:radial-gradient(ellipse closest-side at 50% 56%, #000 60%, transparent 100%);
+            mask-image:radial-gradient(ellipse closest-side at 50% 56%, #000 60%, transparent 100%); }
+  @media (max-width:760px){
+    main{ grid-template-columns:1fr; align-content:start; }
+    figure{ order:-1; margin:0 -18px; }
+  }
+</style>
+</head>
+<body>
+<header><a href="/">我的夢想車庫</a></header>
+<main>
+  <div>
+    <div class="kicker">404</div>
+    <h1>這一頁不在車庫裡。</h1>
+    <p>網址可能打錯了，或是這一頁已經搬走。九台車都還停在原位。</p>
+    <div class="row">
+      <a class="cta" href="/">回首頁看車</a>
+      <a class="link" href="/garage">直接進配置器</a>
+    </div>
+  </div>
+  <figure><img src="/tt/w202/100.webp?v=144d" width="1280" height="720" alt="深綠色 W202 的車尾，停在暗色攝影棚"></figure>
+</main>
+</body>
+</html>
