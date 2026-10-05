@@ -188,12 +188,9 @@
 
   .hint{ position:absolute; bottom:30px; right:28px; z-index:4; font-size:11.5px; color:var(--sub); letter-spacing:.04em; }
 
-  /* AR 按鈕：預設隱藏，只有在支援 AR 的裝置才顯示 */
-  #ar-btn{ position:absolute; top:18px; right:148px; z-index:6; font-family:inherit; font-size:13px; font-weight:400;
-    cursor:pointer; color:#fff; background:var(--accent); border:none; border-radius:30px; padding:9px 16px;
-    align-items:center; gap:8px; display:none; }
-  #ar-btn:hover{ filter:brightness(1.08); }
-  #ar-btn.ar-ok{ display:flex; }
+  /* AR 入口放在控制列（#ar-go），model-viewer 自己浮在畫面上的 AR 鈕關掉 */
+  model-viewer{ --ar-button-display:none; }
+  .controls button[hidden]{ display:none; }
 
   /* toast */
   #toast{ position:absolute; bottom:148px; left:50%; transform:translateX(-50%); z-index:9; background:var(--ink);
@@ -280,7 +277,6 @@
     .brand{ top:12px; left:12px; font-size:11.5px; letter-spacing:.08em; }
     .actions{ top:10px; right:10px; gap:6px; }
     .actions button{ width:34px; height:34px; font-size:14px; }
-    #ar-btn{ top:auto; bottom:calc(54vh + 6px); right:10px; }
     .title{ top:44px; left:12px; max-width:76vw; }
     #car-name{ font-size:20px; letter-spacing:.02em; line-height:1.15; }
     #car-tag{ font-size:12px; margin-top:4px; }
@@ -428,11 +424,10 @@
     interaction-prompt="none"
     shadow-intensity="1.0" shadow-softness="0.6"
     environment-image="neutral" exposure="1.05" tone-mapping="neutral"
-    orientation="0deg -90deg 0deg"
+    orientation="0deg -90deg 0deg" scale="0.01 0.01 0.01"
     ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor"
     camera-orbit="-30deg 75deg 120%" max-camera-orbit="auto 89deg auto"
     min-field-of-view="20deg">
-    <button slot="ar-button" id="ar-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></svg> 在你的空間裡看車</button>
   </model-viewer>
 
   <div id="drop">放開以載入這個 3D 模型</div>
@@ -479,6 +474,7 @@
     <button id="tips-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" /></svg> 亮點</button>
     <button id="rotate-toggle"><svg class="lic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg> 自動旋轉</button>
     <button id="showcase-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /><path d="m6.2 5.3 3.1 3.9" /><path d="m12.4 3.4 3.1 4" /><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg> 展示</button>
+    <button type="button" id="ar-go" hidden><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></svg> AR 看車</button>
   </div>
   <div class="credit" id="credit"></div>
 
@@ -646,24 +642,24 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#5a6169','#1
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', scale:0.01, mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb',  pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
+  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb', scale:0.01, ride:{ max:40 }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
+  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', scale:0.26, ride:{ max:10 }, pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
     credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', pitch:0, yaw:0, exSign:-1, noIv:true, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', wheel:'car_bmw_x5_2015_Meshrim',
+  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', scale:100, ride:{ max:25 }, pitch:0, yaw:0, exSign:-1, noIv:true, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', wheel:'car_bmw_x5_2015_Meshrim',
     credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'disk', calIdx:1,
+  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'disk', calIdx:1,
     credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
+  { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', scale:100, ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
+  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', scale:100, ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
   { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', id:'amg-gt63', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
-  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
+  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
 ];
 /* 分享網址用的車名代號（2026-10-02）：原本用陣列序號，拿掉 R350 時舊的 ?car=6 就指到別台車。
@@ -821,13 +817,22 @@ function applyScene(i){ state.scene=i; var s=SCENES[i]; document.body.style.back
 document.getElementById('scene-btn').onclick = ()=> applyScene((state.scene+1)%SCENES.length);
 applyScene(0);
 
-/* ---------- AR：只在支援的裝置上顯示「在你的空間裡看車」按鈕 ---------- */
-function updateARButton(){
-  var b=document.getElementById('ar-btn');
-  if(b) b.classList.toggle('ar-ok', !!mv.canActivateAR);
-}
-mv.addEventListener('load', updateARButton);
-setTimeout(updateARButton, 1500);   // 能力偵測有時稍慢，補一次
+/* ---------- AR（2026-10-04 改放控制列）----------
+   能不能用由 model-viewer 判斷：iPhone 走 Quick Look、Android 走 WebXR 或 Scene Viewer，桌機不顯示。
+   原本是浮在 3D 畫框上的按鈕：手機上位置照整個螢幕算、落在畫框外被裁掉；矮螢幕會被色票面板蓋住；平板會跟右上角按鈕疊在一起。 */
+var arGo = document.getElementById('ar-go');
+function syncAR(){ arGo.hidden = !mv.canActivateAR; }
+mv.addEventListener('load', function(){ syncAR(); setTimeout(syncAR, 1500); });   // Android 的能力偵測是非同步的，補一次
+mv.addEventListener('ar-status', syncAR);
+arGo.onclick = function(){
+  if(!mv.canActivateAR || arGo.disabled) return;
+  arGo.disabled = true;                                  // 轉檔中先鎖住，避免連按
+  Promise.resolve(mv.activateAR()).catch(function(){}).then(function(){ arGo.disabled = false; });
+};
+// iPhone 按下去要先把整台車轉成 USDZ（蘋果 AR 的格式），桌機量過 0.2–0.7 秒、20–53 MB，手機會更久
+mv.addEventListener('progress', function(e){
+  if(e.detail && e.detail.reason === 'usdz-conversion' && e.detail.totalProgress < 1) toast('正在把車轉成 AR 檔，要等幾秒');
+});
 
 /* ---------- 車燈：把頭燈/尾燈/方向燈材質設為自發光，看起來像「亮起來」 ---------- */
 function applyLights(){
@@ -1010,6 +1015,9 @@ document.getElementById('btn-shot').onclick = function(){
    滑桿用 model-viewer 的 currentTime 定位（官方 API），動畫本身不播放。 */
 var rideRow = document.getElementById('ride-row'), rideIn = document.getElementById('ride'), rideOut = document.getElementById('ride-val');
 var rideMM = 0, pendingRide = null;
+var RIDE_RANGE = 40;   // 每台車的 ride 動畫都烘到 40 mm（W202 用 Blender，其他用 tools/add_ride_v1.mjs）
+                       // max 是這台實際能降多少：輪胎到外面看得到的車身（烤漆、外飾板）的縫隙，扣 5 mm。
+                       // Macan 只有 16.5 mm、X5 的黑色輪拱飾板 30.6 mm，所以只到 10、25；AMG 原廠就只差 1.4 mm，不做
 function rideCar(){ var c = CARS[activeCar]; return c && c.ride ? c.ride : null; }
 function applyRide(v){
   var r = rideCar(); if(!r) return;
@@ -1018,9 +1026,14 @@ function applyRide(v){
   rideOut.textContent = rideMM ? ('−' + rideMM + ' mm') : '原廠';
   rideIn.setAttribute('aria-valuetext', rideMM ? ('降低 ' + rideMM + ' 毫米') : '原廠高度');
   if(mv.availableAnimations && mv.availableAnimations.indexOf('ride') >= 0){
-    // 關鍵影格在第 0、1 秒；動畫會循環，剛好停在片尾會被當成下一圈的 0 → 停在片尾前一點
-    var t = Math.min(1, (mv.duration || 1) - 0.002) * rideMM / r.max;
-    var setT = function(){ mv.pause(); mv.currentTime = t; };
+    // 每台的 ride 都是 1 秒、降 40 mm。W202 是 Blender 逐格烘的，從 1/24 秒才開始（片長 1.042 秒），
+    // 其他車從 0 秒開始 → 起點＝片長 − 1。原本一律從 0 算，W202 拉到 40 實際只降 38.3 mm（2026-10-04 量到）。
+    // 動畫會循環，剛好停在片尾會被當成下一圈的 0 → 停在片尾前 2 ms
+    // 片長要等動畫選好才讀得到（從分享連結打開時，第一次指定 ride 的當下 duration 還是 0）→ 在 setT 裡面才算
+    var setT = function(){
+      var t0 = Math.max(0, (mv.duration || 1) - 1);
+      mv.pause(); mv.currentTime = t0 + (1 - 0.002) * rideMM / RIDE_RANGE;
+    };
     if(mv.animationName !== 'ride'){
       // 第一次指定動畫名稱時，model-viewer 會在下一次更新把時間歸零 → 等它更新完再設
       mv.animationName = 'ride';
@@ -1186,7 +1199,7 @@ function switchCar(i){
   if(typeof stopEngine==='function') stopEngine();
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
-  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation();
+  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale);
   state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.opts = []; state.finish = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
@@ -1457,12 +1470,16 @@ function row(k,v){ return '<div class="summary-row"><span>'+k+'</span><span>'+v+
 /* ---------- 模型方向控制（W202 預設 -90° 翻正；載入別的車可手動調）---------- */
 let _pitch = -90, _yaw = 0;
 function applyOrientation(){ mv.setAttribute('orientation', '0deg ' + _pitch + 'deg ' + _yaw + 'deg'); }
+/* 尺寸：把模型換成公尺（2026-10-04）。畫面上看不出差別，鏡頭照外框自動取景；
+   但 AR 會照原尺寸把車擺進房間。W202、MX-5 的單位是公分（會變 450 公尺），X5、Mazda 3、Mustang 小了 100 倍（5 公分），
+   Macan 的單位不明，照原廠車長 4.73 m 換算（模型長 18.21）。亮點、看內裝都是照外框比例算的，跟著縮放。 */
+function applyScale(k){ k = k || 1; mv.setAttribute('scale', k + ' ' + k + ' ' + k); }
 document.getElementById('rot-pitch').onclick = ()=>{ _pitch=(_pitch+90)%360; applyOrientation(); };
 document.getElementById('rot-yaw').onclick   = ()=>{ _yaw=(_yaw+90)%360; applyOrientation(); };
 document.getElementById('rot-reset').onclick = ()=>{ _pitch=0; _yaw=0; applyOrientation(); };
 
 /* ---------- 載入：檔案 / 拖放 / 路徑（新模型先把方向歸零）---------- */
-function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); activeCar=-1;
+function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); applyScale(1); activeCar=-1;
   document.querySelectorAll('#garage button').forEach(b=>b.classList.remove('active'));
   document.getElementById('car-name').textContent='自訂車模'; applyAccent(-1); updateChips(); updateCredit(); if(typeof showLoader==='function') showLoader(); mv.src = src; updateStory(); }
 document.getElementById('file').addEventListener('change', e=>{
