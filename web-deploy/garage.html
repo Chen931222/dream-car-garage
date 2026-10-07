@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>我的夢想車庫 · 360° 環景配置器</title>
+<!-- impeccable-disable low-contrast -- 暗棚、夜晚的深色背景是 applyScene() 用 JS 換上去的，impeccable 只讀 CSS，看到的是 body 預設的白底；實際對比由 check.mjs 截圖量測（2026-10-07：暗棚、白棚 0 不及格） -->
+<!-- impeccable-disable content-hidden-at-rest -- 藏起來的字是車庫大廳（#lobby），平常收著，按左上角的品牌才打開 -->
 <meta name="description" content="9 台車，自由配色、換輪圈、聽引擎聲，多數車能坐進車內。配好的車就是一條網址。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
 
@@ -311,6 +313,27 @@
   body.scene-dark #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(255,255,255,.055), rgba(255,255,255,.02) 52%, transparent 70%); }
   body.scene-dark #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.11) 30%, rgba(255,255,255,.11) 70%, transparent); }
 
+  /* 雜誌跨頁（2026-10-07 本人選）：車後壓一個大字，用底盤代號（W202、ND、F15…），像雜誌把刊頭壓在主角後面。
+     畫在 3D 畫布底下那層，點不到、讀屏軟體略過（字放在 ::before）；顏色只比背景亮或暗一點點 */
+  #floor .mast{ position:absolute; left:0; right:0; top:47%; transform:translateY(-50%); text-align:center; white-space:nowrap;
+    font-family:"Noto Serif TC",Georgia,serif; font-weight:300; font-size:min(30vw,46vh); line-height:1; letter-spacing:-.01em;
+    color:rgba(0,0,0,.05); transition:opacity .35s ease; }
+  #floor .mast::before{ content:attr(data-code); }
+  #floor .mast.swap{ opacity:0; }
+  body.scene-dark #floor .mast{ color:rgba(255,255,255,.045); }
+  /* 右上角一行尺寸：數字直接量 3D 模型（AR 也是照這個尺寸擺進房間），寬度含後照鏡 */
+  .dims{ position:absolute; top:74px; right:28px; z-index:5; pointer-events:none; text-align:right;
+    font-size:12px; letter-spacing:.03em; color:var(--sub); font-variant-numeric:tabular-nums; }
+  .dims span{ margin-right:8px; color:var(--ink); }
+  body.scene-dark .dims{ color:#9a958c; }
+  body.scene-dark .dims span{ color:#d9d4ca; }
+  body.iv .dims, body.iv #floor .mast{ visibility:hidden; }
+  @media (max-width:680px){
+    #floor .mast{ top:23vh; font-size:min(34vw,21vh); }
+    .dims{ display:none; }
+  }
+  @media (prefers-reduced-motion:reduce){ #floor .mast{ transition:none; } }
+
   .brand{ letter-spacing:.02em; background:none; border:none; padding:0; min-height:24px; font-family:inherit; font-weight:inherit; }   /* 2026-10-03 改成按鈕：鍵盤也能回大廳 */
   .brand:focus-visible{ outline:2px solid var(--ink); outline-offset:4px; }
   body.scene-dark .brand:focus-visible{ outline-color:#eef1f4; }
@@ -412,7 +435,8 @@
   </div>
 
   <!-- 地台與噪點（在 3D 畫布下層） -->
-  <div id="floor"><div class="disc"></div><div class="horizon"></div></div>
+  <div id="floor"><div class="mast" aria-hidden="true" data-code="W202"></div><div class="disc"></div><div class="horizon"></div></div>
+  <div class="dims" id="dims" hidden></div>
   <div id="noise"></div>
 
   <model-viewer id="mv"
@@ -616,8 +640,9 @@ const PACKAGES = [
 ];
 const SCENES = [
   // env = 真實 HDR 環境圖（Poly Haven CC0）：車漆反射真實光影，質感遠勝內建 neutral
-  // 暗棚：深色背景＋同一張柔光箱 HDR，AgX 色調、接觸陰影加深（2026-10 攝影棚改版的預設）
-  { name:'暗棚', bg:'radial-gradient(ellipse 70% 42% at 50% 64%, #2a2b2e 0%, #17181a 55%, #0b0b0c 100%)', exposure:1.3, shadow:1.6, soft:0.35, env:'env-studio.hdr', dark:true, tone:'agx' },
+  // 暗棚：深色背景＋同一張柔光箱 HDR，接觸陰影加深（2026-10 攝影棚改版的預設）
+  // 2026-10-07 從 AgX 1.3 改成 ACES 1.0：AgX 會把黑色抬成灰（W202 最暗的 5% 像素停在 46／255，輪胎是灰的），曝光再高就整台發白
+  { name:'暗棚', bg:'radial-gradient(ellipse 70% 42% at 50% 64%, #2a2b2e 0%, #17181a 55%, #0b0b0c 100%)', exposure:1.0, shadow:1.6, soft:0.35, env:'env-studio.hdr', dark:true, tone:'aces' },
   // 白棚：淺色中性背景，看車色最準
   { name:'白棚', bg:'radial-gradient(circle at 50% 38%, #fdfcf9 0%, #f2f0eb 60%, #e7e4dd 100%)', exposure:1.05, shadow:1.1, env:'env-studio.hdr' },
   { name:'夕陽',   bg:'linear-gradient(160deg, #ffe6bf 0%, #ffb583 45%, #b9795c 100%)',             exposure:1.15, shadow:1.3, env:'env-sunset.hdr' },
@@ -642,24 +667,24 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#5a6169','#1
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', scale:0.01, mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', scale:0.01, code:'W202', mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1, plateMats:['Material__1','Material__2','Material__3','Material__4'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb', scale:0.01, ride:{ max:40 }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
+  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb', scale:0.01, code:'ND', ride:{ max:40 }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', caliper:'brakedisk', calIdx:1,
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', scale:0.26, ride:{ max:10 }, pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
+  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', scale:0.26, code:'95B', ride:{ max:10 }, pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
     credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', scale:100, ride:{ max:25 }, pitch:0, yaw:0, exSign:-1, noIv:true, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', wheel:'car_bmw_x5_2015_Meshrim',
+  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', scale:100, code:'F15', ride:{ max:25 }, pitch:0, yaw:0, exSign:-1, noIv:true, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', wheel:'car_bmw_x5_2015_Meshrim',
     credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'disk', calIdx:1,
+  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', code:'V37', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'disk', calIdx:1,
     credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', scale:100, ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
+  { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', scale:100, code:'BP', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', wheel:'Mazda_3MI_Rim_018',
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', scale:100, ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
+  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', scale:100, code:'S650', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', id:'amg-gt63', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
+  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', id:'amg-gt63', code:'X290', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
-  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
+  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', code:'KF', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
 ];
 /* 分享網址用的車名代號（2026-10-02）：原本用陣列序號，拿掉 R350 時舊的 ?car=6 就指到別台車。
@@ -1199,7 +1224,7 @@ function switchCar(i){
   if(typeof stopEngine==='function') stopEngine();
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
-  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale);
+  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code);
   state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.opts = []; state.finish = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
@@ -1474,12 +1499,28 @@ function applyOrientation(){ mv.setAttribute('orientation', '0deg ' + _pitch + '
    但 AR 會照原尺寸把車擺進房間。W202、MX-5 的單位是公分（會變 450 公尺），X5、Mazda 3、Mustang 小了 100 倍（5 公分），
    Macan 的單位不明，照原廠車長 4.73 m 換算（模型長 18.21）。亮點、看內裝都是照外框比例算的，跟著縮放。 */
 function applyScale(k){ k = k || 1; mv.setAttribute('scale', k + ' ' + k + ' ' + k); }
+/* 雜誌跨頁的大字：換車時淡出、換字、淡入；自訂模型不放字 */
+function setMast(code){
+  var m = document.querySelector('#floor .mast'); if(!m) return;
+  if(m.getAttribute('data-code') === (code || '')) return;
+  m.classList.add('swap');
+  setTimeout(function(){ m.setAttribute('data-code', code || ''); m.classList.remove('swap'); }, 350);
+}
+/* 右上角的尺寸：模型載入後量外框（已經換成公尺），長取水平方向較長的那一軸 */
+function updateDims(){
+  var el = document.getElementById('dims'); if(!el) return;
+  if(activeCar < 0 || !mv.getDimensions){ el.hidden = true; return; }
+  var d = mv.getDimensions(), f = function(v){ return v.toFixed(2); };
+  el.innerHTML = '<span>3D 模型尺寸</span>長 ' + f(Math.max(d.x, d.z)) + ' m · 寬 ' + f(Math.min(d.x, d.z)) + ' m（含後照鏡）· 高 ' + f(d.y) + ' m';
+  el.hidden = false;
+}
+mv.addEventListener('load', updateDims);
 document.getElementById('rot-pitch').onclick = ()=>{ _pitch=(_pitch+90)%360; applyOrientation(); };
 document.getElementById('rot-yaw').onclick   = ()=>{ _yaw=(_yaw+90)%360; applyOrientation(); };
 document.getElementById('rot-reset').onclick = ()=>{ _pitch=0; _yaw=0; applyOrientation(); };
 
 /* ---------- 載入：檔案 / 拖放 / 路徑（新模型先把方向歸零）---------- */
-function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); applyScale(1); activeCar=-1;
+function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); applyScale(1); setMast(''); activeCar=-1;
   document.querySelectorAll('#garage button').forEach(b=>b.classList.remove('active'));
   document.getElementById('car-name').textContent='自訂車模'; applyAccent(-1); updateChips(); updateCredit(); if(typeof showLoader==='function') showLoader(); mv.src = src; updateStory(); }
 document.getElementById('file').addEventListener('change', e=>{
