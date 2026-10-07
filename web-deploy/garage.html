@@ -249,10 +249,6 @@
   .summary-total{ display:flex; justify-content:space-between; font-size:16px; font-weight:500; padding-top:12px; }
   .spec-row{ display:flex; justify-content:space-between; font-size:13.5px; padding:7px 0; border-bottom:1px solid var(--line); }
   .spec-row span:last-child{ color:var(--sub); }
-  .opt-row{ display:flex; align-items:center; gap:11px; font-size:13.5px; padding:9px 2px; border-bottom:1px solid var(--line); cursor:pointer; }
-  .opt-row input{ width:16px; height:16px; flex:0 0 auto; cursor:pointer; accent-color:var(--ink); }
-  .opt-row .opt-name{ flex:1; }
-  .opt-row .opt-add{ color:var(--sub); font-size:12.5px; white-space:nowrap; }
   .opt-total{ font-size:13px; color:var(--sub); margin-top:12px; }
   #qr-box{ text-align:center; margin-top:18px; }
   #qr-box img{ width:172px; height:172px; image-rendering:pixelated; border:1px solid var(--line); border-radius:8px; }
@@ -521,9 +517,6 @@
       <h2>個人化</h2>
       <div class="csub">更多顏色與進階選項</div>
 
-      <h3>一鍵套件</h3>
-      <div class="finish-row" id="pkg-row"></div>
-
       <h3>自訂顏色</h3>
       <label class="custom-color"><svg class="lic" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 車身 <input type="color" id="ext-color" value="#0c0d10"></label>
       <label class="custom-color"><svg class="lic" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 內裝 <input type="color" id="int-color" value="#17181c"></label>
@@ -540,12 +533,12 @@
         <div class="swatches" id="sw-wheel"></div>
       </div>
 
-      <h3>選配套件</h3>
-      <div id="opt-list"></div>
-
-      <h3>進階 · 指定材質（顏色換錯位置時用）</h3>
-      <select id="body-mat"></select>
-      <select id="int-mat"></select>
+      <!-- 指定材質只給自己載入的車模用：九台車的材質都設定好了（2026-10-07） -->
+      <div id="mat-pick" hidden>
+        <h3>進階 · 指定材質（顏色換錯位置時用）</h3>
+        <select id="body-mat"></select>
+        <select id="int-mat"></select>
+      </div>
 
       <h3>進階 · 載入自己的車模</h3>
       <label class="filebtn">選擇 .glb 檔案<input id="file" type="file" accept=".glb,.gltf" hidden></label>
@@ -616,27 +609,12 @@ const WHEELS = [
   { name:'寶藍',   hex:'#1f3a6b', metal:0.9,  rough:0.25 },
   { name:'香檳金', hex:'#c2a878', metal:0.9,  rough:0.3  },
 ];
-// 選配套件：不改外觀的選配項目（勾選 → 列入配置清單）。add 欄位保留但不再顯示：價格是編的
-const OPTIONS = [
-  { name:'氣壓電子懸吊',     add:80000 },
-  { name:'全景天窗',         add:60000 },
-  { name:'環繞音響升級',     add:45000 },
-  { name:'通風加熱座椅',     add:40000 },
-  { name:'智慧 LED 頭燈組',  add:35000 },
-  { name:'抬頭顯示器（HUD）', add:30000 },
-];
 // 車漆質感（改 metalness/roughness；avoid 太亮會放大低面數稜角）
 const FINISHES = [
   { name:'亮面', metal:0.5,  rough:0.32, coat:1   },
   { name:'消光', metal:0.12, rough:0.82, coat:0   },
   { name:'金屬', metal:0.9,  rough:0.4,  coat:0.6 },
   { name:'珍珠', metal:0.55, rough:0.26, coat:1   },
-];
-// 一鍵配置套件：套用 車身色/質感/卡鉗/輪圈/選配（index 對應上面各陣列）
-const PACKAGES = [
-  { name:'運動風', ext:0, int:3, finish:2, cal:0, wheel:2, opts:[0,4] },
-  { name:'優雅風', ext:1, int:2, finish:3, cal:1, wheel:1, opts:[1,3] },
-  { name:'個性風', ext:4, int:1, finish:1, cal:0, wheel:6, opts:[2,5] },
 ];
 const SCENES = [
   // env = 真實 HDR 環境圖（Poly Haven CC0）：車漆反射真實光影，質感遠勝內建 neutral
@@ -731,7 +709,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, opts:[], finish:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[] };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[] };
 
 const mv = document.getElementById('mv');
 
@@ -749,7 +727,7 @@ function saveCfg(){
     localStorage.setItem('dg-cfg', JSON.stringify({
       car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
       cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish,
-      opts:state.opts.slice(), scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
+      scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
 }
@@ -760,31 +738,9 @@ buildSwatches('sw-ext', EXTERIOR, i => { state.ext=i; state.extHex=null; applyEx
 buildSwatches('sw-int', INTERIOR, i => { state.int=i; state.intHex=null; applyInterior(); refresh(); });
 buildSwatches('sw-caliper', CALIPER, i => { state.caliperColor=i; applyCaliper(); refresh(); });
 buildSwatches('sw-wheel', WHEELS, i => { state.wheelStyle=i; applyWheel(); refresh(); });
-buildOptions();
 buildFinish();
-buildPackages();
 refresh();
 
-/* 一鍵配置套件：套用整套配色＋選配 */
-function applyPackage(i){
-  var pk=PACKAGES[i]; if(!pk) return;
-  state.ext=pk.ext; state.extHex=null; state.int=pk.int; state.intHex=null;
-  if(typeof FINISHES!=='undefined') state.finish=pk.finish;
-  if(state.caliperMats.length) state.caliperColor=pk.cal;
-  if(state.wheelMats.length) state.wheelStyle=pk.wheel;
-  state.opts=(pk.opts||[]).slice();
-  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
-  toast('已套用「'+pk.name+'」套件');
-}
-function buildPackages(){
-  var box=document.getElementById('pkg-row'); if(!box) return;
-  box.innerHTML='';
-  PACKAGES.forEach(function(pk,i){
-    var b=document.createElement('button'); b.textContent=pk.name;
-    b.onclick=function(){ applyPackage(i); };
-    box.appendChild(b);
-  });
-}
 /* 車漆質感（亮面/消光/金屬/珍珠）*/
 function buildFinish(){
   var box=document.getElementById('finish-row'); if(!box) return;
@@ -795,21 +751,6 @@ function buildFinish(){
       Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===i?'active':''); });
       refresh(); };
     box.appendChild(b);
-  });
-}
-/* 選配套件清單（勾選 → 加進配置；不改外觀）*/
-function buildOptions(){
-  var box=document.getElementById('opt-list'); if(!box) return;
-  box.innerHTML='';
-  OPTIONS.forEach(function(o,i){
-    var r=document.createElement('label'); r.className='opt-row';
-    r.innerHTML='<input type="checkbox" data-i="'+i+'"><span class="opt-name">'+o.name+'</span>';
-    r.querySelector('input').onchange=function(){
-      var idx=state.opts.indexOf(i);
-      if(this.checked){ if(idx<0) state.opts.push(i); } else if(idx>=0){ state.opts.splice(idx,1); }
-      refresh();
-    };
-    box.appendChild(r);
   });
 }
 
@@ -1084,7 +1025,6 @@ function buildShareLink(){
   if(state.caliperMats.length) p.set('cal', state.caliperColor);
   if(state.wheelMats.length) p.set('wheel', state.wheelStyle);
   p.set('scene', state.scene);
-  if(state.opts && state.opts.length) p.set('opt', state.opts.join('-'));
   if(rideMM && rideCar()) p.set('ride', rideMM);
   return location.origin+location.pathname+'?'+p.toString();
 }
@@ -1152,7 +1092,7 @@ function enterFromLobby(i){
   if(savedCfg && savedCfg.car===i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
-    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, opt:(savedCfg.opts||[]).join('-') };
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin };
     pendingRide = savedCfg.ride || 0;
     if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
@@ -1178,7 +1118,7 @@ function parseShareURL(){
   if(p.has('cal')) cfg.cal=+p.get('cal');
   if(p.has('wheel')) cfg.wheel=+p.get('wheel');
   if(p.has('fin')) cfg.fin=+p.get('fin');
-  if(p.has('opt')) cfg.opt=p.get('opt');
+  // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
   if(Object.keys(cfg).length) pendingCfg=cfg;
   if(p.has('car')){ var ci=carIndexOf(p.get('car')); if(ci>=0 && ci<CARS.length && ci!==activeCar) switchCar(ci); }
@@ -1224,8 +1164,8 @@ function switchCar(i){
   if(typeof stopEngine==='function') stopEngine();
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
-  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code);
-  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.opts = []; state.finish = 0;
+  _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code); setMatPick(false);
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
@@ -1313,7 +1253,6 @@ function onModelLoad(){
     if(c.cal!=null && state.caliperMats.length) state.caliperColor=c.cal;
     if(c.wheel!=null && state.wheelMats.length) state.wheelStyle=c.wheel;
     if(c.fin!=null) state.finish=c.fin;
-    if(c.opt!=null){ state.opts=(''+c.opt).split('-').map(Number).filter(function(n){return !isNaN(n)&&OPTIONS[n];}); }
     applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
@@ -1467,10 +1406,6 @@ function refresh(){
     s.classList.toggle('sel', on);
     s.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
-  // 選配套件（氣壓懸吊等）：勾選的累加加價、列入摘要、同步勾選框
-  var optTotal=0, optRows='';
-  (state.opts||[]).forEach(function(i){ if(OPTIONS[i]){ optTotal+=OPTIONS[i].add; optRows+=row('選配', OPTIONS[i].name); } });
-  document.querySelectorAll('#opt-list input[type=checkbox]').forEach(function(cb){ cb.checked = (state.opts||[]).indexOf(+cb.dataset.i)>=0; });
   var _fb=document.getElementById('finish-row'); if(_fb) Array.prototype.forEach.call(_fb.children,function(x,xi){ x.className=(xi===state.finish?'active':''); });
   var _rc = (activeCar>=0 && CARS[activeCar] && CARS[activeCar].realColor) || null;
   const extName = state.extHex ? ((_rc && state.extHex===_rc.hex) ? _rc.name : ('自訂 '+state.extHex)) : EXTERIOR[state.ext].name;
@@ -1483,7 +1418,6 @@ function refresh(){
     (state.intMats.length ? row('內裝顏色', intName) : '')+
     (state.caliperMats.length ? row('煞車卡鉗', CALIPER[state.caliperColor].name) : '')+
     (state.wheelMats.length ? row('輪圈樣式', WHEELS[state.wheelStyle].name) : '')+
-    optRows+
     specs;
   /* dock 標籤帶目前選中的顏色名稱 */
   var _le=document.getElementById('lab-ext'); if(_le) _le.textContent='車身 · '+extName;
@@ -1499,6 +1433,8 @@ function applyOrientation(){ mv.setAttribute('orientation', '0deg ' + _pitch + '
    但 AR 會照原尺寸把車擺進房間。W202、MX-5 的單位是公分（會變 450 公尺），X5、Mazda 3、Mustang 小了 100 倍（5 公分），
    Macan 的單位不明，照原廠車長 4.73 m 換算（模型長 18.21）。亮點、看內裝都是照外框比例算的，跟著縮放。 */
 function applyScale(k){ k = k || 1; mv.setAttribute('scale', k + ' ' + k + ' ' + k); }
+/* 指定材質只給自己載入的車模用（九台車的材質都設定好了）*/
+function setMatPick(on){ var m = document.getElementById('mat-pick'); if(m) m.hidden = !on; }
 /* 雜誌跨頁的大字：換車時淡出、換字、淡入；自訂模型不放字 */
 function setMast(code){
   var m = document.querySelector('#floor .mast'); if(!m) return;
@@ -1520,7 +1456,7 @@ document.getElementById('rot-yaw').onclick   = ()=>{ _yaw=(_yaw+90)%360; applyOr
 document.getElementById('rot-reset').onclick = ()=>{ _pitch=0; _yaw=0; applyOrientation(); };
 
 /* ---------- 載入：檔案 / 拖放 / 路徑（新模型先把方向歸零）---------- */
-function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); applyScale(1); setMast(''); activeCar=-1;
+function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); applyScale(1); setMast(''); setMatPick(true); activeCar=-1;
   document.querySelectorAll('#garage button').forEach(b=>b.classList.remove('active'));
   document.getElementById('car-name').textContent='自訂車模'; applyAccent(-1); updateChips(); updateCredit(); if(typeof showLoader==='function') showLoader(); mv.src = src; updateStory(); }
 document.getElementById('file').addEventListener('change', e=>{
