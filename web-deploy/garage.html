@@ -430,6 +430,14 @@
   body.scene-dark .ride-row input[type=range]{ accent-color:#eef1f4; }
   body.scene-dark .ride-row output{ color:#eef1f4; }
   @media (max-width:680px){ .ride-row input[type=range]{ width:150px; height:22px; } }
+  /* 自訂車牌：一格輸入框，字體跟車牌一樣用等寬大寫 */
+  .plate-row[hidden]{ display:none; }
+  .plate-row input{ width:138px; min-height:30px; box-sizing:border-box; font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; text-align:center;
+    color:var(--ink); background:transparent; border:1px solid var(--line); border-radius:8px; padding:0 8px; }
+  .plate-row input::placeholder{ font-weight:400; letter-spacing:.02em; text-transform:none; color:var(--sub); }
+  .plate-row input:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
+  body.scene-dark .plate-row input{ color:#eef1f4; border-color:rgba(255,255,255,.22); }
+  body.scene-dark .plate-row input::placeholder{ color:#a7adb4; }
   /* 窗戶隔熱紙：三段切換，跟車高並排 */
   .tint-row[hidden]{ display:none; }
   .tint-row output{ color:var(--ink); font-weight:500; }
@@ -445,6 +453,14 @@
   body.scene-dark .tint-seg button + button{ border-left-color:rgba(255,255,255,.22); }
   body.scene-dark .tint-seg button:hover{ background:rgba(255,255,255,.08); }
   body.scene-dark .tint-seg button.active{ background:#eef1f4; color:#18191b; }
+  /* 手機：車高、隔熱紙、車牌擠進同一行，控制列才不會長到蓋住車（SE 375×667 原本會蓋掉 W202 的輪子） */
+  @media (max-width:440px){
+    .color-rows{ column-gap:10px; }
+    .ride-row input[type=range]{ width:92px; }
+    .tint-seg button{ padding:0 8px; font-size:12px; }
+    .plate-row input{ width:96px; font-size:13px; letter-spacing:.04em; padding:0 4px; }
+    .plate-row input::placeholder{ font-size:11.5px; }
+  }
 </style>
 </head>
 <body>
@@ -517,6 +533,11 @@
         <div class="color-row tint-row" id="tint-block" hidden>
           <span class="lab">隔熱紙 · <output id="tint-val">原廠</output></span>
           <div class="tint-seg" id="tint-row" role="group" aria-label="窗戶隔熱紙"></div>
+        </div>
+        <!-- 自訂車牌（2026-10-08）：模型裡有 plate_print 薄板的車，九台都有 -->
+        <div class="color-row plate-row" id="plate-block" hidden>
+          <span class="lab"><label for="plate-in">車牌</label></span>
+          <input type="text" id="plate-in" maxlength="8" placeholder="打字印上車牌" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
         </div>
       </div>
       <div class="more"><button class="linkbtn" id="rand-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg> 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 <svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6" /></svg></button></div>
@@ -760,7 +781,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[] };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
 
 const mv = document.getElementById('mv');
 
@@ -777,7 +798,7 @@ function saveCfg(){
   try{
     localStorage.setItem('dg-cfg', JSON.stringify({
       car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
-      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint,
+      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:state.plate,
       scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
@@ -834,6 +855,50 @@ function applyTint(){
     if(k>0 && m.setAlphaMode) m.setAlphaMode('BLEND');
   });
 }
+
+/* 自訂車牌：只收大寫英文、數字、連字號，最多 8 個字（台灣自用車 ABC-1234 剛好 8 個） */
+function cleanPlate(t){ return (''+(t||'')).toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,8); }
+var _plateVer = 0;
+function drawPlate(text, aspect){
+  // 寬高比照模型裡的車牌（材質名稱 plate_print@寬高比；W202、MX-5 是 50.1 × 10.4 cm，美規 30.5 × 15.2 cm 約 2:1）
+  // 白底、細黑框、黑字，字太長就壓窄
+  var W=1040, H=Math.round(W/(aspect||4.82)), c=document.createElement('canvas'); c.width=W; c.height=H;
+  var g=c.getContext('2d'), u=H/216;
+  g.fillStyle='#f3f2ee'; g.fillRect(0,0,W,H);
+  g.strokeStyle='#16171a'; g.lineWidth=10*Math.min(u,1.6); g.beginPath();
+  var m=14*Math.min(u,1.6);
+  if(g.roundRect) g.roundRect(m,m,W-2*m,H-2*m,22*Math.min(u,1.6)); else g.rect(m,m,W-2*m,H-2*m);
+  g.stroke();
+  g.fillStyle='#16171a'; g.textAlign='center'; g.textBaseline='middle';
+  var fs=Math.round(H*0.78);
+  g.font='700 '+fs+'px "Noto Sans TC", "Arial Narrow", Arial, sans-serif';
+  var w=g.measureText(text).width, max=W*0.86, sx=Math.min(0.82, max/Math.max(w,1));   // 車牌字比一般字窄
+  g.save(); g.translate(W/2, H/2+fs*0.05); g.scale(sx,1); g.fillText(text,0,0); g.restore();
+  return c.toDataURL('image/png');
+}
+function applyPlate(){
+  var inp=document.getElementById('plate-in'); if(inp && document.activeElement!==inp) inp.value=state.plate;
+  var m=matAt(state.plateMat); if(!m) return;
+  var p=m.pbrMetallicRoughness, ver=++_plateVer;
+  if(!state.plate){ p.setBaseColorFactor([1,1,1,0]); return; }   // 沒打字：薄板透明，看到原本的黑牌
+  var asp=parseFloat((m.name||'').split('@')[1])||4.82;
+  var url=drawPlate(state.plate, asp);
+  mv.createTexture(url).then(function(tex){
+    if(ver!==_plateVer || matAt(state.plateMat)!==m) return;   // 打字很快時只留最後一次
+    p.baseColorTexture.setTexture(tex);
+    p.setBaseColorFactor([1,1,1,1]);
+    if(m.setAlphaMode) m.setAlphaMode('OPAQUE');
+  }).catch(function(){});
+}
+(function(){
+  var inp=document.getElementById('plate-in'); if(!inp) return;
+  var t=null;
+  inp.addEventListener('input', function(){
+    var v=cleanPlate(inp.value); if(v!==inp.value){ var pos=inp.selectionStart; inp.value=v; try{ inp.setSelectionRange(pos,pos); }catch(e){} }
+    state.plate=v; clearTimeout(t); t=setTimeout(function(){ applyPlate(); refresh(); }, 120);
+  });
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') inp.blur(); });
+})();
 
 /* ---------- 自訂顏色（調色盤）---------- */
 document.getElementById('ext-color').addEventListener('input', e=>{ state.extHex=e.target.value; applyExterior(); refresh(); });
@@ -1106,6 +1171,7 @@ function buildShareLink(){
   if(state.caliperMats.length) p.set('cal', state.caliperColor);
   if(state.wheelMats.length) p.set('wheel', state.wheelStyle);
   if(state.tintMats.length && state.tint) p.set('tint', state.tint);
+  if(state.plateMat>=0 && state.plate) p.set('plate', state.plate);
   p.set('scene', state.scene);
   if(rideMM && rideCar()) p.set('ride', rideMM);
   return location.origin+location.pathname+'?'+p.toString();
@@ -1197,7 +1263,7 @@ function enterFromLobby(i){
   if(savedCfg && savedCfg.car===i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
-    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint };
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate };
     pendingRide = savedCfg.ride || 0;
     if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
@@ -1224,6 +1290,7 @@ function parseShareURL(){
   if(p.has('wheel')) cfg.wheel=+p.get('wheel');
   if(p.has('fin')) cfg.fin=+p.get('fin');
   if(p.has('tint')) cfg.tint=+p.get('tint');
+  if(p.has('plate')) cfg.plate=cleanPlate(p.get('plate'));
   // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
   if(Object.keys(cfg).length) pendingCfg=cfg;
@@ -1359,6 +1426,11 @@ function onModelLoad(){
   var tblk=document.getElementById('tint-block'); if(tblk) tblk.hidden = !state.tintMats.length;
   if(!state.tintMats.length) state.tint = 0;
   applyTint();
+  // 自訂車牌：模型裡有 plate_print（第二版名稱帶寬高比 plate_print@4.62）才開放；打過的字換車也保留（是「你的車牌」）
+  state.plateMat = -1;
+  if(activeCar>=0) mats.forEach(function(m,i){ if(/^plate_print(@|$)/.test(m.name||'')) state.plateMat=i; });
+  var pblk=document.getElementById('plate-block'); if(pblk) pblk.hidden = state.plateMat<0;
+  applyPlate();
   if(typeof pendingCfg!=='undefined' && pendingCfg){
     var c=pendingCfg; pendingCfg=null;
     if(c.ext!=null){ if((''+c.ext).charAt(0)==='#'){ state.extHex=c.ext; } else { state.ext=+c.ext; state.extHex=null; } }
@@ -1367,7 +1439,8 @@ function onModelLoad(){
     if(c.wheel!=null && state.wheelMats.length) state.wheelStyle=c.wheel;
     if(c.fin!=null) state.finish=c.fin;
     if(c.tint!=null && state.tintMats.length && TINTS[+c.tint]) state.tint=+c.tint;
-    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); refresh();
+    if(c.plate!=null) state.plate=cleanPlate(c.plate);
+    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
   }
@@ -1533,6 +1606,7 @@ function refresh(){
     (state.caliperMats.length ? row('煞車卡鉗', CALIPER[state.caliperColor].name) : '')+
     (state.wheelMats.length ? row('輪圈樣式', WHEELS[state.wheelStyle].name) : '')+
     (state.tintMats.length ? row('窗戶隔熱紙', TINTS[state.tint].name) : '')+
+    (state.plateMat>=0 ? row('車牌', state.plate || '原廠（空白）') : '')+
     specs;
   /* dock 標籤帶目前選中的顏色名稱 */
   var _le=document.getElementById('lab-ext'); if(_le) _le.textContent='車身 · '+extName;
