@@ -66,16 +66,37 @@
     border:1px solid rgba(255,255,255,.16); border-radius:30px; padding:8px 16px; background:transparent; transition:.15s; }
   .lobby-nav a:hover{ color:#fff; border-color:rgba(255,255,255,.4); }
   .lobby-nav a:hover svg.lic{ animation:licWiggle .55s ease; transform-origin:50% 50%; }
-  .lobby-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(205px, 1fr)); gap:1px; width:min(1060px, 94vw);
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08); }
-  .lcard{ font-family:inherit; text-align:left; background:#0e0f12; border:none; color:#ece9e2;
-    overflow:hidden; cursor:pointer; padding:0; transition:background .18s; }
-  .lcard:hover{ background:#16171b; }
-  .lcard img{ width:100%; aspect-ratio:4/3; object-fit:contain; display:block; background:transparent; padding:10px 14px 0; box-sizing:border-box; }
-  .lcard .ln{ font-family:"Noto Serif TC",Georgia,serif; font-size:15px; font-weight:500; padding:10px 16px 3px; line-height:1.45; }
-  .lcard .lt{ font-size:12px; color:#a9a59c; padding:0 16px 16px; line-height:1.55; }
-  .lcard .lbadge{ display:inline-block; font-family:"Noto Sans TC",sans-serif; font-size:11px; color:#0a0b0d; background:#d9d4c7; border-radius:3px; padding:1px 7px; margin-left:8px; vertical-align:2px; font-weight:500; }
-  .lcard .lbadge.mine{ background:#b8962e; color:#0a0b0d; }
+  /* 5×2 剛好排滿：九台車＋「增加其他車輛」；格線是 1px 的縫（底色從縫裡透出來），像型錄的表格 */
+  .lobby-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:1px; width:min(1180px, 94vw);
+    background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.09); }
+  .lcard{ position:relative; display:flex; flex-direction:column; font-family:inherit; text-align:left; background:#0e0f12; border:none; color:#ece9e2;
+    overflow:hidden; cursor:pointer; padding:0; transition:background .2s; }
+  .lcard:hover{ background:#15161a; }
+  .lcard:focus-visible{ outline:1px solid #b8962e; outline-offset:-1px; }
+  /* 照片：攝影棚第 28 格，九台同一個框裁（lobby-*.webp），矩形、不加暈影 */
+  .lcard .lph{ display:block; width:100%; aspect-ratio:16/10; background:#0b0b0c; overflow:hidden; }
+  .lcard .lph img{ width:100%; height:100%; object-fit:cover; display:block; filter:brightness(.92); transition:filter .25s, transform .5s cubic-bezier(.2,.7,.2,1); }
+  .lcard:hover .lph img{ filter:brightness(1.04); transform:scale(1.025); }
+  .lcard .lm{ font-size:11.5px; letter-spacing:.06em; color:#a9a59c; padding:14px 16px 0; }
+  .lcard .lm.mine{ color:#c9a43a; }
+  .lcard .ln{ font-family:"Noto Serif TC",Georgia,serif; font-size:17px; font-weight:500; padding:4px 16px 0; line-height:1.4; }
+  .lcard .lt{ font-family:"Noto Serif TC",Georgia,serif; font-size:13.5px; font-weight:300; color:#c2bdb3; padding:3px 16px 18px; line-height:1.55; }
+  .lcard .lbadges{ position:absolute; top:10px; left:10px; display:flex; gap:6px; }
+  .lcard .lbadge{ font-size:11px; letter-spacing:.04em; color:#ece9e2; background:rgba(10,11,13,.72); border:1px solid rgba(255,255,255,.18); border-radius:3px; padding:2px 8px; }
+  .lcard .lbadge.mine{ color:#0a0b0d; background:#c9a43a; border-color:#c9a43a; font-weight:500; }
+  /* 第十格：增加其他車輛（載入自己的 .glb） */
+  .lcard.ladd .lph{ display:flex; align-items:center; justify-content:center; padding-top:9%; box-sizing:border-box; background:#0b0b0c url(lobby-empty.webp) center/cover no-repeat; }   /* 同一個攝影棚、沒有車：空車位；＋放在地板的光區中間 */
+  .lcard.ladd .lplus{ position:relative; width:34px; height:34px; opacity:.55; transition:opacity .2s, transform .3s cubic-bezier(.2,.7,.2,1); }
+  .lcard.ladd .lplus::before, .lcard.ladd .lplus::after{ content:''; position:absolute; background:#ece9e2; }
+  .lcard.ladd .lplus::before{ left:16.5px; top:0; width:1px; height:34px; }
+  .lcard.ladd .lplus::after{ top:16.5px; left:0; height:1px; width:34px; }
+  .lcard.ladd:hover .lplus{ opacity:1; transform:rotate(90deg); }
+  @media (max-width:960px){ .lobby-grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:480px){
+    .lcard .lm{ font-size:11px; padding:11px 12px 0; letter-spacing:.03em; }
+    .lcard .ln{ font-size:15px; padding:3px 12px 0; }
+    .lcard .lt{ font-size:12.5px; padding:2px 12px 14px; }
+  }
 
   model-viewer{
     width:100%; height:100%; background:transparent;
@@ -382,7 +403,6 @@
   .lobby-nav{ gap:24px; }
   .lobby-nav a{ border:none; border-radius:0; padding:10px 2px 6px; border-bottom:1px solid rgba(255,255,255,.22); font-size:14px; }
   .lobby-nav a:hover{ border-bottom-color:#b8962e; }
-  .lcard img{ aspect-ratio:16/9; object-fit:cover; padding:0; }
 
   /* 載入畫面：預設是暗棚，載入時不要先閃一片白 */
   #loader{ background:#0c0c0d; }
@@ -700,7 +720,7 @@ const STORIES = [
     story:'1964 年誕生的美式跑車圖騰，第七代 S650。GT 是 5.0L 自然進氣 V8，美規 480 hp，可選六速手排。',
     hi:['5.0L V8','後輪驅動','可選手排','可進車內'] },
   { tag:'四門轎跑', sub:'Mercedes-AMG GT 63 S · X290 四門轎跑',
-    story:'4.0L V8 雙渦輪，639 PS，原廠宣稱 0-100 只要 3.2 秒。這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆、方向盤停在原點。我把它拆開重組，從 26MB 壓到 1.6MB。',
+    story:'4.0L V8 雙渦輪，639 PS，原廠宣稱 0-100 只要 3.2 秒。這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆、方向盤停在原點。我把它拆開重組，從 26 MB 壓到 1.7 MB。',
     hi:['639 PS V8','0-100 3.2 秒','4MATIC+ 四驅','重組過的模型'] },
   { tag:'中型休旅', sub:'Mazda CX-5 · 2020 年式 Skyactiv',
     story:'2.5L 自然進氣、i-Activ 四驅，歐規 194 PS。本來想放 CX-60，但 Sketchfab 上的 CX-60 全是 AI 生成、只有一個材質，換不了色，所以改用這台真實掃描的 CX-5。',
@@ -1071,19 +1091,41 @@ function showLoader(){ var l=document.getElementById('loader'); if(l) l.classLis
 setTimeout(hideLoader, 9000);
 
 /* ---------- 車庫入口大廳 ---------- */
+/* 大廳每台車的三行字：品牌 · 底盤代號／車款／首頁那句標題（index.html STORIES 的 title，兩邊要一起改） */
+var LOBBY = [
+  ['Mercedes-Benz', 'C220', '真的那一台'],
+  ['Mazda', 'MX-5', '一噸重的敞篷'],
+  ['Porsche', 'Macan', '跑車廠做的休旅'],
+  ['BMW', 'X5', '它不叫 SUV'],
+  ['Infiniti', 'Q50 Red Sport 400', '看不出來的 400 hp'],
+  ['Mazda', 'Mazda 3', '沒有腰線的掀背'],
+  ['Ford', 'Mustang GT', '六十年沒停產'],
+  ['Mercedes-AMG', 'GT 63 S', '四門、639 PS'],
+  ['Mazda', 'CX-5', '本來不是它']
+];
 function buildLobby(){
   var g=document.getElementById('lobby-grid'); if(!g) return;
   g.innerHTML='';
   CARS.forEach(function(c,i){
-    var s=(typeof STORIES!=='undefined'&&STORIES[i])?STORIES[i]:null;
+    var L=LOBBY[i]||[c.short, c.name, ''];
     var b=document.createElement('button'); b.className='lcard';
-    var last=(c.mine ? '<span class="lbadge mine">我的車</span>' : '') + ((savedCfg && savedCfg.car===i) ? '<span class="lbadge">上次的配置</span>' : '');
-    b.innerHTML='<img loading="lazy" src="thumb-'+c.file.replace(/\.glb$/i,'')+'.webp" alt="'+c.short+'" onerror="this.remove()">'
-      +'<div class="ln">'+c.name+last+'</div>'
-      +'<div class="lt">'+(s?s.tag:'')+'</div>';
+    b.setAttribute('aria-label', c.name+'，'+L[2]+(c.mine?'，我的車':'')+((savedCfg && savedCfg.car===i) ? '，上次的配置' : ''));
+    b.innerHTML='<span class="lph"><img loading="lazy" src="lobby-'+c.file.replace(/\.glb$/i,'')+'.webp" alt="" onerror="this.remove()"></span>'
+      +((c.mine || (savedCfg && savedCfg.car===i)) ? '<span class="lbadges">'+(c.mine?'<span class="lbadge mine">我的車</span>':'')+((savedCfg && savedCfg.car===i)?'<span class="lbadge">上次的配置</span>':'')+'</span>' : '')
+      +'<span class="lm'+(c.mine?' mine':'')+'">'+L[0]+' · '+c.code+'</span>'
+      +'<span class="ln">'+L[1]+'</span>'
+      +'<span class="lt">'+L[2]+'</span>';
     b.onclick=function(){ enterFromLobby(i); };
     g.appendChild(b);
   });
+  // 第十格：增加其他車輛 → 開檔案選擇；選好才關大廳（取消的話留在大廳）
+  var a=document.createElement('button'); a.className='lcard ladd';
+  a.innerHTML='<span class="lph"><span class="lplus" aria-hidden="true"></span></span>'
+    +'<span class="lm">自己的 3D 模型</span>'
+    +'<span class="ln">增加其他車輛</span>'
+    +'<span class="lt">載入一個 .glb 車模檔</span>';
+  a.onclick=function(){ var f=document.getElementById('file'); if(f) f.click(); };
+  g.appendChild(a);
 }
 function closeLobby(){ var l=document.getElementById('lobby'); if(l) l.classList.add('gone'); }
 function openLobby(){ var l=document.getElementById('lobby'); if(l) l.classList.remove('gone'); }
@@ -1460,7 +1502,7 @@ function loadSrc(src){ _pitch=0; _yaw=0; applyOrientation(); applyScale(1); setM
   document.querySelectorAll('#garage button').forEach(b=>b.classList.remove('active'));
   document.getElementById('car-name').textContent='自訂車模'; applyAccent(-1); updateChips(); updateCredit(); if(typeof showLoader==='function') showLoader(); mv.src = src; updateStory(); }
 document.getElementById('file').addEventListener('change', e=>{
-  const f = e.target.files[0]; if(f) loadSrc(URL.createObjectURL(f));
+  const f = e.target.files[0]; if(f){ closeLobby(); loadSrc(URL.createObjectURL(f)); }
 });
 document.getElementById('path-load').onclick = ()=>{
   const p = document.getElementById('path').value.trim(); if(p) loadSrc(p);
@@ -1470,7 +1512,7 @@ const drop = document.getElementById('drop');
 ['dragleave','drop'].forEach(ev=> window.addEventListener(ev, e=>{ e.preventDefault(); if(ev==='drop'||e.target===drop) drop.classList.remove('show'); }));
 window.addEventListener('drop', e=>{
   const f = e.dataTransfer.files[0];
-  if(f && /\.(glb|gltf)$/i.test(f.name)) loadSrc(URL.createObjectURL(f));
+  if(f && /\.(glb|gltf)$/i.test(f.name)){ closeLobby(); loadSrc(URL.createObjectURL(f)); }
   else toast('請拖入 .glb 檔（單一檔案最穩）');
 });
 
