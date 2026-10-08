@@ -36,3 +36,8 @@ glb-backup-nodraco/
 /*.bat
 /backups/
 /.wrangler/
+
+# 首頁轉盤的大螢幕版影格（2026-10-08）：每台 4.5–6 MB，每重渲一次就多一份，不進版本庫。
+# 由 1280 那份的同一批 2560 渲染縮出來（tt/ 有進版本庫），部署時照樣上傳
+/web-deploy/tt1920/
+/web-deploy/tt2560/

@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="tt/w202/028.webp?v=144a">
+<link rel="preload" as="image" href="tt/w202/028.webp?v=144g">
 <style>
   /* =====================================================================
      導覽頁：車誌版面（2026-10-02 改版）
@@ -249,7 +249,7 @@
       <p class="sub">九台車，一台是我自己的 1993 W202，另外八台是想過的車。這一頁講網站的每個功能為什麼這樣做，以及做的時候踩過的坑。</p>
     </div>
     <figure class="fig">
-      <div class="plate"><img src="tt/w202/028.webp?v=144a" width="1280" height="720" alt="深綠色 W202 停在暗色攝影棚，地板有倒影"></div>
+      <div class="plate"><img src="tt/w202/028.webp?v=144g" width="1280" height="720" alt="深綠色 W202 停在暗色攝影棚，地板有倒影"></div>
       <figcaption>首頁轉盤的其中一張。Blender 攝影棚渲染。</figcaption>
     </figure>
   </section>
@@ -430,8 +430,8 @@ var SEGS = {
     '<p>複製連結、分享到 LINE，或讓朋友掃 QR code，打開就是你配的那台。支援 AR 的手機可以把車以實際比例擺進房間。<b>AR 我還沒在實機上測過。</b></p>'
   ],
   's-perf':[
-    '<p>首頁的車是預先渲染的照片。每台車在 Blender 的攝影棚裡轉一圈，拍 <b>144 張</b>，每 2.5° 一張，有真的地板倒影。</p>',
-    '<p>一開始只拍 36 張，換車時看得出一格一格，所以加密四倍。圖分批下載，沒動手拖車的人每台只載六成左右。</p>',
+    '<p>首頁的車是預先渲染的照片。每台車在 Blender 的攝影棚裡轉一圈，拍 <b>144 張</b>，每 2.5° 一張，有真的地板倒影。燈條的邊緣做成漸層：硬邊的反光會把車身的小起伏放大成一塊塊白斑。</p>',
+    '<p>一開始只拍 36 張，換車時看得出一格一格，所以加密四倍。圖分批下載，沒動手拖車的人每台只載六成左右。手機拿 1280 寬的版本，大螢幕拿 1920 或 2560。</p>',
     '<p>即時 3D 留在配置器，給想換色、坐進車內的人。那邊也踩過坑：一頁超過三個 3D 檢視器 Chrome 就會卡死；兩台車的車身被簡化掉八成多，打光就凹凸不平，後來換回原始車身。</p>'
   ]
 };
@@ -448,7 +448,7 @@ function clamp(v,a,b){ return v<a?a : v>b?b : v; }
   var box = document.getElementById('sheet'), h = '';
   for(var k=0;k<8;k++){
     var f = k*18;
-    h += '<div class="cell"><img src="tt/w202/'+String(f).padStart(3,'0')+'.webp?v=144a" width="1280" height="720" loading="lazy" alt=""><span class="deg">'+(f*2.5)+'°</span></div>';
+    h += '<div class="cell"><img src="tt/w202/'+String(f).padStart(3,'0')+'.webp?v=144g" width="1280" height="720" loading="lazy" alt=""><span class="deg">'+(f*2.5)+'°</span></div>';
   }
   box.innerHTML = h;
 })();

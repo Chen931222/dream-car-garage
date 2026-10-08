@@ -180,7 +180,7 @@ window.__dgFonts = function(){
     font-size:clamp(24px, 3.6vw, 40px); font-weight:300; line-height:1.3; margin-bottom:10px;
   }
   #panel h2 em{ font-style:normal; font-weight:500; }
-  #panel p{ font-size:clamp(15px, 1.2vw, 16px); line-height:1.9; color:#a29d93; }
+  #panel p{ font-size:clamp(15px, 1.2vw, 16px); line-height:1.9; color:#a29d93; text-wrap:pretty; }   /* pretty：最後一行不要只剩一個字 */
   #panel .divider{ width:40px; height:1px; margin:16px 0; background:var(--accent); }
   #panel.side-right .divider{ margin-left:auto; }
   #panel .inner{ transition:opacity .35s ease; }
@@ -599,33 +599,45 @@ var CARS = [
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } }
 ];
 var STORIES = [
-  { kick:'Mercedes-Benz · 1993 · 我的車', tag:'第一代 C-Class，九台裡唯一真的那台', title:'真的那一台',
-    story:'九台裡只有這台是我自己的車。其他八台是夢，這一台要自己洗。',
-    story2:'畫面上的 3D 模型不是我的車本人，是網路上的 CC BY 模型。內裝是我在 Blender 裡重新拆零件、上材質做的。' },
-  { kick:'Mazda · ND', tag:'雙座敞篷跑車', title:'一噸重的敞篷',
-    story:'全球最暢銷的雙座敞篷跑車。2.0L 自然進氣、車重約一噸、後驅。',
-    story2:'Roadster 從 1989 年到現在 37 年，配方一直是輕、小、後驅。' },
-  { kick:'Porsche · 2022', tag:'中型性能休旅', title:'跑車廠做的休旅',
-    story:'2022 年式基本款，2.0L 渦輪直四、265 PS、四驅。',
-    story2:'這台模型有完整的方向盤和中控台，可以坐進去看。' },
-  { kick:'BMW · F15', tag:'大型豪華休旅', title:'直六與四驅',
-    story:'2015 年式 xDrive35i，3.0L 直六渦輪、306 PS、xDrive 四驅。',
-    story2:'這台模型的內裝比較簡陋，所以配置器沒有開放「看內裝」。' },
-  { kick:'Infiniti · Red Sport 400', tag:'性能房車', title:'看不出來的 400 hp',
-    story:'3.0L 雙渦輪 V6，原廠標 400 hp。',
-    story2:'外觀和一般 Q50 幾乎一樣。這台模型的作者自己也標註了「不完全準確」。' },
-  { kick:'Mazda · 第四代', tag:'掀背車', title:'沒有腰線的掀背',
-    story:'2020 年式，2.5L 直四，美規 186 hp。',
-    story2:'第四代把腰線拿掉，車側只靠鈑件曲面反射光影。' },
-  { kick:'Ford · S650 GT', tag:'美式跑車', title:'5.0 升 V8',
-    story:'1964 年誕生的美式跑車，這是第七代。GT 是 5.0L 自然進氣 V8，美規 480 hp。',
-    story2:'長車頭、短車尾的比例從第一代延續到現在。' },
-  { kick:'Mercedes-AMG · X290', tag:'四門轎跑', title:'四門、639 PS',
-    story:'4.0L V8 雙渦輪、639 PS，原廠宣稱 0-100 只要 3.2 秒。2018 年日內瓦車展發表。',
-    story2:'這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆。我把它拆開重組，從 26MB 壓到 1.6MB。' },
-  { kick:'Mazda · 2020', tag:'中型休旅', title:'沒有渦輪的休旅',
-    story:'2.5L 自然進氣、i-Activ 四驅，歐規 194 PS。',
-    story2:'本來想放 CX-60，但 Sketchfab 上的 CX-60 全是 AI 生成、只有一個材質，換不了色。這台是真實掃描的 CX-5。' }
+  /* kick：完整車名；title：標題；hook：封面那一句；story／story2：故事卡兩段（第二段講這個 3D 模型本身）
+     2026-10-08 重寫。新加的事實都查過：Macan＝印尼語老虎（Porsche 2012 命名新聞稿）、X5 是 BMW 第一台 SAV（BMW 1999 新聞稿）、
+     Mustang 1964 年起沒停產、S650 GT 有手排、MX-5 金氏紀錄與 ND 比 NC 輕約 100 kg（各家量法不同，77–158 kg） */
+  { kick:'1993 Mercedes-Benz C220 · 我的車', title:'真的那一台',
+    hook:'其他八台是夢，這一台要自己洗。',
+    story:'第一代 C-Class，1993 年出廠，車齡三十多年。',
+    story2:'畫面上的不是我的車本人，是網路上 CC BY 授權的模型。內裝是我在 Blender 裡拆零件、重新上材質做的。' },
+  { kick:'2015 Mazda MX-5 · ND', title:'一噸重的敞篷',
+    hook:'1989 年到現在，配方沒換過：輕、後驅、兩個座位。',
+    story:'金氏世界紀錄裡賣最多的雙座跑車。第四代 ND 比上一代輕了大約 100 公斤，車重回到一噸上下。',
+    story2:'這台模型的車身一度被簡化掉 86% 的面，燈一照就凹凸不平。我換回原始車身，再把攝影棚燈條的邊緣改成漸層。' },
+  { kick:'2022 Porsche Macan', title:'跑車廠做的休旅',
+    hook:'名字取自印尼語的「老虎」。保時捷的兩台休旅裡，這是小的那台。',
+    story:'2022 年式入門款：2.0 升四缸渦輪、265 PS。Macan 不分等級都是四驅。',
+    story2:'這台模型有完整的方向盤和中控台，配置器裡可以坐進去看。' },
+  { kick:'2015 BMW X5 · F15', title:'它不叫 SUV',
+    hook:'1999 年第一代上市，BMW 就堅持叫它 SAV，不叫 SUV。這是第三代。',
+    story:'2015 年式 xDrive35i。3.0 升直六渦輪，配 xDrive 四驅。',
+    story2:'這台模型的內裝很陽春，所以配置器沒開放「看內裝」。' },
+  { kick:'2021 Infiniti Q50 Red Sport 400', title:'看不出來的 400 hp',
+    hook:'外觀跟一般 Q50 幾乎一樣，差別在引擎蓋底下。',
+    story:'3.0 升雙渦輪 V6。一般版 Q50 3.0t 是 300 hp，同一顆引擎調到 400 hp。',
+    story2:'模型作者在標題寫了「不完全準確」。網站原本用的那份被簡化過，車身凹凸不平，我換回 58 萬面的原檔。' },
+  { kick:'2020 Mazda 3 · 第四代', title:'沒有腰線的掀背',
+    hook:'車側沒有一條折線，造型全靠曲面的反光。',
+    story:'馬自達叫這套設計「魂動」。這台是美規 2.5 升直四，186 hp。',
+    story2:'拖著它慢慢轉：反光滑過車門的那一下，就是它的造型。' },
+  { kick:'2024 Ford Mustang GT · S650', title:'六十年沒停產',
+    hook:'1964 年上市，一路做到第七代，中間沒停過。',
+    story:'GT 是 5.0 升自然進氣 V8，美規 480 hp，還有手排可選。',
+    story2:'長車頭、短車尾的比例，從第一代延續到現在。' },
+  { kick:'Mercedes-AMG GT 63 S 4-Door Coupé · X290', title:'四門、639 PS',
+    hook:'原廠宣稱 0–100 只要 3.2 秒。後面還有兩扇門。',
+    story:'2018 年日內瓦車展發表。4.0 升 V8 雙渦輪。',
+    story2:'這台模型原本是遊戲零件包：引擎蓋浮在半空、輪子只有一顆。我把它拆開重組，從 26 MB 壓到 1.7 MB。' },
+  { kick:'2020 Mazda CX-5', title:'本來不是它',
+    hook:'原本要放的是 CX-60。',
+    story:'Sketchfab 上找得到的 CX-60 全是 AI 生成，整台只有一個材質，換不了顏色。最後換成這台 CX-5：2.5 升自然進氣，i-Activ 四驅。',
+    story2:'它是掃描出來的模型，前車牌上印著作者的名字。首頁和配置器都把那塊蓋掉了。' }
 ];
 var SPECS = [
   [['年份','1993'],['引擎','2.2L 直四'],['馬力','150 PS'],['0–100','10.5 秒'],['驅動','後驅']],
@@ -674,27 +686,39 @@ CARS.forEach(function(c,i){
 var dots = dotsBox.children;
 
 /* ---------- 3 格輪替的轉盤池 ----------
-   每台車 144 張影格（tt/<車>/000..143.webp），每張轉 2.5°；影格 0 是前 3/4。
+   每台車 144 張影格（tt/<車>/000..143.webp，大螢幕換 tt1920/、tt2560/），每張轉 2.5°；影格 0 是前 3/4。
    36 張（每 10°）的時候進場只換 4 張圖，看起來像每秒 5 格，所以加密到 144 張。
    分層下載，先載會用到的：
      0 停留的那一張　1 進場掃過的 60°（24 張）　2 每 10° 一張　3 每 5° 一張　4 剩下的
-   前後一台只載 0、1 層（夠它順順地進場），輪到它才補 2、3 層。第 4 層（約 1.3 MB）等使用者真的動手拖了才載，
+   前後一台只載 0、1 層（夠它順順地進場），輪到它才補 2、3 層。第 4 層（約 60 張：1280 那份 1.3–1.8 MB，2560 那份 2.6–3.5 MB）等使用者真的動手拖了才載，
    沒拖過的人不用多付這些流量。畫的時候挑離目標角度最近、已經載好的那張。 */
 var SLOT_N = 3, FR = 144, ARC = 24;            // ARC：進場掃過的格數（24 × 2.5° = 60°）
-var TT_VER = '144f';                           // 影格重渲染時改這個，讓瀏覽器重抓
+var TT_VER = '144g';                           // 影格重渲染時改這個，讓瀏覽器重抓
 var viewerBox = document.getElementById('viewers');
 var slots = [];
 var _conn = navigator.connection || {};
 var LITE = !!_conn.saveData || /(^|-)2g$|^3g$/.test(_conn.effectiveType||'');   // 省流量或慢網路：拖曳也只載到每 5° 一張
+/* 影格尺寸（2026-10-08）：同一批 2560 渲染縮成三份，tt/（1280）、tt1920/、tt2560/。
+   需要的寬度 = 畫面上影格的寬 × 像素密度。桌面影格蓋滿視窗再縮到 0.85 倍；手機是 118vw。
+   挑第一個夠用的（容許放大一成）。一進站就決定，之後縮放視窗不換，免得整批重抓。 */
+var TT_W = (function(){
+  if(LITE) return 1280;
+  var vw = window.innerWidth, vh = window.innerHeight, dpr = window.devicePixelRatio || 1;
+  var need = (vw<=680 ? vw*1.18 : Math.max(vw, vh*16/9)*0.85) * dpr;
+  var tiers = [1280, 1920, 2560];
+  for(var t=0; t<tiers.length; t++){ if(tiers[t] >= need*0.9) return tiers[t]; }
+  return 2560;
+})();
+var TT_DIR = TT_W===1280 ? 'tt/' : 'tt'+TT_W+'/';
 function fmod(i){ return ((i%FR)+FR)%FR; }
-function frameURL(k, i){ return 'tt/'+CARS[k].file.replace(/\.glb$/i,'')+'/'+String(fmod(i)).padStart(3,'0')+'.webp?v='+TT_VER; }
+function frameURL(k, i){ return TT_DIR+CARS[k].file.replace(/\.glb$/i,'')+'/'+String(fmod(i)).padStart(3,'0')+'.webp?v='+TT_VER; }
 /* 停留角度：車頭朝文字卡的反方向。偶數台文字卡在左 → 70°（車頭朝右）；奇數台文字卡在右 → 0°（車頭朝左） */
 function baseFrame(k){ return (k%2===0) ? 28 : 0; }
 function sweepDir(k){ return (k%2===0) ? 1 : -1; }
 (function(){
   for(var s=0;s<SLOT_N;s++){
     var el = document.createElement('div'); el.className='car-viewer'; el.setAttribute('aria-hidden','true');
-    var cv = document.createElement('canvas'); cv.width=1280; cv.height=720;
+    var cv = document.createElement('canvas'); cv.width=TT_W; cv.height=TT_W*9/16;
     el.appendChild(cv); viewerBox.appendChild(el);
     slots.push({ el:el, ctx:cv.getContext('2d',{alpha:false}), car:-1, imgs:[], ok:null, req:null, need:0, got:0, loaded:false, readyAt:0, ia:-1, full:false });
   }
@@ -794,7 +818,7 @@ function nearestLoaded(s, i){
 function showFrame(s, i){
   var j = nearestLoaded(s, fmod(i));
   if(j<0 || j===s.ia) return;
-  s.ctx.drawImage(s.imgs[j], 0, 0, 1280, 720);
+  s.ctx.drawImage(s.imgs[j], 0, 0, TT_W, TT_W*9/16);
   s.ia = j; s.el.dataset.f = j;
 }
 /* 拖曳旋轉（滑鼠或觸控水平拖）：放開後車停在新的角度，自動環繞從那裡接著轉 */
@@ -868,7 +892,7 @@ function camFor(i, t){
 /* ---------- 文字卡內容 ---------- */
 function cardHTML(i, c){
   var st=STORIES[i], sp=SPECS[i], car=CARS[i];
-  if(c===0) return '<div class="kicker">'+st.kick+'</div><h2>'+st.title+'</h2><div class="divider"></div><p>'+car.name+'。'+st.tag+'。</p>';
+  if(c===0) return '<div class="kicker">'+st.kick+'</div><h2>'+st.title+'</h2><div class="divider"></div><p>'+st.hook+'</p>';
   if(c===1) return '<div class="kicker">故事</div><p>'+st.story+'</p><p style="margin-top:8px">'+st.story2+'</p>';
   var rows = sp.map(function(kv){ return '<div><dt>'+kv[0]+'</dt><dd>'+kv[1]+'</dd></div>'; }).join('');
   return '<div class="kicker">規格</div><dl class="specs">'+rows+'</dl><a class="cta" href="garage.html?car='+(car.id||car.file.replace(/\.glb$/i,''))+'">配這一台 →</a>';

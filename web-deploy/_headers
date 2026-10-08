@@ -2,6 +2,12 @@
 /tt/*
   Cache-Control: public, max-age=2592000
 
+/tt1920/*
+  Cache-Control: public, max-age=2592000
+
+/tt2560/*
+  Cache-Control: public, max-age=2592000
+
 /dream-garage-opening.mp4
   Cache-Control: public, max-age=86400
 
