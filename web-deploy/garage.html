@@ -430,6 +430,21 @@
   body.scene-dark .ride-row input[type=range]{ accent-color:#eef1f4; }
   body.scene-dark .ride-row output{ color:#eef1f4; }
   @media (max-width:680px){ .ride-row input[type=range]{ width:150px; height:22px; } }
+  /* 窗戶隔熱紙：三段切換，跟車高並排 */
+  .tint-row[hidden]{ display:none; }
+  .tint-row output{ color:var(--ink); font-weight:500; }
+  .tint-seg{ display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .tint-seg button{ font-family:inherit; font-size:12.5px; min-height:30px; padding:0 13px; background:transparent; border:none; color:var(--ink); cursor:pointer; transition:background .15s; }
+  .tint-seg button + button{ border-left:1px solid var(--line); }
+  .tint-seg button:hover{ background:rgba(0,0,0,.05); }
+  .tint-seg button.active{ background:var(--ink); color:#fff; }
+  .tint-seg button:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
+  body.scene-dark .tint-row output{ color:#eef1f4; }
+  body.scene-dark .tint-seg{ border-color:rgba(255,255,255,.22); }
+  body.scene-dark .tint-seg button{ color:#e6e8eb; }
+  body.scene-dark .tint-seg button + button{ border-left-color:rgba(255,255,255,.22); }
+  body.scene-dark .tint-seg button:hover{ background:rgba(255,255,255,.08); }
+  body.scene-dark .tint-seg button.active{ background:#eef1f4; color:#18191b; }
 </style>
 </head>
 <body>
@@ -498,6 +513,11 @@
           <span class="lab"><label for="ride">車高</label> · <output id="ride-val" for="ride">原廠</output></span>
           <input type="range" id="ride" min="0" max="40" step="5" value="0" aria-valuetext="原廠高度">
         </div>
+        <!-- 窗戶隔熱紙（2026-10-08）：原本放在齒輪的個人化視窗裡，找不到，搬到控制列 -->
+        <div class="color-row tint-row" id="tint-block" hidden>
+          <span class="lab">隔熱紙 · <output id="tint-val">原廠</output></span>
+          <div class="tint-seg" id="tint-row" role="group" aria-label="窗戶隔熱紙"></div>
+        </div>
       </div>
       <div class="more"><button class="linkbtn" id="rand-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg> 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 <svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6" /></svg></button></div>
     </div>
@@ -551,10 +571,6 @@
       <div id="wheel-block" style="display:none">
         <h3>輪圈樣式</h3>
         <div class="swatches" id="sw-wheel"></div>
-      </div>
-      <div id="tint-block" hidden>
-        <h3>窗戶隔熱紙</h3>
-        <div class="finish-row" id="tint-row"></div>
       </div>
 
       <!-- 指定材質只給自己載入的車模用：九台車的材質都設定好了（2026-10-07） -->
@@ -633,13 +649,14 @@ const WHEELS = [
   { name:'寶藍',   hex:'#1f3a6b', metal:0.9,  rough:0.25 },
   { name:'香檳金', hex:'#c2a878', metal:0.9,  rough:0.3  },
 ];
-// 窗戶隔熱紙（2026-10-08）：只開放每個角度看都對的 5 台。逐台截圖查過：
+// 窗戶隔熱紙（2026-10-08）：只開放每個角度看都對的 4 台（車窗都是一般半透明玻璃）。逐台截圖查過：
 //   Mustang、CX-5 原廠車窗就是深色，套了沒差；X5 的頭燈燈罩跟車窗同一個材質，會一起變暗；
-//   Q50 的車窗是透射玻璃，調深以後正側面會浮出一片白霧（Mazda 3 也是透射玻璃，但沒有這個問題）。
+//   Q50、Mazda 3 的車窗是透射玻璃（KHR_materials_transmission），調深以後某些角度會浮出一片白霧
+//   （Q50 正側面、Mazda 3 左後方的後車門）。model-viewer 的材質 API 關不掉透射，只能不開放。
 // 用材質名稱指出車窗；Macan 的 Glass3Mtl、AMG 的 glass_clear 含頭燈燈罩，不能算進來
 const TINT_MATS = {
   'w202.glb':/^windowglass$/, 'mx5.glb':/^windowglass$/, 'macan.glb':/^glass2mtl$|bootok|windscreen/i,
-  'mazda3.glb':/Show_Glass_Out_026$/, 'gt43.glb':/^glass_tint$/
+  'gt43.glb':/^glass_tint$/
 };
 // k：往深色靠多少（0＝原廠）；顏色往近黑、透明度往 0.9 拉
 const TINTS = [ { name:'原廠', k:0 }, { name:'淺色', k:0.5 }, { name:'深色', k:1 } ];
@@ -794,14 +811,16 @@ function buildTint(){
   var box=document.getElementById('tint-row'); if(!box) return;
   box.innerHTML='';
   TINTS.forEach(function(t,i){
-    var b=document.createElement('button'); b.textContent=t.name; b.className=(i===state.tint?'active':'');
+    var b=document.createElement('button'); b.type='button'; b.textContent=t.name; b.className=(i===state.tint?'active':'');
+    b.setAttribute('aria-pressed', i===state.tint ? 'true' : 'false');
     b.onclick=function(){ state.tint=i; applyTint(); refresh(); };
     box.appendChild(b);
   });
 }
 function syncTintRow(){
   var box=document.getElementById('tint-row'); if(!box) return;
-  Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===state.tint?'active':''); });
+  Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===state.tint?'active':''); x.setAttribute('aria-pressed', xi===state.tint ? 'true' : 'false'); });
+  var v=document.getElementById('tint-val'); if(v) v.textContent=TINTS[state.tint] ? TINTS[state.tint].name : '原廠';
 }
 // 原廠的玻璃顏色在載入時記下來（fixGlass 之後），換回原廠時照原樣還原
 function applyTint(){
