@@ -552,6 +552,10 @@
         <h3>輪圈樣式</h3>
         <div class="swatches" id="sw-wheel"></div>
       </div>
+      <div id="tint-block" hidden>
+        <h3>窗戶隔熱紙</h3>
+        <div class="finish-row" id="tint-row"></div>
+      </div>
 
       <!-- 指定材質只給自己載入的車模用：九台車的材質都設定好了（2026-10-07） -->
       <div id="mat-pick" hidden>
@@ -629,6 +633,16 @@ const WHEELS = [
   { name:'寶藍',   hex:'#1f3a6b', metal:0.9,  rough:0.25 },
   { name:'香檳金', hex:'#c2a878', metal:0.9,  rough:0.3  },
 ];
+// 窗戶隔熱紙（2026-10-08）：只開放每個角度看都對的 5 台。逐台截圖查過：
+//   Mustang、CX-5 原廠車窗就是深色，套了沒差；X5 的頭燈燈罩跟車窗同一個材質，會一起變暗；
+//   Q50 的車窗是透射玻璃，調深以後正側面會浮出一片白霧（Mazda 3 也是透射玻璃，但沒有這個問題）。
+// 用材質名稱指出車窗；Macan 的 Glass3Mtl、AMG 的 glass_clear 含頭燈燈罩，不能算進來
+const TINT_MATS = {
+  'w202.glb':/^windowglass$/, 'mx5.glb':/^windowglass$/, 'macan.glb':/^glass2mtl$|bootok|windscreen/i,
+  'mazda3.glb':/Show_Glass_Out_026$/, 'gt43.glb':/^glass_tint$/
+};
+// k：往深色靠多少（0＝原廠）；顏色往近黑、透明度往 0.9 拉
+const TINTS = [ { name:'原廠', k:0 }, { name:'淺色', k:0.5 }, { name:'深色', k:1 } ];
 // 車漆質感（改 metalness/roughness；avoid 太亮會放大低面數稜角）
 const FINISHES = [
   { name:'亮面', metal:0.5,  rough:0.32, coat:1   },
@@ -729,7 +743,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[] };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[] };
 
 const mv = document.getElementById('mv');
 
@@ -746,7 +760,7 @@ function saveCfg(){
   try{
     localStorage.setItem('dg-cfg', JSON.stringify({
       car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
-      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish,
+      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint,
       scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
@@ -759,6 +773,7 @@ buildSwatches('sw-int', INTERIOR, i => { state.int=i; state.intHex=null; applyIn
 buildSwatches('sw-caliper', CALIPER, i => { state.caliperColor=i; applyCaliper(); refresh(); });
 buildSwatches('sw-wheel', WHEELS, i => { state.wheelStyle=i; applyWheel(); refresh(); });
 buildFinish();
+buildTint();
 refresh();
 
 /* 車漆質感（亮面/消光/金屬/珍珠）*/
@@ -771,6 +786,33 @@ function buildFinish(){
       Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===i?'active':''); });
       refresh(); };
     box.appendChild(b);
+  });
+}
+
+/* 窗戶隔熱紙 */
+function buildTint(){
+  var box=document.getElementById('tint-row'); if(!box) return;
+  box.innerHTML='';
+  TINTS.forEach(function(t,i){
+    var b=document.createElement('button'); b.textContent=t.name; b.className=(i===state.tint?'active':'');
+    b.onclick=function(){ state.tint=i; applyTint(); refresh(); };
+    box.appendChild(b);
+  });
+}
+function syncTintRow(){
+  var box=document.getElementById('tint-row'); if(!box) return;
+  Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===state.tint?'active':''); });
+}
+// 原廠的玻璃顏色在載入時記下來（fixGlass 之後），換回原廠時照原樣還原
+function applyTint(){
+  syncTintRow();
+  if(!state.tintMats.length) return;
+  var k=TINTS[state.tint] ? TINTS[state.tint].k : 0;
+  state.tintMats.forEach(function(t){ var m=matAt(t.i); if(!m) return;
+    var o=t.orig, d=[0.01,0.012,0.014];
+    var a=o[3]+(0.9-o[3])*k;
+    m.pbrMetallicRoughness.setBaseColorFactor([o[0]+(d[0]-o[0])*k, o[1]+(d[1]-o[1])*k, o[2]+(d[2]-o[2])*k, Math.max(o[3], a)]);
+    if(k>0 && m.setAlphaMode) m.setAlphaMode('BLEND');
   });
 }
 
@@ -1044,6 +1086,7 @@ function buildShareLink(){
   if(state.finish) p.set('fin', state.finish);
   if(state.caliperMats.length) p.set('cal', state.caliperColor);
   if(state.wheelMats.length) p.set('wheel', state.wheelStyle);
+  if(state.tintMats.length && state.tint) p.set('tint', state.tint);
   p.set('scene', state.scene);
   if(rideMM && rideCar()) p.set('ride', rideMM);
   return location.origin+location.pathname+'?'+p.toString();
@@ -1078,7 +1121,8 @@ function randomConfig(){
   if(typeof FINISHES!=='undefined') state.finish=ri(FINISHES.length);
   if(state.caliperMats.length) state.caliperColor=ri(CALIPER.length);
   if(state.wheelMats.length) state.wheelStyle=ri(WHEELS.length);
-  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
+  if(state.tintMats.length) state.tint=ri(TINTS.length);
+  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); refresh();
   toast(LIC.dice+' 幫你配了一套！');
 }
 var randBtn=document.getElementById('rand-btn'); if(randBtn) randBtn.onclick=randomConfig;
@@ -1134,7 +1178,7 @@ function enterFromLobby(i){
   if(savedCfg && savedCfg.car===i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
-    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin };
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint };
     pendingRide = savedCfg.ride || 0;
     if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
@@ -1160,6 +1204,7 @@ function parseShareURL(){
   if(p.has('cal')) cfg.cal=+p.get('cal');
   if(p.has('wheel')) cfg.wheel=+p.get('wheel');
   if(p.has('fin')) cfg.fin=+p.get('fin');
+  if(p.has('tint')) cfg.tint=+p.get('tint');
   // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
   if(Object.keys(cfg).length) pendingCfg=cfg;
@@ -1207,7 +1252,7 @@ function switchCar(i){
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
   _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code); setMatPick(false);
-  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0;
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
@@ -1288,6 +1333,13 @@ function onModelLoad(){
   if(carCfg.realColor && state.extHex===null && state.ext===DEFAULT_EXT) state.extHex = carCfg.realColor.hex;   // 真的那台：預設用原車色
   mats.forEach(function(m){ if(m.name==='tire'){ m.pbrMetallicRoughness.setBaseColorFactor([0.02,0.02,0.022,1]); m.pbrMetallicRoughness.setRoughnessFactor(0.85); } });
   applyExterior(); applyInterior(); applyCaliper(); applyWheel(); fixGlass(); hidePlates(); applyLights(); applyExhaust(); buildHotspots();
+  // 窗戶隔熱紙：只有 TINT_MATS 列的車；自己載入的車模不開放（不知道哪個是車窗）
+  state.tintMats = [];
+  var tre = (activeCar>=0 && CARS[activeCar]) ? TINT_MATS[CARS[activeCar].file] : null;
+  if(tre) mats.forEach(function(m,i){ if(tre.test(m.name||'')) state.tintMats.push({ i:i, orig:m.pbrMetallicRoughness.baseColorFactor.slice() }); });
+  var tblk=document.getElementById('tint-block'); if(tblk) tblk.hidden = !state.tintMats.length;
+  if(!state.tintMats.length) state.tint = 0;
+  applyTint();
   if(typeof pendingCfg!=='undefined' && pendingCfg){
     var c=pendingCfg; pendingCfg=null;
     if(c.ext!=null){ if((''+c.ext).charAt(0)==='#'){ state.extHex=c.ext; } else { state.ext=+c.ext; state.extHex=null; } }
@@ -1295,7 +1347,8 @@ function onModelLoad(){
     if(c.cal!=null && state.caliperMats.length) state.caliperColor=c.cal;
     if(c.wheel!=null && state.wheelMats.length) state.wheelStyle=c.wheel;
     if(c.fin!=null) state.finish=c.fin;
-    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); refresh();
+    if(c.tint!=null && state.tintMats.length && TINTS[+c.tint]) state.tint=+c.tint;
+    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
   }
@@ -1460,6 +1513,7 @@ function refresh(){
     (state.intMats.length ? row('內裝顏色', intName) : '')+
     (state.caliperMats.length ? row('煞車卡鉗', CALIPER[state.caliperColor].name) : '')+
     (state.wheelMats.length ? row('輪圈樣式', WHEELS[state.wheelStyle].name) : '')+
+    (state.tintMats.length ? row('窗戶隔熱紙', TINTS[state.tint].name) : '')+
     specs;
   /* dock 標籤帶目前選中的顏色名稱 */
   var _le=document.getElementById('lab-ext'); if(_le) _le.textContent='車身 · '+extName;
