@@ -40,8 +40,10 @@ for (const [mesh, nodes] of users) {
       if (!newMats[name + '|' + mat.getName()]) {
         // 燈罩拿掉透射（KHR_materials_transmission／volume）：透射玻璃的自發光會被吃掉，發動引擎時燈看起來沒亮（Mustang、Q50、X5、Mazda 3）
         const nm = mat.clone().setName(name);
-        for (const e of nm.listExtensions()) { const n2 = e.extensionName || ''; if (/transmission|volume/.test(n2)) nm.setExtension(n2, null); }
-        if (nm.getAlphaMode() === 'OPAQUE') nm.setAlphaMode('BLEND');
+        if (/_lens$/.test(name)) {   // 只有燈罩要這樣處理；燈裡的鍍鉻反射罩（lamp_chrome，黑化套件用）照原樣複製
+          for (const e of nm.listExtensions()) { const n2 = e.extensionName || ''; if (/transmission|volume/.test(n2)) nm.setExtension(n2, null); }
+          if (nm.getAlphaMode() === 'OPAQUE') nm.setAlphaMode('BLEND');
+        }
         newMats[name + '|' + mat.getName()] = nm;
       }
       const q = prim.clone().setMaterial(newMats[name + '|' + mat.getName()]);

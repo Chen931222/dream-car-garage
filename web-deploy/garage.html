@@ -440,7 +440,12 @@
   body.scene-dark .plate-row input{ color:#eef1f4; border-color:rgba(255,255,255,.22); }
   body.scene-dark .plate-row input::placeholder{ color:#a7adb4; }
   /* 窗戶隔熱紙：三段切換，跟車高並排 */
-  .tint-row[hidden]{ display:none; }
+  .tint-row[hidden], .mod-row[hidden], .tint-seg button[hidden]{ display:none; }
+  /* 完整色票：四個色系各一排 */
+  #ext-tiers{ display:grid; gap:12px; margin:4px 0 6px; }
+  .ext-tier{ display:grid; grid-template-columns:4.5em 1fr; align-items:center; gap:10px; }
+  .ext-tier-name{ font-size:12.5px; color:var(--sub); }
+  .ext-tier .swatches{ justify-content:flex-start; flex-wrap:wrap; }
   .tint-row output{ color:var(--ink); font-weight:500; }
   .tint-seg{ display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   .tint-seg button{ font-family:inherit; font-size:12.5px; min-height:30px; padding:0 13px; background:transparent; border:none; color:var(--ink); cursor:pointer; transition:background .15s; }
@@ -455,6 +460,13 @@
   body.scene-dark .tint-seg button:hover{ background:rgba(255,255,255,.08); }
   body.scene-dark .tint-seg button.active{ background:#eef1f4; color:#18191b; }
   /* 手機：車高、隔熱紙、車牌擠進同一行，控制列才不會長到蓋住車（SE 375×667 原本會蓋掉 W202 的輪子） */
+  /* 手機（≤440px）控制列分兩頁：顏色＋車高／隔熱紙＋車牌＋改裝，用「改裝 ›」切換，高度不變，不會蓋到車 */
+  .dock-page{ display:none; }
+  @media (max-width:440px){
+    .dock-page{ display:inline-flex; font-weight:500; }
+    body:not(.dock-mods) .tint-row, body:not(.dock-mods) .plate-row, body:not(.dock-mods) .mod-row{ display:none !important; }
+    body.dock-mods .color-rows > .color-row:not(.tint-row):not(.plate-row):not(.mod-row){ display:none !important; }
+  }
   @media (max-width:440px){
     .color-rows{ column-gap:10px; }
     .ride-row input[type=range]{ width:92px; }
@@ -540,8 +552,17 @@
           <span class="lab"><label for="plate-in">車牌</label></span>
           <input type="text" id="plate-in" maxlength="8" placeholder="打字印上車牌" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
         </div>
+        <!-- 改裝（2026-10-09）：燻黑燈組、黑化套件、後視鏡，九台都有 -->
+        <div class="color-row mod-row" id="mod-block" hidden>
+          <span class="lab">改裝</span>
+          <div class="tint-seg" role="group" aria-label="改裝">
+            <button type="button" id="mod-smoke" aria-pressed="false">燻黑燈組</button>
+            <button type="button" id="mod-black" aria-pressed="false" hidden>黑化套件</button>
+            <button type="button" id="mod-mirror" aria-pressed="false" hidden>後視鏡亮黑</button>
+          </div>
+        </div>
       </div>
-      <div class="more"><button class="linkbtn" id="rand-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg> 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 <svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6" /></svg></button></div>
+      <div class="more"><button type="button" class="linkbtn" id="more-colors">更多車色</button><button type="button" class="linkbtn dock-page" id="dock-page" aria-expanded="false" aria-controls="tint-block plate-block mod-block">改裝 ›</button><button class="linkbtn" id="rand-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg> 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 <svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6" /></svg></button></div>
     </div>
   </div>
 
@@ -578,6 +599,9 @@
       <button class="x" id="cfg-x" title="關閉">✕</button>
       <h2>個人化</h2>
       <div class="csub">更多顏色與進階選項</div>
+
+      <h3 id="ext-tiers-h">車身顏色 · 四個色系</h3>
+      <div id="ext-tiers"></div>
 
       <h3>自訂顏色</h3>
       <label class="custom-color"><svg class="lic" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 車身 <input type="color" id="ext-color" value="#0c0d10"></label>
@@ -640,14 +664,25 @@
      讓你指定哪個材質是車身烤漆 / 內裝，再用色票即時換色。
    ===================================================================== */
 
+/* 車身顏色（2026-10-09 參考 Porsche 配置器分成四個色系）：前七色順序不能動（分享連結用序號），新色接在後面。
+   控制列只放前七色，完整的十四色在「個人化」視窗依色系排 */
+const EXT_TIERS = [ { key:'base', name:'基本色' }, { key:'metal', name:'金屬色' }, { key:'special', name:'特殊色' }, { key:'classic', name:'經典色' } ];
+const EXT_DOCK = 7;
 const EXTERIOR = [
-  { name:'曜岩黑',   hex:'#0c0d10', add:0 },
-  { name:'北極白',   hex:'#eef0f2', add:0 },
-  { name:'高山灰',   hex:'#6b7177', add:30000 },
-  { name:'鈦銀',     hex:'#aeb4bb', add:30000 },
-  { name:'午夜藍',   hex:'#1b2c4d', add:60000 },
-  { name:'翡翠綠',   hex:'#1f3d33', add:60000 },
-  { name:'太陽石紅', hex:'#7a1e23', add:60000 },
+  { name:'曜岩黑',   hex:'#0c0d10', tier:'base' },
+  { name:'北極白',   hex:'#eef0f2', tier:'base' },
+  { name:'高山灰',   hex:'#6b7177', tier:'metal' },
+  { name:'鈦銀',     hex:'#aeb4bb', tier:'metal' },
+  { name:'午夜藍',   hex:'#1b2c4d', tier:'special' },
+  { name:'翡翠綠',   hex:'#1f3d33', tier:'classic' },
+  { name:'太陽石紅', hex:'#7a1e23', tier:'special' },
+  { name:'粉筆灰',   hex:'#c9c6bf', tier:'base' },
+  { name:'石墨灰',   hex:'#3a3e43', tier:'metal' },
+  { name:'龍膽藍',   hex:'#24468f', tier:'special' },
+  { name:'熔岩橙',   hex:'#c4501c', tier:'special' },
+  { name:'賽車黃',   hex:'#d9b21f', tier:'classic' },
+  { name:'橄欖綠',   hex:'#4b5136', tier:'classic' },
+  { name:'沙丘米',   hex:'#c8b791', tier:'classic' },
 ];
 const INTERIOR = [
   { name:'曜石黑', hex:'#17181c', add:0 },
@@ -718,24 +753,24 @@ const ACCENTS = ['#a8842a','#c2452e','#0b7f9e','#3f6ea6','#b02328','#5a6169','#1
 
 /* 車庫：每台車的檔案、顯示名稱、方向修正（兩台都是 Nieve5677 的模型，材質名 carpaint/interior、需 -90° 翻正）*/
 const CARS = [
-  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', scale:0.01, code:'W202', mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', disc:'brakedisk', plateMats:['Material__1','Material__2','Material__3','Material__4'],
+  { name:'1993 Mercedes-Benz W202 C220', short:'W202', file:'w202.glb', scale:0.01, code:'W202', mine:true, ride:{ max:40 }, realColor:{ name:'原車綠', hex:'#2f4a3e' }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.18,back:0.05}, body:'carpaint', interior:/^interior_leather$/, wheel:'material', disc:'brakedisk', chrome:['chrome'], smokeExtra:['clearglass','orangeglass'], plateMats:['Material__1','Material__2','Material__3','Material__4'],
     credit:{ t:'Mercedes-Benz C-Class (W202) sedan by Nieve5677', u:'https://sketchfab.com/3d-models/mercedes-benz-c-class-w202-sedan-c0630f02413745ff80a83ceecdd3a79e', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb', scale:0.01, code:'ND', ride:{ max:40 }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', disc:'brakedisk',
+  { name:'2015 Mazda MX-5（ND）',          short:'MX-5',   file:'mx5.glb', scale:0.01, code:'ND', ride:{ max:40 }, pitch:-90, yaw:0, iv:{axis:'z',fwd:1,side:0.20,back:0.10,h:0.78}, plateMats:['Material__1','Material__2','Material__3','Material__4'], body:'carpaint', interior:/^interior_leather$/, wheel:'material', disc:'brakedisk', chrome:['chrome'], smokeExtra:['clearglass','orangeglass'],
     credit:{ t:'Mazda MX-5 (ND) 2014 by Nieve5677', u:'https://sketchfab.com/3d-models/mazda-mx-5-nd-2014-3ea94405f9c04abfa7bc32865831b3cc', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', scale:0.26, code:'95B', ride:{ max:10 }, pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl',
+  { name:'2022 Porsche Macan',             short:'Macan',     file:'macan.glb', scale:0.26, code:'95B', ride:{ max:10 }, pitch:0, yaw:0, iv:{axis:'x',fwd:-1}, body:'Color1Mtl', interior:/intcolor2|interior|doorlr/i, caliper:'Intcolor1Mtl', wheel:'rim', wheelIdx:3, chrome:['trim_chrome'],
     credit:{ t:'2022 Porsche Macan by jwustina', u:'https://sketchfab.com/3d-models/2022-porsche-macan-f0270f8ae1db4d7b909417e07492043a', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', scale:100, code:'F15', ride:{ max:25 }, pitch:0, yaw:0, exSign:-1, noIv:true, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', disc:'car_bmw_x5_2015_Meshdisk', wheel:'car_bmw_x5_2015_Meshrim',
+  { name:'2015 BMW X5（F15）',             short:'BMW X5',    file:'x5.glb', scale:100, code:'F15', ride:{ max:25 }, pitch:0, yaw:0, exSign:-1, noIv:true, body:'carpaint', interior:'inter', caliper:'car_bmw_x5_2015_Meshcalipers', disc:'car_bmw_x5_2015_Meshdisk', chrome:['chrome_1','chrome_r'], wheel:'car_bmw_x5_2015_Meshrim',
     credit:{ t:'2015 BMW X5 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2015-bmw-x5-a2e7d663902e4be7bd170fdb9f333ad8', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', code:'V37', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'brake_caliper', disc:'disk',
+  { name:'2021 Infiniti Q50 Red Sport 400', short:'Q50', file:'q50.glb', code:'V37', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/carpaint/i, interior:/leather|int_c_plas/i, wheel:'Rim_RS_AO', caliper:'brake_caliper', disc:'disk', chrome:['Chrome1','Chrome_SQ','Chrome_R1','SQ_CH'], mirrorBlack:true,
     credit:{ t:'2021 Infiniti Q50 Red Sport 400 by Ddiaz Design', u:'https://sketchfab.com/3d-models/2021-infiniti-q50-red-sport-400-inaccurate-e91aeee80d1b4dd2b385ca2b951ca5e2', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
-  { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', scale:100, code:'BP', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', disc:'brake_disc', wheel:'Mazda_3MI_Rim_018',
+  { name:'2020 Mazda 3 掀背',                    short:'Mazda 3',   file:'mazda3.glb', scale:100, code:'BP', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:'Mazda_3MI_1218030001_089', interior:/leather|fablic|dashboard|cabin/i, caliper:'Mazda_3MI_Brake_007', disc:'brake_disc', chrome:['Mazda_3MI_Exhaust_621'], wheel:'Mazda_3MI_Rim_018',
     credit:{ t:'2020 Mazda 3 Hatchback by Ddiaz Design', u:'https://sketchfab.com/3d-models/2020-mazda-3-hatchback-a72de3f3c1604409a7e6fc6be9854c9d', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', scale:100, code:'S650', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
+  { name:'2024 Ford Mustang GT',  short:'Mustang',   file:'mustang.glb', chrome:['Ford_MustangGT_2024BadgeA_Material'], scale:100, code:'S650', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, iv:{axis:'z',fwd:1}, body:/2024Coloured_Material|2024PaintA_Material/, interior:/InteriorA_Material|InteriorTilling/i, caliper:'Ford_MustangGT_2024_CallipersCalliperA_Zone_Material', calIdx:1, wheel:'Ford_MustangGT_2024_Wheel1A_3D_3DWheel1A_Material',
     credit:{ t:'2024 Ford Mustang GT by Ddiaz Design', u:'https://sketchfab.com/3d-models/2024-ford-mustang-gt-16f0753d26a04a089223f2d9107a777f', l:'CC BY-NC-SA 4.0', lu:'https://creativecommons.org/licenses/by-nc-sa/4.0/' } },
-  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', id:'amg-gt63', code:'X290', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
+  { name:'Mercedes-AMG GT 63 S 4-Door Coupé', short:'AMG GT', file:'gt43.glb', id:'amg-gt63', code:'X290', minRough:0.42, pitch:0, yaw:0, body:'gtishka_body', chrome:['amg_chrome'], mirrorBlack:true, interior:/^interior_leather$/, iv:{axis:'z',fwd:1}, noLights:/tailsignal_l_4/, wheel:'gtishka_zapekwheel2',
     credit:{ t:'Mercedes-Benz AMG GT 4-Door Coupe (X290) by ZapupaNekra', u:'https://sketchfab.com/3d-models/mercedes-benz-amg-gt-4-door-coupe-x290-fe00234b5af84539ade55c31ca6639e3', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
   // CX-5 的輪圈與水箱罩共用同一個材質，開換輪圈會連水箱罩一起變色，所以不設 wheel
-  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', code:'KF', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true,
+  { name:'2020 Mazda CX-5', short:'CX-5', file:'cx5.glb', code:'KF', ride:{ max:40 }, pitch:0, yaw:0, exSign:-1, body:'Paint_Color', noInterior:true, wheel:'rim', chrome:['trim_chrome'],
     credit:{ t:'Mazda CX-5 2020 by ItsDiyor', u:'https://sketchfab.com/3d-models/mazda-cx-5-2020-ea176c6ebe814be3b06641bf038f8642', l:'CC BY 4.0', lu:'https://creativecommons.org/licenses/by/4.0/' } },
 ];
 /* 分享網址用的車名代號（2026-10-02）：原本用陣列序號，拿掉 R350 時舊的 ?car=6 就指到別台車。
@@ -782,7 +817,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
 
 const mv = document.getElementById('mv');
 
@@ -799,7 +834,7 @@ function saveCfg(){
   try{
     localStorage.setItem('dg-cfg', JSON.stringify({
       car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
-      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:(plateBlocked(state.plate) ? '' : state.plate),
+      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:(plateBlocked(state.plate) ? '' : state.plate), smk:state.smoke, blk:state.black, mir:state.mirror,
       scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
@@ -807,7 +842,22 @@ function saveCfg(){
 
 /* ---------- 建立車庫 + 色票 + 分頁 ---------- */
 buildGarage();
-buildSwatches('sw-ext', EXTERIOR, i => { state.ext=i; state.extHex=null; applyExterior(); refresh(); });
+buildSwatches('sw-ext', EXTERIOR.slice(0, EXT_DOCK), i => { state.ext=i; state.extHex=null; applyExterior(); refresh(); });
+(function(){   // 完整色票：依色系分組
+  var box=document.getElementById('ext-tiers'); if(!box) return;
+  EXT_TIERS.forEach(function(t){
+    var g=document.createElement('div'); g.className='ext-tier';
+    g.innerHTML='<div class="ext-tier-name">'+t.name+'</div>';
+    var row=document.createElement('div'); row.className='swatches';
+    EXTERIOR.forEach(function(it,i){ if(it.tier!==t.key) return;
+      var b=document.createElement('button'); b.type='button'; b.className='swatch'; b.style.background=it.hex; b.dataset.box='sw-ext-all'; b.dataset.i=i;
+      b.setAttribute('aria-label', it.name); b.setAttribute('aria-pressed','false'); b.innerHTML='<span class="tip" aria-hidden="true">'+it.name+'</span>';
+      b.onclick=function(){ state.ext=i; state.extHex=null; applyExterior(); refresh(); };
+      row.appendChild(b);
+    });
+    g.appendChild(row); box.appendChild(g);
+  });
+})();
 buildSwatches('sw-int', INTERIOR, i => { state.int=i; state.intHex=null; applyInterior(); refresh(); });
 buildSwatches('sw-caliper', CALIPER, i => { state.caliperColor=i; applyCaliper(); refresh(); });
 buildSwatches('sw-wheel', WHEELS, i => { state.wheelStyle=i; applyWheel(); refresh(); });
@@ -978,8 +1028,65 @@ function applyLens(m, on, col, str){
     p.setBaseColorFactor(o.base); if(m.setAlphaMode && o.mode) m.setAlphaMode(o.mode);
     if(m.setEmissiveFactor) m.setEmissiveFactor(o.emi);
     if(m.setEmissiveStrength) m.setEmissiveStrength(1);
+    if(state.smoke && smokeable(m)){   // 燻黑燈組：深色半透明，還看得到燈裡的東西；發動時照樣亮
+      p.setBaseColorFactor([0.025, 0.026, 0.03, Math.max(o.base[3], 0.88)]); if(m.setAlphaMode) m.setAlphaMode('BLEND');
+    }
   }
 }
+/* 改裝（2026-10-09）：燻黑燈組＝燈罩（切出來的 headlight_lens／taillight_lens；W202、MX-5 的尾燈本來就是獨立的 redglass）。
+   黑化套件＝車身鍍鉻改亮黑；燈裡的反射罩由 tools/split_lens_v1.mjs 切成 lamp_chrome，不在名單裡，頭燈才不會像壞掉 */
+// W202、MX-5 的倒車燈、方向燈是另外的 clearglass／orangeglass（頭燈那塊已經切成 headlight_lens），不一起燻會像半套
+function smokeable(m){ var c = activeCar>=0 ? CARS[activeCar] : {}; return /_lens$|^redglass$/.test(m.name||'') || !!(c.smokeExtra && c.smokeExtra.indexOf(m.name)>=0); }
+function applySmoke(){
+  if(!mv.model) return;
+  // 發動時燈罩由 applyLights 管（亮著）；不會亮的倒車燈、方向燈罩（smokeExtra）隨時都要照開關更新
+  mv.model.materials.forEach(function(m){ if(smokeable(m) && !(state.lights && /_lens$|^redglass$/.test(m.name||''))) applyLens(m, false); });
+}
+var _chromeOrig = new WeakMap();
+function blackMats(){ var c = activeCar>=0 ? CARS[activeCar] : null; return (c && c.chrome && mv.model) ? mv.model.materials.filter(function(m){ return c.chrome.indexOf(m.name)>=0; }) : []; }
+function applyBlack(){
+  blackMats().forEach(function(m){ var p=m.pbrMetallicRoughness;
+    if(!_chromeOrig.has(m)) _chromeOrig.set(m, { base:p.baseColorFactor.slice(), metal:p.metallicFactor, rough:p.roughnessFactor });
+    var o=_chromeOrig.get(m);
+    if(state.black){ p.setBaseColorFactor([0.012,0.012,0.013,o.base[3]]); p.setMetallicFactor(0.6); p.setRoughnessFactor(0.22); }
+    else { p.setBaseColorFactor(o.base); p.setMetallicFactor(o.metal); p.setRoughnessFactor(o.rough); }
+  });
+}
+/* 車外後視鏡（2026-10-09，參考 Porsche「車外後視鏡施以車身同色／高亮澤黑色烤漆」）：
+   tools/mods_split_v1.mjs 把九台的後視鏡外殼切成 mirror_cap。Q50、AMG 原廠是黑色塑膠（mirrorBlack），其他七台原廠是車身色。
+   state.mirror＝1 表示換成另一種 */
+var _mirrorOrig = new WeakMap();
+function mirrorMats(){ return mv.model ? mv.model.materials.filter(function(m){ return m.name==='mirror_cap'; }) : []; }
+function applyMirror(){
+  var c = activeCar>=0 ? CARS[activeCar] : {}, stockBlack = !!c.mirrorBlack, black = stockBlack !== !!state.mirror;
+  var body = state.bodyMats.length ? matAt(state.bodyMats[0]) : null;
+  mirrorMats().forEach(function(m){ var p=m.pbrMetallicRoughness;
+    if(!_mirrorOrig.has(m)) _mirrorOrig.set(m, { base:p.baseColorFactor.slice(), metal:p.metallicFactor, rough:p.roughnessFactor });
+    var o=_mirrorOrig.get(m);
+    if(black && stockBlack){ p.setBaseColorFactor(o.base); p.setMetallicFactor(o.metal); p.setRoughnessFactor(o.rough); }
+    else if(black){ p.setBaseColorFactor([0.012,0.012,0.013,1]); p.setMetallicFactor(0.6); p.setRoughnessFactor(0.22); }
+    else if(body){ var b=body.pbrMetallicRoughness; p.setBaseColorFactor(b.baseColorFactor.slice()); p.setMetallicFactor(b.metallicFactor); p.setRoughnessFactor(b.roughnessFactor); }
+  });
+}
+function syncMods(){
+  var hasBlack = blackMats().length>0, hasSmoke = activeCar>=0 && !!(mv.model && mv.model.materials.some(smokeable));
+  var blk=document.getElementById('mod-block'); if(blk) blk.hidden = !(hasBlack || hasSmoke);
+  var bs=document.getElementById('mod-smoke'), bb=document.getElementById('mod-black');
+  if(bs){ bs.hidden=!hasSmoke; bs.className=state.smoke?'active':''; bs.setAttribute('aria-pressed', state.smoke?'true':'false'); }
+  if(bb){ bb.hidden=!hasBlack; bb.className=state.black?'active':''; bb.setAttribute('aria-pressed', state.black?'true':'false'); }
+  var hasMirror = activeCar>=0 && mirrorMats().length>0, bm=document.getElementById('mod-mirror');
+  if(bm){ bm.hidden=!hasMirror; bm.textContent = (activeCar>=0 && CARS[activeCar].mirrorBlack) ? '後視鏡同車色' : '後視鏡亮黑';
+    bm.className=state.mirror?'active':''; bm.setAttribute('aria-pressed', state.mirror?'true':'false'); }
+  if(blk) blk.hidden = !(hasBlack || hasSmoke || hasMirror);
+}
+(function(){
+  var b=document.getElementById('dock-page'); if(!b) return;
+  b.onclick=function(){ var on=document.body.classList.toggle('dock-mods'); b.textContent = on ? '‹ 顏色' : '改裝 ›'; b.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+})();
+document.getElementById('more-colors').onclick=function(){ var b=document.getElementById('btn-cfg'); if(b) b.click(); setTimeout(function(){ var h=document.getElementById('ext-tiers-h'); if(h) h.scrollIntoView({block:'start'}); }, 60); };
+document.getElementById('mod-smoke').onclick=function(){ state.smoke=state.smoke?0:1; applySmoke(); syncMods(); refresh(); };
+document.getElementById('mod-mirror').onclick=function(){ state.mirror=state.mirror?0:1; applyMirror(); syncMods(); refresh(); };
+document.getElementById('mod-black').onclick=function(){ state.black=state.black?0:1; applyBlack(); syncMods(); refresh(); };
 function applyLights(){
   if(!mv.model) return;
   var _car = activeCar>=0 ? CARS[activeCar] : {};
@@ -1209,6 +1316,9 @@ function buildShareLink(){
   if(state.caliperMats.length) p.set('cal', state.caliperColor);
   if(state.wheelMats.length) p.set('wheel', state.wheelStyle);
   if(state.tintMats.length && state.tint) p.set('tint', state.tint);
+  if(state.smoke) p.set('smk', 1);
+  if(state.black && blackMats().length) p.set('blk', 1);
+  if(state.mirror && mirrorMats().length) p.set('mir', 1);
   if(state.plateMat>=0 && state.plate && !plateBlocked(state.plate)) p.set('plate', state.plate);
   p.set('scene', state.scene);
   if(rideMM && rideCar()) p.set('ride', rideMM);
@@ -1245,7 +1355,8 @@ function randomConfig(){
   if(state.caliperMats.length) state.caliperColor=ri(CALIPER.length);
   if(state.wheelMats.length) state.wheelStyle=ri(WHEELS.length);
   if(state.tintMats.length) state.tint=ri(TINTS.length);
-  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); refresh();
+  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0;
+  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applySmoke(); applyBlack(); applyMirror(); syncMods(); refresh();
   toast(LIC.dice+' 幫你配了一套！');
 }
 var randBtn=document.getElementById('rand-btn'); if(randBtn) randBtn.onclick=randomConfig;
@@ -1301,7 +1412,7 @@ function enterFromLobby(i){
   if(savedCfg && savedCfg.car===i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
-    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate };
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate, smk:savedCfg.smk, blk:savedCfg.blk, mir:savedCfg.mir };
     pendingRide = savedCfg.ride || 0;
     if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
@@ -1328,6 +1439,9 @@ function parseShareURL(){
   if(p.has('wheel')) cfg.wheel=+p.get('wheel');
   if(p.has('fin')) cfg.fin=+p.get('fin');
   if(p.has('tint')) cfg.tint=+p.get('tint');
+  if(p.has('smk')) cfg.smk=+p.get('smk');
+  if(p.has('blk')) cfg.blk=+p.get('blk');
+  if(p.has('mir')) cfg.mir=+p.get('mir');
   if(p.has('plate')){ var _pl=cleanPlate(p.get('plate')); if(!plateBlocked(_pl)) cfg.plate=_pl; }
   // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
@@ -1376,7 +1490,7 @@ function switchCar(i){
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
   _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code); setMatPick(false);
-  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0;
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
@@ -1453,7 +1567,8 @@ function onModelLoad(){
   bodySel.value = state.bodyMats[0]; intSel.value = state.intMats[0];
   bodySel.onchange = ()=>{ state.bodyMats = [+bodySel.value]; applyExterior(); };
   intSel.onchange  = ()=>{ state.intMats  = [+intSel.value];  applyInterior(); };
-  if(carCfg && carCfg.calIdx!=null) state.caliperColor=carCfg.calIdx;  // 碟煞的車預設黑色（低調）
+  if(carCfg && carCfg.calIdx!=null) state.caliperColor=carCfg.calIdx;
+  if(carCfg && carCfg.wheelIdx!=null) state.wheelStyle=carCfg.wheelIdx;   // Macan 原廠是消光黑輪圈  // 碟煞的車預設黑色（低調）
   if(carCfg.realColor && state.extHex===null && state.ext===DEFAULT_EXT) state.extHex = carCfg.realColor.hex;   // 真的那台：預設用原車色
   mats.forEach(function(m){ if(m.name==='tire'){ m.pbrMetallicRoughness.setBaseColorFactor([0.02,0.02,0.022,1]); m.pbrMetallicRoughness.setRoughnessFactor(0.85); } });
   applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyDisc(); fixGlass(); hidePlates(); applyLights(); applyExhaust(); buildHotspots();
@@ -1468,7 +1583,7 @@ function onModelLoad(){
   state.plateMat = -1;
   if(activeCar>=0) mats.forEach(function(m,i){ if(/^plate_print(@|$)/.test(m.name||'')) state.plateMat=i; });
   var pblk=document.getElementById('plate-block'); if(pblk) pblk.hidden = state.plateMat<0;
-  applyPlate();
+  applyPlate(); applySmoke(); applyBlack(); applyMirror(); syncMods();
   if(typeof pendingCfg!=='undefined' && pendingCfg){
     var c=pendingCfg; pendingCfg=null;
     if(c.ext!=null){ if((''+c.ext).charAt(0)==='#'){ state.extHex=c.ext; } else { state.ext=+c.ext; state.extHex=null; } }
@@ -1478,7 +1593,10 @@ function onModelLoad(){
     if(c.fin!=null) state.finish=c.fin;
     if(c.tint!=null && state.tintMats.length && TINTS[+c.tint]) state.tint=+c.tint;
     if(c.plate!=null){ var _cp=cleanPlate(c.plate); state.plate = plateBlocked(_cp) ? '' : _cp; }
-    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); refresh();
+    if(c.smk!=null) state.smoke = +c.smk ? 1 : 0;
+    if(c.blk!=null) state.black = (+c.blk && blackMats().length) ? 1 : 0;
+    if(c.mir!=null) state.mirror = (+c.mir && mirrorMats().length) ? 1 : 0;
+    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); syncMods(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
   }
@@ -1568,6 +1686,7 @@ function applyExterior(){
     // 透明漆層：車漆上那一層亮光（攝影棚的長條高光就是打在這層）
     if(m.setClearcoatFactor){ m.setClearcoatFactor(f.coat!=null ? f.coat : 0.8); if(m.setClearcoatRoughnessFactor) m.setClearcoatRoughnessFactor(mr ? 0.2 : 0.06); }
   });
+  if(typeof applyMirror==='function') applyMirror();
 }
 function applyInterior(){
   const lin = hexToLinear(state.intHex || INTERIOR[state.int].hex);
@@ -1593,10 +1712,18 @@ function applyDisc(){
     p.setBaseColorFactor([0.045,0.046,0.05,1]); p.setMetallicFactor(0.55); p.setRoughnessFactor(0.5);
   });
 }
+var _wheelOrig = new WeakMap();
 function applyWheel(){
   if(!state.wheelMats.length) return;
   const w = WHEELS[state.wheelStyle]; const lin = hexToLinear(w.hex);
   state.wheelMats.forEach(function(i){ var m=matAt(i); if(!m) return;
+    var p=m.pbrMetallicRoughness;
+    if(!_wheelOrig.has(m)) _wheelOrig.set(m, { base:p.baseColorFactor.slice(), metal:p.metallicFactor, rough:p.roughnessFactor, tex:!!(p.baseColorTexture && p.baseColorTexture.texture) });
+    var o=_wheelOrig.get(m);
+    // 有貼圖的輪圈（CX-5 掃描模型）：顏色是乘上去的，選「原廠銀」就照原樣
+    var _wc = activeCar>=0 ? CARS[activeCar] : {};
+    // 原廠那一格（Macan 是消光黑 wheelIdx）照原本的材質，不用色票的近似值
+    if((o.tex && state.wheelStyle===0) || (_wc.wheelIdx!=null && _wc.wheelIdx===state.wheelStyle)){ p.setBaseColorFactor(o.base); p.setMetallicFactor(o.metal); p.setRoughnessFactor(o.rough); return; }
     m.pbrMetallicRoughness.setBaseColorFactor([lin[0],lin[1],lin[2],1]);
     m.pbrMetallicRoughness.setMetallicFactor(w.metal);
     m.pbrMetallicRoughness.setRoughnessFactor(w.rough);
@@ -1636,7 +1763,7 @@ function hidePlates(){
 function refresh(){
   document.querySelectorAll('.swatch').forEach(s=>{
     const box=s.dataset.box, i=+s.dataset.i;
-    const on=(box==='sw-ext'&&i===state.ext&&!state.extHex)||(box==='sw-int'&&i===state.int&&!state.intHex)||(box==='sw-caliper'&&i===state.caliperColor)||(box==='sw-wheel'&&i===state.wheelStyle);
+    const on=((box==='sw-ext'||box==='sw-ext-all')&&i===state.ext&&!state.extHex)||(box==='sw-int'&&i===state.int&&!state.intHex)||(box==='sw-caliper'&&i===state.caliperColor)||(box==='sw-wheel'&&i===state.wheelStyle);
     s.classList.toggle('sel', on);
     s.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
@@ -1653,6 +1780,9 @@ function refresh(){
     (state.caliperMats.length ? row('煞車卡鉗', CALIPER[state.caliperColor].name) : '')+
     (state.wheelMats.length ? row('輪圈樣式', WHEELS[state.wheelStyle].name) : '')+
     (state.tintMats.length ? row('窗戶隔熱紙', TINTS[state.tint].name) : '')+
+    (activeCar>=0 ? row('燈組', state.smoke ? '燻黑' : '原廠') : '')+
+    (blackMats().length ? row('亮面飾條', state.black ? '黑化' : '原廠') : '')+
+    (mirrorMats().length ? row('車外後視鏡', ((CARS[activeCar]||{}).mirrorBlack !== !!state.mirror) ? '亮黑' : '車身色') : '')+
     (state.plateMat>=0 ? row('車牌', (state.plate && !plateBlocked(state.plate)) ? state.plate : '原廠') : '')+
     specs;
   /* dock 標籤帶目前選中的顏色名稱 */
