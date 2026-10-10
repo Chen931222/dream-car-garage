@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>我的夢想車庫 · 360° 環景配置器</title>
-<!-- impeccable-disable low-contrast -- 暗棚、夜晚的深色背景是 applyScene() 用 JS 換上去的，impeccable 只讀 CSS，看到的是 body 預設的白底；實際對比由 check.mjs 截圖量測（2026-10-07：暗棚、白棚 0 不及格） -->
-<!-- impeccable-disable cramped-padding -- 隔熱紙、改裝那排是分段按鈕：內距在每顆按鈕裡，外框貼齊按鈕是分段控制的正常樣子 -->
+<!-- impeccable-disable low-contrast -- 暗棚、夜晚的深色背景是 applyScene() 用 JS 換到車圖卡（#stage）上的，impeccable 只讀 CSS；實際對比由 check.mjs 截圖量測（2026-10-07：暗棚、白棚 0 不及格） -->
+<!-- impeccable-disable cramped-padding -- 隔熱紙、車漆質感是分段按鈕：內距在每顆按鈕裡，外框貼齊按鈕是分段控制的正常樣子 -->
 <!-- impeccable-disable content-hidden-at-rest -- 藏起來的字是車庫大廳（#lobby），平常收著，按左上角的品牌才打開 -->
 <meta name="description" content="9 台車，自由配色、換輪圈、聽引擎聲，多數車能坐進車內。配好的車就是一條網址。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' x2='4' y1='22' y2='15'/%3E%3C/svg%3E">
@@ -32,24 +32,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;500&display=swap" rel="stylesheet">
 
 <style>
-  :root{ --ink:#1d2126; --sub:#5f666e; --line:rgba(0,0,0,.09); --panel:#ffffff; --accent:#0a66c2; }
+  /* 2026-10-10 照 Porsche 配置器的版面重排：頁面是白紙，車放在左邊一張圓角圖卡裡（場景只換圖卡的底），
+     選項全部收在右邊一欄、照類別分區，可以收合。手機：車圖卡黏在上面，選項在下面捲。 */
+  :root{ --page:#f5f5f3; --surface:#ffffff; --ink:#16181b; --sub:#5b6168; --line:#e3e3e0; --line-strong:#c8c9c6; --chip:#ebebe8; --accent:#16181b; }
   *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ height:100%; overflow:hidden; }
-  body{
-    font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif; color:var(--ink); font-weight:300;
-    background:radial-gradient(circle at 50% 40%, #ffffff 0%, #f5f7f9 70%, #eef1f4 100%);
-    -webkit-font-smoothing:antialiased;
-  }
-  #app{ position:fixed; inset:0; }
+  body{ font-family:"Noto Sans TC",-apple-system,"Segoe UI",sans-serif; color:var(--ink); font-weight:400; background:var(--page); -webkit-font-smoothing:antialiased; }
+  button{ font-family:inherit; }
+  #app{ position:fixed; inset:0; display:grid; grid-template-rows:auto minmax(0,1fr); }
 
-  /* 載入開場畫面 */
-  #loader{ position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
-    background:radial-gradient(circle at 50% 40%, #ffffff 0%, #f5f7f9 70%, #eef1f4 100%); transition:opacity .5s ease; }
+  /* 載入畫面：預設是暗棚，載入時不要先閃一片白 */
+  #loader{ position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; background:#0c0c0d; transition:opacity .5s ease; }
   #loader.gone{ opacity:0; pointer-events:none; }
   .loader-in{ text-align:center; }
-  .loader-badge{ font-size:34px; }
-  .loader-title{ font-size:16px; letter-spacing:.22em; color:var(--ink); font-weight:500; margin:10px 0 22px; }
-  .spin{ width:30px; height:30px; margin:0 auto; border:3px solid rgba(0,0,0,.1); border-top-color:var(--ink); border-radius:50%; animation:ldspin .9s linear infinite; }
+  .loader-title{ font-size:16px; letter-spacing:.12em; color:#ece9e2; font-weight:500; margin:10px 0 22px; }
+  .spin{ width:30px; height:30px; margin:0 auto; border:3px solid rgba(255,255,255,.12); border-top-color:#ece9e2; border-radius:50%; animation:ldspin .9s linear infinite; }
   @keyframes ldspin{ to{ transform:rotate(360deg); } }
 
   /* 車庫入口大廳：縮圖牆，點一台進入。深色、襯線標題，跟首頁同一套（配置器本體維持淺色，看車色要中性底） */
@@ -99,26 +96,66 @@
     .lcard .lt{ font-size:12.5px; padding:2px 12px 14px; }
   }
 
-  model-viewer{
-    width:100%; height:100%; background:transparent;
-    --poster-color:transparent; --min-hotspot-opacity:0;
-    position:relative; z-index:1;   /* 蓋在地台/噪點之上 */
-  }
+  .lobby-kick{ letter-spacing:.24em; }
+  .lobby-title{ letter-spacing:.03em; }
+  .lobby-nav{ gap:24px; }
+  .lobby-nav a{ border:none; border-radius:0; padding:10px 2px 6px; border-bottom:1px solid rgba(255,255,255,.22); font-size:14px; }
+  .lobby-nav a:hover{ border-bottom-color:#b8962e; }
+  .lobby-nav a:hover svg.lic{ animation:none; }
+  /* 大廳開著時，後面的配置器整個藏起來（看不到的按鈕不該還能被 Tab 到）；3D 畫布照常載入 */
+  #lobby:not(.gone) ~ *{ visibility:hidden; }
+  #lobby:not(.gone) ~ * model-viewer{ visibility:visible; }
 
-  /* 地台：車底一圈柔和的舞台影 + 地平線，車才不會像飄在白紙上 */
+  /* ===== 頂列：左「更換車款／幫我配」、中間站名、右「存圖／總覽／分享」 ===== */
+  .topbar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; height:64px; padding:0 32px; }
+  .tb-left{ display:flex; align-items:center; gap:4px; }
+  .tb-link{ display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; font-size:13.5px; color:var(--ink);
+    background:none; border:none; border-radius:6px; cursor:pointer; transition:background .15s; }
+  .tb-link:hover{ background:var(--chip); }
+  .tb-link:first-child{ margin-left:-10px; }
+  .wordmark{ font-family:"Noto Serif TC",Georgia,serif; font-size:17px; font-weight:500; letter-spacing:.16em; color:var(--ink); text-decoration:none; white-space:nowrap; }
+  .actions{ justify-self:end; display:flex; align-items:center; gap:8px; }
+  .actions .ic{ width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; border:none; border-radius:6px; background:none; color:var(--ink); cursor:pointer; transition:background .15s; }
+  .actions .ic:hover{ background:var(--chip); }
+  .pbtn{ min-height:40px; padding:0 18px; font-size:14px; font-weight:500; border-radius:6px; border:none; cursor:pointer; background:var(--chip); color:var(--ink); transition:background .15s; white-space:nowrap; }
+  .pbtn:hover{ background:#dfdfdc; }
+  .pbtn.primary{ background:var(--ink); color:#fff; }
+  .pbtn.primary:hover{ background:#2c2f33; }
+  .brand:focus-visible, .tb-link:focus-visible, .actions button:focus-visible, .wordmark:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
+  /* ===== 主體：左車圖、右選項 ===== */
+  .main{ display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:28px; padding:0 32px 24px; min-height:0; }
+  .stagecol{ display:flex; flex-direction:column; gap:12px; min-height:0; min-width:0; }
+  .stage{ position:relative; flex:1 1 auto; min-height:0; border-radius:16px; overflow:hidden; background:#17181a; container-type:size;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.06); }
+  model-viewer{ position:relative; z-index:1; width:100%; height:100%; background:transparent; --poster-color:transparent; --min-hotspot-opacity:0; --ar-button-display:none; }
+
+  /* 地台：車底一圈柔和的影＋地平線 */
   #floor{ position:absolute; inset:0; z-index:0; pointer-events:none; }
-  #floor .disc{ position:absolute; left:50%; top:72%; width:min(1150px,94vw); height:32vh; transform:translate(-50%,-50%);
-    background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(30,40,58,.13), rgba(30,40,58,.045) 52%, transparent 70%); }
-  #floor .horizon{ position:absolute; left:50%; top:72%; transform:translateX(-50%); width:min(880px,78vw); height:1px;
-    background:linear-gradient(90deg, transparent, rgba(30,40,58,.17) 30%, rgba(30,40,58,.17) 70%, transparent); }
-  body.scene-dark #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(130,160,210,.09), rgba(130,160,210,.03) 52%, transparent 70%); }
-  body.scene-dark #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(160,180,220,.15) 30%, rgba(160,180,220,.15) 70%, transparent); }
+  #floor .disc{ position:absolute; left:50%; top:72%; width:94%; height:32%; transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(0,0,0,.10), rgba(0,0,0,.035) 52%, transparent 70%); }
+  #floor .horizon{ position:absolute; left:50%; top:72%; transform:translateX(-50%); width:78%; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(0,0,0,.14) 30%, rgba(0,0,0,.14) 70%, transparent); }
+  body.scene-dark #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(255,255,255,.055), rgba(255,255,255,.02) 52%, transparent 70%); }
+  body.scene-dark #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.11) 30%, rgba(255,255,255,.11) 70%, transparent); }
 
-  /* 細噪點：壓掉「純白 AI 棚」的塑膠感（只鋪背景，車身在上層不受影響） */
-  #noise{ position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.05; mix-blend-mode:multiply;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-    background-size:170px; }
-  body.scene-dark #noise{ mix-blend-mode:screen; opacity:.04; }
+  /* 雜誌跨頁（2026-10-07 本人選）：車後壓一個大字，用底盤代號（W202、ND、F15…），像雜誌把刊頭壓在主角後面。
+     畫在 3D 畫布底下那層，點不到、讀屏軟體略過（字放在 ::before）；顏色只比背景亮或暗一點點 */
+  #floor .mast{ position:absolute; left:0; right:0; top:47%; transform:translateY(-50%); text-align:center; white-space:nowrap;
+    font-family:"Noto Serif TC",Georgia,serif; font-weight:300; font-size:min(30cqw,46cqh); line-height:1; letter-spacing:-.01em;
+    color:rgba(0,0,0,.05); transition:opacity .35s ease; }
+  #floor .mast::before{ content:attr(data-code); }
+  #floor .mast.swap{ opacity:0; }
+  body.scene-dark #floor .mast{ color:rgba(255,255,255,.045); }
+  /* 右上角一行尺寸：數字直接量 3D 模型（AR 也是照這個尺寸擺進房間），寬度含後照鏡 */
+  .dims{ position:absolute; top:16px; right:20px; z-index:5; pointer-events:none; text-align:right;
+    font-size:12px; letter-spacing:.03em; color:var(--sub); font-variant-numeric:tabular-nums; }
+  .dims span{ margin-right:8px; color:var(--ink); }
+  body.scene-dark .dims{ color:#9a958c; }
+  body.scene-dark .dims span{ color:#d9d4ca; }
+  body.iv .dims, body.iv #floor .mast{ visibility:hidden; }
+  @media (prefers-reduced-motion:reduce){ #floor .mast{ transition:none; } }
+
   /* 排氣煙：每縷煙是一顆模糊的圓，往上飄並淡出 */
   .smoke{ pointer-events:none; }
   .smoke-in{ transition:opacity .35s ease; }   /* 依視角淡出（外層 .smoke 交給 model-viewer 做遮擋）*/
@@ -128,135 +165,119 @@
   @keyframes smk{ 0%{ transform:translate(-50%,-30%) scale(.3); opacity:0; } 18%{ opacity:.6; } 100%{ transform:translate(-38%,-210%) scale(2.8); opacity:0; } }
 
   /* 拖放覆蓋層 */
-  #drop{
-    position:absolute; inset:0; z-index:8; display:none; align-items:center; justify-content:center;
-    background:rgba(10,102,194,.10); border:3px dashed var(--accent); border-radius:18px; margin:14px;
-    font-size:20px; color:var(--accent); font-weight:500;
-  }
+  #drop{ position:absolute; inset:14px; z-index:12; display:none; align-items:center; justify-content:center;
+    background:rgba(22,24,27,.06); border:2px dashed var(--ink); border-radius:16px; font-size:20px; color:var(--ink); font-weight:500; }
   #drop.show{ display:flex; }
 
-  /* 品牌（左上）/ 動作鈕（右上）*/
-  .brand{ position:absolute; top:26px; left:32px; z-index:5; display:flex; align-items:center; gap:9px;
-    font-size:14px; letter-spacing:.16em; color:var(--ink); cursor:pointer; }
-  .brand b{ font-weight:500; } .brand .sep{ color:var(--sub); }
-  .actions{ position:absolute; top:22px; right:28px; z-index:6; display:flex; gap:7px; }
-  .actions button{ width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:rgba(255,255,255,.65);
-    color:var(--sub); font-size:15px; cursor:pointer; font-family:inherit; transition:.15s; }
-  .actions button:hover{ color:var(--ink); border-color:#cfd4da; }
+  /* 圖卡左下的工具列：深色半透明底，暗棚、白棚、夕陽上都讀得到（Porsche 圖上那排「調整場景、比較、360」的位置） */
+  .controls{ position:absolute; left:16px; bottom:16px; z-index:5; display:flex; gap:2px; padding:4px; max-width:calc(100% - 32px);
+    overflow-x:auto; scrollbar-width:none; border-radius:10px; background:rgba(16,17,19,.74); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .controls::-webkit-scrollbar{ display:none; }
+  .controls button{ flex:0 0 auto; display:flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; font-size:13px; color:#f1f1ef;
+    background:none; border:none; border-radius:6px; cursor:pointer; white-space:nowrap; transition:background .15s; }
+  .controls button:hover{ background:rgba(255,255,255,.1); }
+  .controls button.on{ background:#f1f1ef; color:var(--ink); }
+  .controls button:focus-visible{ outline:2px solid #f1f1ef; outline-offset:-2px; }
+  .controls button[hidden]{ display:none; }
+  #rotate-toggle.off svg.lic{ opacity:.45; }
+  /* 按住看原廠：放開就回到改裝後；圖卡上方標一個「原廠」 */
+  #cmp-tip{ position:absolute; top:16px; left:50%; transform:translateX(-50%); z-index:6; pointer-events:none; opacity:0; transition:opacity .15s;
+    font-size:13px; letter-spacing:.1em; padding:6px 14px; border-radius:6px; background:rgba(16,17,19,.78); color:#f1f1ef; }
+  body.comparing #cmp-tip{ opacity:1; }
+  #cmp-btn{ touch-action:none; user-select:none; -webkit-user-select:none; }
 
-  /* 車名 / 副標：置頂左上（乾淨背景、清楚可讀）*/
-  .title{ position:absolute; top:60px; left:32px; z-index:4; text-align:left; pointer-events:none; max-width:64vw; }
-  #car-name{ font-family:"Noto Serif TC",Georgia,serif; font-size:30px; font-weight:300; letter-spacing:.05em; line-height:1.25; }
-  #car-tag{ font-size:13px; color:var(--sub); margin-top:5px; letter-spacing:.04em; }
-  /* 車名下的常駐規格 chips：左半邊不再整片留白 */
-  #car-chips{ display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
-  #car-chips span{ font-size:11px; letter-spacing:.05em; color:#555b63; background:rgba(255,255,255,.6);
-    border:1px solid rgba(0,0,0,.08); border-radius:20px; padding:4px 11px; backdrop-filter:blur(4px); }
-  #car-chips span b{ font-weight:500; color:var(--ink); margin-right:5px; }
-  body.scene-dark #car-chips span{ color:#aeb7c2; background:rgba(10,14,22,.45); border-color:rgba(255,255,255,.14); }
-  body.scene-dark #car-chips span b{ color:#eef1f4; }
-
-  /* 底部設定 dock：霧面底襯，色點清楚、與車身分隔 */
-  .info{ position:absolute; left:0; right:0; bottom:152px; z-index:4; text-align:center; pointer-events:none; }
-  .dock{ display:inline-block; pointer-events:auto; background:rgba(255,255,255,.9); backdrop-filter:blur(12px);
-    border-radius:14px; padding:14px 28px 12px; box-shadow:0 8px 28px rgba(0,0,0,.18); }   /* 浮在 3D 上：只用陰影，不再加細框（細框＋大柔光＝幽靈卡） */
-  .color-rows{ display:flex; justify-content:center; gap:30px; flex-wrap:wrap; }
-  .color-row{ display:flex; flex-direction:column; align-items:center; gap:9px; }
-  .color-row .lab{ font-size:11px; color:var(--sub); letter-spacing:.18em; }
-  .swatches{ display:flex; gap:12px; justify-content:center; }
-  .swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; position:relative;
-    border:1px solid rgba(0,0,0,.25); box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .15s; }
-  .swatch:hover{ transform:scale(1.12); } .swatch.sel{ box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink); }
-  .swatch .tip{ position:absolute; bottom:-25px; left:50%; transform:translateX(-50%); background:var(--ink);
-    color:#fff; font-size:11.5px; white-space:nowrap; padding:3px 7px; border-radius:6px; opacity:0; pointer-events:none; transition:.15s; z-index:9; }
-  .swatch:hover .tip, .swatch:focus-visible .tip{ opacity:1; }
-  button.swatch{ padding:0; appearance:none; -webkit-appearance:none; font:inherit; }
-  .swatch:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
-  body.scene-dark .swatch:focus-visible{ outline-color:#eef1f4; }
-  .more{ margin-top:13px; }
-  .linkbtn{ font-family:inherit; font-size:13px; font-weight:400; color:var(--sub); background:none; border:none;
-    cursor:pointer; letter-spacing:.08em; padding:6px 4px; transition:.15s; }
-  .linkbtn:hover{ color:var(--ink); }
-
-  /* 車庫：底部一排車名（單列、必要時可橫向捲動）*/
-  .garage{ position:absolute; bottom:14px; left:50%; transform:translateX(-50%); z-index:5;
-    display:flex; gap:10px; align-items:flex-start; max-width:calc(100vw - 280px); flex-wrap:nowrap;
-    overflow-x:auto; justify-content:center; white-space:nowrap; padding:4px 2px; }
-  .garage button{ font-family:inherit; font-size:11px; font-weight:300; color:var(--sub); background:none; border:none;
-    cursor:pointer; letter-spacing:.04em; white-space:nowrap; transition:.15s;
-    display:flex; flex-direction:column; align-items:center; gap:5px; padding:2px; }
-  .garage button img{ width:66px; height:44px; object-fit:cover; border-radius:9px; display:block;
-    border:2px solid transparent; opacity:.72; transition:.18s; box-shadow:0 3px 10px rgba(0,0,0,.12); }
+  /* 圖卡下面一排縮圖：換車（Porsche 這裡是換視角） */
+  .garage{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:thin; padding:2px 2px 4px; flex:0 0 auto; }
+  .garage button{ flex:1 1 0; min-width:66px; max-width:96px; display:flex; flex-direction:column; align-items:center; gap:5px; padding:0; font-size:12px; color:var(--sub);
+    background:none; border:none; cursor:pointer; white-space:nowrap; }
+  .garage button img{ width:100%; height:auto; aspect-ratio:84/52; object-fit:cover; display:block; border-radius:6px; border:2px solid transparent; outline:1px solid var(--line); outline-offset:-1px; opacity:.8; transition:opacity .15s, border-color .15s; }
   .garage button:hover{ color:var(--ink); }
   .garage button:hover img{ opacity:1; }
   .garage button.active{ color:var(--ink); font-weight:500; }
-  .garage button.active img{ opacity:1; border-color:var(--accent); box-shadow:0 5px 16px rgba(0,0,0,.22); }
+  .garage button.active img{ opacity:1; border-color:var(--ink); outline-color:transparent; }
+  .garage button:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
 
-  /* 控制鈕（置中、在換車列上方）*/
-  /* width:max-content 必加：left:50% 定位的 flex 容器可用寬度只有畫面一半，沒設會提早折行 */
-  .controls{ position:absolute; bottom:98px; left:50%; transform:translateX(-50%); z-index:5; display:flex; gap:7px; flex-wrap:wrap; width:max-content; max-width:92vw; justify-content:center; }
-  .controls button{ font-family:inherit; font-size:12.5px; color:var(--ink); background:rgba(255,255,255,.92);
-    border:1px solid var(--line); border-radius:30px; padding:8px 13px; cursor:pointer; transition:.15s;
-    display:flex; align-items:center; gap:6px; }
-  .controls button:hover{ border-color:#cfd4da; }
-  .controls button.on{ border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
-  .controls .dot{ width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; }
-  .controls .off .dot{ background:#cbd1d8; }
-  /* 車身熱點 */
-  .tip-hot{ border:none; background:none; padding:0; cursor:pointer; }
-  .tip-dot{ display:block; width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.92); border:2px solid var(--ink); box-shadow:0 1px 5px rgba(0,0,0,.35); position:relative; }
-  .tip-dot::after{ content:'+'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; line-height:1; color:var(--ink); }
-  .tip-card{ position:absolute; left:24px; top:50%; transform:translateY(-50%); width:198px; background:var(--ink); color:#fff; font-size:12px; line-height:1.6; padding:9px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:.15s; box-shadow:0 8px 24px rgba(0,0,0,.28); text-align:left; z-index:9; }
-  .tip-card b{ font-weight:500; font-size:13px; }
-  .tip-hot.show .tip-card, .tip-hot:hover .tip-card, .tip-hot:focus .tip-card{ opacity:1; }
+  /* ===== 右欄：選項 ===== */
+  .panel{ min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:0 6px 24px 2px; scrollbar-width:thin; }
+  .p-head{ padding:2px 0 20px; }
+  #car-name{ font-size:32px; font-weight:400; letter-spacing:-.01em; line-height:1.15; }
+  #car-tag{ font-size:14px; color:var(--sub); margin-top:8px; line-height:1.6; text-wrap:pretty; }
+  #car-chips{ display:flex; flex-wrap:wrap; gap:4px 18px; margin-top:12px; font-size:13px; color:var(--sub); font-variant-numeric:tabular-nums; }
+  #car-chips span b{ font-weight:500; color:var(--ink); margin-right:5px; }
+  .linkbtn{ font-size:13.5px; color:var(--ink); background:none; border:none; cursor:pointer; padding:6px 0; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
+  .linkbtn:hover{ text-decoration-thickness:2px; }
+  .p-head .linkbtn{ margin-top:10px; }
 
-  .hint{ position:absolute; bottom:30px; right:28px; z-index:4; font-size:11.5px; color:var(--sub); letter-spacing:.04em; }
+  .opt{ background:var(--surface); border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05), 0 6px 18px rgba(0,0,0,.035); margin-bottom:12px; }
+  .opt[hidden]{ display:none; }
+  .opt > h2{ font:inherit; }
+  .opt-h{ width:100%; display:flex; align-items:center; gap:12px; padding:18px 20px; background:none; border:none; cursor:pointer; text-align:left; color:var(--ink); border-radius:12px; }
+  .opt-h .t{ font-size:16px; font-weight:500; flex:0 0 auto; }
+  .opt-h .val{ margin-left:auto; font-size:13px; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .opt-h .chev{ flex:0 0 auto; width:16px; height:16px; transition:transform .25s cubic-bezier(.2,.7,.2,1); }
+  .opt-h[aria-expanded=false] .chev{ transform:rotate(180deg); }
+  .opt-h:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
+  .opt-b{ padding:0 20px 22px; }
+  .opt-b[hidden]{ display:none; }
+  .opt-b > * + *{ margin-top:22px; }
+  .grp[hidden]{ display:none; }
+  .grp-h, .ext-tier-name{ display:flex; align-items:baseline; gap:8px; font-size:13.5px; font-weight:500; color:var(--ink); margin-bottom:10px; }
+  .grp-h output, .grp-h .note{ font-weight:400; color:var(--sub); font-variant-numeric:tabular-nums; }
+  .grp-h output{ margin-left:auto; color:var(--ink); }
 
-  /* AR 入口放在控制列（#ar-go），model-viewer 自己浮在畫面上的 AR 鈕關掉 */
-  model-viewer{ --ar-button-display:none; }
-  .controls button[hidden]{ display:none; }
+  /* 色票：圓角方塊＋一層斜光，像烤漆色卡；選中是外面一圈黑框 */
+  .swatches{ display:flex; flex-wrap:wrap; gap:10px; }
+  .swatch{ position:relative; width:44px; height:44px; border-radius:6px; border:none; padding:0; cursor:pointer; appearance:none; -webkit-appearance:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12); transition:box-shadow .15s; }
+  .swatch::after{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background:linear-gradient(135deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,0) 42%, rgba(0,0,0,0) 58%, rgba(0,0,0,.20) 100%); }
+  .swatch:hover{ box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), 0 0 0 2px #fff, 0 0 0 3px var(--line-strong); }
+  .swatch.sel{ box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
+  .swatch:focus-visible{ outline:2px solid var(--ink); outline-offset:5px; }
+  .swatch .tip{ position:absolute; bottom:-28px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; font-size:12px; white-space:nowrap;
+    padding:3px 8px; border-radius:4px; opacity:0; pointer-events:none; transition:opacity .15s; z-index:9; }
+  .swatch:hover .tip, .swatch:focus-visible .tip{ opacity:1; }
+  /* 輪圈、卡鉗用圓的，外圈一道輪胎 */
+  #sw-wheel .swatch, #sw-caliper .swatch{ border-radius:50%; }
+  #sw-wheel .swatch::before{ content:''; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 0 6px #1c1d1f, inset 0 0 0 7px rgba(255,255,255,.14); pointer-events:none; z-index:1; }
+  #ext-tiers{ display:grid; gap:20px; }
 
-  /* toast */
-  #toast{ position:absolute; bottom:148px; left:50%; transform:translateX(-50%); z-index:9; background:var(--ink);
-    color:#fff; font-size:13px; padding:10px 16px; border-radius:10px; opacity:0; transition:.3s; pointer-events:none; max-width:80vw; text-align:center; }
-  #toast.show{ opacity:1; }
-  .spec-src{ font-size:12px; color:var(--sub); line-height:1.7; margin-top:12px; }
-  body.iv .dock, body.iv .info, body.iv #car-chips{ visibility:hidden; }
+  /* 分段切換：隔熱紙、車漆質感 */
+  .seg{ display:flex; border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; }
+  .seg button{ flex:1 1 0; min-height:40px; padding:0 10px; font-size:13.5px; background:transparent; border:none; color:var(--ink); cursor:pointer; transition:background .15s; }
+  .seg button + button{ border-left:1px solid var(--line-strong); }
+  .seg button:hover{ background:var(--chip); }
+  .seg button.active{ background:var(--ink); color:#fff; }
+  .seg button:focus-visible{ outline:2px solid var(--ink); outline-offset:-3px; }
+  .seg button[hidden]{ display:none; }
 
-  .credit{ position:absolute; right:14px; bottom:8px; z-index:3; font-size:11px; color:var(--sub);
-    background:rgba(255,255,255,.82); padding:3px 8px; border-radius:8px; }
-  .credit a{ color:var(--sub); text-decoration:underline; }
+  /* 外觀套件：一行一個、前面一格勾選框（Porsche 選配清單的樣子） */
+  .opt-list{ display:flex; flex-direction:column; }
+  .opt-list button{ display:flex; align-items:center; gap:12px; min-height:48px; padding:10px 0; font-size:14.5px; text-align:left; color:var(--ink);
+    background:none; border:none; border-top:1px solid var(--line); cursor:pointer; }
+  .opt-list button:first-child{ border-top:none; }
+  .opt-list button::before{ content:''; flex:0 0 auto; width:20px; height:20px; border:1.5px solid var(--ink); border-radius:4px; background:#fff center/14px no-repeat; transition:background-color .15s; }
+  .opt-list button.active::before{ background-color:var(--ink);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+  .opt-list button:hover::before{ border-width:2px; }
+  .opt-list button:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .opt-list button[hidden]{ display:none; }
 
-  /* 深色場景（夜晚）：把疊在畫面上的文字轉亮色，維持可讀 */
-  body.scene-dark .brand, body.scene-dark #car-name{ color:#eef1f4; }
-  body.scene-dark #car-tag{ color:#8b97a3; }
-  body.scene-dark .garage button{ color:#8b97a3; }
-  body.scene-dark .garage button:hover, body.scene-dark .garage button.active{ color:#fff; }
-  /* 暗棚／夜晚：署名、分隔點、縮圖列換成深色版，維持 4.5:1 以上 */
-  body.scene-dark .credit{ background:rgba(10,11,13,.78); color:#b9bec5; }
-  body.scene-dark .credit a{ color:#d7dbe0; }
-  body.scene-dark .brand .sep{ color:#8b97a3; }
-  body.scene-dark .garage{ background:rgba(12,13,16,.72); }
-  body.scene-dark .garage button{ color:#aab3bd; }
-
-  /* 覆蓋視窗：故事與規格 / 個人化 */
-  .sheet{ position:absolute; inset:0; z-index:8; background:rgba(248,250,251,.72); backdrop-filter:blur(8px);
-    display:none; align-items:center; justify-content:center; padding:20px; }
-  .sheet.show{ display:flex; }
-  .card{ width:540px; max-width:90vw; max-height:86vh; overflow-y:auto; background:#fff; border:1px solid var(--line);
-    border-radius:16px; padding:36px 38px 32px; box-shadow:0 30px 70px rgba(0,0,0,.18); position:relative; }
-  .card .x{ position:absolute; top:14px; right:16px; width:34px; height:34px; border:none; background:none; font-size:18px; color:var(--sub); cursor:pointer; }
-  .card h2{ font-size:26px; font-weight:200; letter-spacing:.03em; }
-  .card .csub{ font-size:13px; color:var(--sub); margin-top:6px; letter-spacing:.04em; }
-  .card h3{ font-size:11.5px; color:var(--sub); font-weight:500; letter-spacing:.04em; margin:22px 0 12px; }
-  .card p.story{ font-size:14px; font-weight:300; line-height:2; color:#41464d; margin:18px 0 4px; }
-  .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:16px 0 4px; }
-  .chips span{ font-size:11.5px; color:var(--ink); background:rgba(0,0,0,.05); border:1px solid var(--line); padding:4px 11px; border-radius:30px; }
+  /* 車高 */
+  .ride-row input[type=range]{ width:100%; height:28px; margin:0; accent-color:var(--ink); cursor:pointer; }
+  .ride-scale{ display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-top:2px; }
+  /* 自訂車牌：一格輸入框，等寬大寫 */
+  .plate-row input{ width:100%; min-height:46px; font-family:inherit; font-size:17px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; text-align:center;
+    color:var(--ink); background:var(--page); border:1px solid var(--line-strong); border-radius:8px; padding:0 10px; }
+  .plate-row input::placeholder{ font-size:14px; font-weight:400; letter-spacing:.02em; text-transform:none; color:var(--sub); }
+  .plate-row input:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
+  .plate-row input[aria-invalid=true]{ border-color:#b42318; text-decoration:line-through; }
+  .plate-note{ font-size:12.5px; color:var(--sub); margin-top:8px; line-height:1.6; }
 
   /* 個人化面板的表單元件 */
   select{ width:100%; font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
     border:1px solid var(--line); border-radius:9px; padding:9px 10px; margin-bottom:8px; }
-  .custom-color{ display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--sub); cursor:pointer; margin-right:18px; }
+  .custom-color{ display:inline-flex; align-items:center; gap:10px; font-size:13.5px; color:var(--ink); cursor:pointer; margin-right:18px; }
   .custom-color input[type=color]{ width:44px; height:30px; border:1px solid var(--line); border-radius:8px; background:none; cursor:pointer; padding:0; }
   .filebtn{ display:inline-block; font-family:inherit; font-size:13px; cursor:pointer; background:var(--ink);
     color:#fff; border:none; border-radius:9px; padding:9px 14px; margin-bottom:8px; }
@@ -274,212 +295,80 @@
   .opt-total{ font-size:13px; color:var(--sub); margin-top:12px; }
   #qr-box{ text-align:center; margin-top:18px; }
   #qr-box img{ width:172px; height:172px; image-rendering:pixelated; border:1px solid var(--line); border-radius:8px; }
-  .finish-row{ display:flex; gap:6px; flex-wrap:wrap; }
-  .finish-row button{ flex:1; min-width:62px; font-family:inherit; font-size:13px; cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:9px; padding:9px 6px; color:var(--ink); transition:.15s; }
-  .finish-row button:hover{ background:rgba(0,0,0,.04); }
-  .finish-row button.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
-  #cfg-total{ color:var(--ink); font-weight:500; }
+    #cfg-total{ color:var(--ink); font-weight:500; }
 
-  /* Lucide 內嵌 icon（取代 emoji；與 Icon Animator 同一套圖庫，ISC 授權） */
-  svg.lic{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2;
-    stroke-linecap:round; stroke-linejoin:round; vertical-align:-2.5px; }
-  .actions svg.lic{ width:16px; height:16px; vertical-align:middle; }
-  @keyframes licWiggle{ 0%,100%{ transform:rotate(0) } 30%{ transform:rotate(-14deg) } 65%{ transform:rotate(9deg) } }
-  @keyframes licSpin{ to{ transform:rotate(360deg) } }
-  .controls button:hover svg.lic, .actions button:hover svg.lic, .linkbtn:hover svg.lic{
-    animation:licWiggle .55s ease; transform-origin:50% 50%; }
-  #rotate-toggle svg.lic{ color:#22c55e; }
-  #rotate-toggle.off svg.lic{ color:#cbd1d8; animation:none; }
-  #rotate-toggle:not(.off) svg.lic{ animation:licSpin 3s linear infinite; }
+  .adv-note{ font-size:12.5px; color:var(--sub); margin-top:12px; line-height:1.8; }
+  .p-foot{ padding:8px 2px 0; font-size:12px; color:var(--sub); line-height:1.8; }
+  .p-foot a{ color:var(--sub); text-underline-offset:2px; }
+  .p-foot nav{ display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:6px; }
 
-  @media (max-width:680px){
-    model-viewer{ height:46vh; }
-    .brand{ top:12px; left:12px; font-size:11.5px; letter-spacing:.08em; }
-    .actions{ top:10px; right:10px; gap:6px; }
-    .actions button{ width:34px; height:34px; font-size:14px; }
-    .title{ top:44px; left:12px; max-width:76vw; }
-    #car-name{ font-size:20px; letter-spacing:.02em; line-height:1.15; }
-    #car-tag{ font-size:12px; margin-top:4px; }
-    /* 下半部由下往上乾淨堆疊：色票面板 → 控制鈕 → 換車列 → 版權 */
-    .info{ bottom:226px; top:auto; }
-    .dock{ padding:12px 16px 10px; }
-    .color-rows{ gap:16px; margin-top:0; }
-    .color-row .lab{ font-size:11px; letter-spacing:.08em; }
-    .swatches{ gap:8px; }
-    .swatch{ width:22px; height:22px; }
-    .more{ margin-top:9px; }
-    .linkbtn{ font-size:12px; }
-    .controls{ top:auto; bottom:132px; left:50%; transform:translateX(-50%); flex-wrap:wrap; justify-content:center; width:94vw; max-width:94vw; gap:6px; }
-    .controls button{ padding:7px 11px; font-size:12px; }
-    .garage{ bottom:44px; max-width:94vw; gap:8px; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; padding:6px 10px; }
-    .garage button img{ width:50px; height:34px; border-radius:7px; }
-    .garage button{ font-size:11px; gap:3px; }
-    #car-chips{ margin-top:8px; gap:4px; }
-    #car-chips span{ font-size:11px; padding:3px 8px; }
-    #floor .disc{ top:44vh; height:22vh; }
-    #floor .horizon{ top:44vh; }
-    .hint{ display:none; }
-    .credit{ bottom:4px; left:8px; right:8px; font-size:11px; padding:3px 8px; text-align:center; line-height:1.4; }
-  }
+  /* 覆蓋視窗：總覽（故事、規格、你的配置）／分享 */
+  .sheet{ position:absolute; inset:0; z-index:18; background:rgba(12,12,13,.5); display:none; align-items:center; justify-content:center; padding:20px; }
+  .sheet.show{ display:flex; }
+  .card{ width:540px; max-width:92vw; max-height:86vh; overflow-y:auto; background:#fff; border-radius:12px; padding:36px 38px 32px; box-shadow:0 30px 70px rgba(0,0,0,.18); position:relative; }
+  .card .x{ position:absolute; top:14px; right:16px; width:36px; height:36px; border:none; background:none; font-size:18px; color:var(--sub); cursor:pointer; border-radius:6px; }
+  .card .x:hover{ background:var(--chip); color:var(--ink); }
+  .card h2{ font-size:26px; font-weight:400; letter-spacing:-.005em; }
+  .card .csub{ font-size:13.5px; color:var(--sub); margin-top:6px; }
+  .card h3{ font-size:13px; color:var(--ink); font-weight:500; margin:24px 0 10px; }
+  .card p.story{ font-size:14.5px; line-height:1.95; color:#3a3f45; margin:18px 0 4px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:16px 0 4px; }
+  .chips span{ font-size:12px; color:var(--ink); background:var(--chip); padding:4px 10px; border-radius:4px; }
+  .spec-src{ font-size:12px; color:var(--sub); line-height:1.7; margin-top:12px; }
 
-  /* ===== 2026-10-02 去 AI 感：跟首頁、導覽頁同一套語言 =====
-     實心面、細線、直角一點；不霧化、不發光、圖示不亂動、不鋪雜訊紋理。
-     暗場景（暗棚、夜晚）時面板跟著變深，不再是一塊白板浮在黑底上。 */
-  #noise{ display:none; }
-  #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(0,0,0,.10), rgba(0,0,0,.035) 52%, transparent 70%); }
-  #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(0,0,0,.14) 30%, rgba(0,0,0,.14) 70%, transparent); }
-  body.scene-dark #floor .disc{ background:radial-gradient(ellipse 50% 44% at 50% 50%, rgba(255,255,255,.055), rgba(255,255,255,.02) 52%, transparent 70%); }
-  body.scene-dark #floor .horizon{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.11) 30%, rgba(255,255,255,.11) 70%, transparent); }
+  #toast{ position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:30; background:var(--ink); color:#fff; font-size:13.5px;
+    padding:10px 16px; border-radius:6px; opacity:0; transition:opacity .3s; pointer-events:none; max-width:86vw; text-align:center; }
+  #toast.show{ opacity:1; }
 
-  /* 雜誌跨頁（2026-10-07 本人選）：車後壓一個大字，用底盤代號（W202、ND、F15…），像雜誌把刊頭壓在主角後面。
-     畫在 3D 畫布底下那層，點不到、讀屏軟體略過（字放在 ::before）；顏色只比背景亮或暗一點點 */
-  #floor .mast{ position:absolute; left:0; right:0; top:47%; transform:translateY(-50%); text-align:center; white-space:nowrap;
-    font-family:"Noto Serif TC",Georgia,serif; font-weight:300; font-size:min(30vw,46vh); line-height:1; letter-spacing:-.01em;
-    color:rgba(0,0,0,.05); transition:opacity .35s ease; }
-  #floor .mast::before{ content:attr(data-code); }
-  #floor .mast.swap{ opacity:0; }
-  body.scene-dark #floor .mast{ color:rgba(255,255,255,.045); }
-  /* 右上角一行尺寸：數字直接量 3D 模型（AR 也是照這個尺寸擺進房間），寬度含後照鏡 */
-  .dims{ position:absolute; top:74px; right:28px; z-index:5; pointer-events:none; text-align:right;
-    font-size:12px; letter-spacing:.03em; color:var(--sub); font-variant-numeric:tabular-nums; }
-  .dims span{ margin-right:8px; color:var(--ink); }
-  body.scene-dark .dims{ color:#9a958c; }
-  body.scene-dark .dims span{ color:#d9d4ca; }
+  /* Lucide 內嵌 icon（ISC 授權） */
+  svg.lic{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:-3px; flex:0 0 auto; }
+  .actions .ic svg.lic{ width:18px; height:18px; }
+
+  /* 車身熱點 */
+  .tip-hot{ border:none; background:none; padding:0; cursor:pointer; }
+  .tip-dot{ display:block; width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.92); border:2px solid var(--ink); box-shadow:0 1px 5px rgba(0,0,0,.35); position:relative; }
+  .tip-dot::after{ content:'+'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; line-height:1; color:var(--ink); }
+  .tip-card{ position:absolute; left:24px; top:50%; transform:translateY(-50%); width:198px; background:var(--ink); color:#fff; font-size:12px; line-height:1.6; padding:9px 12px; border-radius:10px; opacity:0; pointer-events:none; transition:.15s; box-shadow:0 8px 24px rgba(0,0,0,.28); text-align:left; z-index:9; }
+  .tip-card b{ font-weight:500; font-size:13px; }
+  .tip-hot.show .tip-card, .tip-hot:hover .tip-card, .tip-hot:focus .tip-card{ opacity:1; }
+
   body.iv .dims, body.iv #floor .mast{ visibility:hidden; }
-  @media (max-width:680px){
-    #floor .mast{ top:23vh; font-size:min(34vw,21vh); }
+
+  /* ===== 窄一點的桌機：右欄縮到 360 ===== */
+  @media (max-width:1180px){
+    .main{ grid-template-columns:minmax(0,1fr) 360px; gap:20px; padding:0 20px 20px; }
+    .topbar{ padding:0 20px; }
+  }
+  /* ===== 平板直式、手機：車圖卡黏在上面，下面是縮圖列和選項，整頁一起捲 ===== */
+  @media (max-width:899px){
+    .topbar{ height:54px; padding:0 8px; grid-template-columns:1fr auto 1fr; gap:6px; }
+    .tb-link:first-child{ margin-left:0; }
+    .tb-link{ padding:0 8px; }
+    .tb-link .t{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+    .tb-link svg.lic{ width:20px; height:20px; }
+    .wordmark{ font-size:15px; letter-spacing:.1em; }
+    .actions{ gap:2px; }
+    #btn-cinema, #btn-sum{ display:none; }
+    .pbtn{ min-height:36px; padding:0 14px; font-size:13.5px; }
+    .main{ display:block; overflow-y:auto; overscroll-behavior:contain; padding:0; }
+    .stagecol{ display:contents; }
+    .stage{ position:sticky; top:0; z-index:3; height:46svh; min-height:250px; border-radius:0; }
+    .garage{ padding:12px 12px 6px; }
+    .garage button{ flex:0 0 70px; }
+    .panel{ overflow:visible; padding:10px 12px 40px; }
+    #car-name{ font-size:26px; }
+    .controls{ left:10px; right:10px; bottom:10px; max-width:none; -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent); mask-image:linear-gradient(90deg,#000 88%,transparent); }   /* 右邊淡出：看得出還能往右滑 */
+    .controls button{ padding:0 10px; font-size:12.5px; min-height:34px; }
     .dims{ display:none; }
+    .card{ padding:30px 22px 26px; }
   }
-  @media (prefers-reduced-motion:reduce){ #floor .mast{ transition:none; } }
-
-  .brand{ letter-spacing:.02em; background:none; border:none; padding:0; min-height:24px; font-family:inherit; font-weight:inherit; }   /* 2026-10-03 改成按鈕：鍵盤也能回大廳 */
-  .brand:focus-visible{ outline:2px solid var(--ink); outline-offset:4px; }
-  body.scene-dark .brand:focus-visible{ outline-color:#eef1f4; }
-  .brand b{ font-family:"Noto Serif TC",Georgia,serif; font-size:16px; letter-spacing:.06em; }
-
-  /* 車名下的規格：一行文字，不用膠囊 */
-  #car-chips{ gap:4px 18px; margin-top:10px; }
-  #car-chips span, body.scene-dark #car-chips span{ background:none; border:none; padding:0; border-radius:0;
-    backdrop-filter:none; -webkit-backdrop-filter:none; font-size:13px; letter-spacing:0; }
-  #car-chips span{ color:var(--sub); }
-  body.scene-dark #car-chips span{ color:#a7adb4; }
-  #car-chips span b{ font-weight:500; color:var(--ink); }
-  body.scene-dark #car-chips span b{ color:#eef1f4; }
-
-  /* 色票面板 */
-  .dock{ backdrop-filter:none; -webkit-backdrop-filter:none; background:#fff; border-radius:10px; }
-  .color-row .lab{ font-size:12px; letter-spacing:.06em; }
-  body.scene-dark .dock{ background:#18191b; box-shadow:0 8px 28px rgba(0,0,0,.35); }
-  body.scene-dark .color-row .lab, body.scene-dark .linkbtn{ color:#a7adb4; }
-  body.scene-dark .linkbtn:hover{ color:#fff; }
-  body.scene-dark .swatch{ border-color:rgba(255,255,255,.24); }
-  body.scene-dark .swatch.sel{ box-shadow:0 0 0 2px #18191b, 0 0 0 4px #eef1f4; }
-
-  /* 控制鈕：一條工具列，不是六顆各自浮著的膠囊 */
-  .controls{ gap:2px; padding:4px; background:#fff; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.12); flex-wrap:nowrap; }
-  .controls button{ background:none; border:none; border-radius:6px; padding:8px 12px; min-height:36px; font-size:13px; color:var(--ink); }
-  .controls button:hover{ background:rgba(0,0,0,.05); border:none; }
-  .controls button.on{ box-shadow:none; background:var(--ink); color:#fff; }
-  body.scene-dark .controls{ background:#18191b; box-shadow:0 6px 20px rgba(0,0,0,.35); }
-  body.scene-dark .controls button{ color:#e6e8eb; }
-  body.scene-dark .controls button:hover{ background:rgba(255,255,255,.07); }
-  body.scene-dark .controls button.on{ background:#eef1f4; color:#18191b; }
-  .controls button:hover svg.lic, .actions button:hover svg.lic, .linkbtn:hover svg.lic,
-  .lobby-nav a:hover svg.lic, #rotate-toggle:not(.off) svg.lic{ animation:none; }
-
-  /* 右上動作鈕 */
-  .actions button{ background:#fff; border:none; color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,.10); }
-  body.scene-dark .actions button{ background:#18191b; color:#e6e8eb; box-shadow:none; }
-
-  /* 換車列：縮圖是攝影棚照片，方一點 */
-  .garage button img, .garage button.active img{ border-radius:4px; box-shadow:none; }
-  #rotate-toggle svg.lic{ color:currentColor; }
-  #rotate-toggle.off svg.lic{ color:currentColor; opacity:.4; }
-  #toast{ border-radius:6px; }
-  .credit{ border-radius:4px; }
-
-  /* 大廳 */
-  .lobby-kick{ letter-spacing:.24em; }
-  .lobby-title{ letter-spacing:.03em; }
-  .lobby-nav{ gap:24px; }
-  .lobby-nav a{ border:none; border-radius:0; padding:10px 2px 6px; border-bottom:1px solid rgba(255,255,255,.22); font-size:14px; }
-  .lobby-nav a:hover{ border-bottom-color:#b8962e; }
-
-  /* 載入畫面：預設是暗棚，載入時不要先閃一片白 */
-  #loader{ background:#0c0c0d; }
-  .loader-title{ color:#ece9e2; letter-spacing:.12em; }
-  .spin{ border-color:rgba(255,255,255,.12); border-top-color:#ece9e2; }
-
-  /* 視窗 */
-  .sheet{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(12,12,13,.55); }
-  .card{ border:none; border-radius:12px; }
-  .chips span{ border-radius:4px; }
-
-  @media (max-width:680px){
-    .brand b{ font-size:15px; }
-    .controls{ flex-wrap:wrap; justify-content:center; }
-    .controls button{ padding:7px 9px; font-size:12.5px; min-height:34px; }
-    #car-chips{ gap:2px 12px; margin-top:6px; }
-    #car-chips span{ font-size:12px; }
+  @media (max-width:400px){
+    .wordmark{ font-size:14px; letter-spacing:.06em; }
+    .pbtn{ padding:0 12px; }
+    .opt-h{ padding:16px 16px; }
+    .opt-b{ padding:0 16px 20px; }
   }
-
-  /* 車高滑桿（W202 樣張）：只動車身、輪子不動 */
-  .ride-row[hidden]{ display:none; }
-  /* 跟「車身」「內裝」並排當第三欄：面板不變高，不會蓋到車 */
-  .ride-row input[type=range]{ width:140px; height:26px; margin:0; accent-color:var(--ink); cursor:pointer; }
-  .ride-row output{ font-variant-numeric:tabular-nums; color:var(--ink); font-weight:500; }
-  body.scene-dark .ride-row input[type=range]{ accent-color:#eef1f4; }
-  body.scene-dark .ride-row output{ color:#eef1f4; }
-  @media (max-width:680px){ .ride-row input[type=range]{ width:150px; height:22px; } }
-  /* 自訂車牌：一格輸入框，字體跟車牌一樣用等寬大寫 */
-  .plate-row[hidden]{ display:none; }
-  .plate-row input{ width:138px; min-height:30px; box-sizing:border-box; font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; text-align:center;
-    color:var(--ink); background:transparent; border:1px solid var(--line); border-radius:8px; padding:0 8px; }
-  .plate-row input::placeholder{ font-weight:400; letter-spacing:.02em; text-transform:none; color:var(--sub); }
-  .plate-row input:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
-  .plate-row input[aria-invalid=true]{ border-color:#c0392b; text-decoration:line-through; }
-  body.scene-dark .plate-row input{ color:#eef1f4; border-color:rgba(255,255,255,.22); }
-  body.scene-dark .plate-row input::placeholder{ color:#a7adb4; }
-  /* 窗戶隔熱紙：三段切換，跟車高並排 */
-  .tint-row[hidden], .mod-row[hidden], .tint-seg button[hidden]{ display:none; }
-  /* 按住看原廠：放開就回到改裝後；畫面上方標一個「原廠」 */
-  #cmp-tip{ position:absolute; top:84px; left:50%; transform:translateX(-50%); z-index:6; pointer-events:none; opacity:0; transition:opacity .15s;
-    font-size:13px; letter-spacing:.1em; padding:6px 14px; border-radius:6px; background:rgba(12,12,13,.78); color:#eef1f4; }
-  body.comparing #cmp-tip{ opacity:1; }
-  #cmp-btn{ touch-action:none; user-select:none; -webkit-user-select:none; }
-  /* 完整色票：四個色系各一排 */
-  #ext-tiers{ display:grid; gap:12px; margin:4px 0 6px; }
-  .ext-tier{ display:grid; grid-template-columns:4.5em 1fr; align-items:center; gap:10px; }
-  .ext-tier-name{ font-size:12.5px; color:var(--sub); }
-  .ext-tier .swatches{ justify-content:flex-start; flex-wrap:wrap; }
-  .tint-row output{ color:var(--ink); font-weight:500; }
-  .tint-seg{ display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-  .tint-seg button{ font-family:inherit; font-size:12.5px; min-height:30px; padding:0 13px; background:transparent; border:none; color:var(--ink); cursor:pointer; transition:background .15s; }
-  .tint-seg button + button{ border-left:1px solid var(--line); }
-  .tint-seg button:hover{ background:rgba(0,0,0,.05); }
-  .tint-seg button.active{ background:var(--ink); color:#fff; }
-  .tint-seg button:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
-  body.scene-dark .tint-row output{ color:#eef1f4; }
-  body.scene-dark .tint-seg{ border-color:rgba(255,255,255,.22); }
-  body.scene-dark .tint-seg button{ color:#e6e8eb; }
-  body.scene-dark .tint-seg button + button{ border-left-color:rgba(255,255,255,.22); }
-  body.scene-dark .tint-seg button:hover{ background:rgba(255,255,255,.08); }
-  body.scene-dark .tint-seg button.active{ background:#eef1f4; color:#18191b; }
-  /* 手機：車高、隔熱紙、車牌擠進同一行，控制列才不會長到蓋住車（SE 375×667 原本會蓋掉 W202 的輪子） */
-  /* 手機（≤440px）控制列分兩頁：顏色＋車高／隔熱紙＋車牌＋改裝，用「改裝 ›」切換，高度不變，不會蓋到車 */
-  .dock-page{ display:none; }
-  @media (max-width:440px){
-    .dock-page{ display:inline-flex; font-weight:500; }
-    body:not(.dock-mods) .tint-row, body:not(.dock-mods) .plate-row, body:not(.dock-mods) .mod-row{ display:none !important; }
-    body.dock-mods .color-rows > .color-row:not(.tint-row):not(.plate-row):not(.mod-row){ display:none !important; }
-  }
-  @media (max-width:440px){
-    .color-rows{ column-gap:10px; }
-    .ride-row input[type=range]{ width:92px; }
-    .tint-seg button{ padding:0 8px; font-size:12px; }
-    .plate-row input{ width:96px; font-size:13px; letter-spacing:.04em; padding:0 4px; }
-    .plate-row input::placeholder{ font-size:11.5px; }
-  }
+  @media (prefers-reduced-motion:reduce){ .opt-h .chev, #floor .mast{ transition:none; } }
 </style>
 </head>
 <body>
@@ -500,95 +389,153 @@
     <div class="lobby-grid" id="lobby-grid"></div>
   </div>
 
-  <!-- 地台與噪點（在 3D 畫布下層） -->
-  <div id="floor"><div class="mast" aria-hidden="true" data-code="W202"></div><div class="disc"></div><div class="horizon"></div></div>
-  <div class="dims" id="dims" hidden></div>
-  <div id="noise"></div>
+  <!-- 頂列（Porsche 配置器的樣子：左邊換車款、中間站名、右邊總覽和主要動作） -->
+  <header class="topbar">
+    <div class="tb-left">
+      <button type="button" class="brand tb-link" aria-label="更換車款，回車庫大廳"><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg><span class="t">更換車款</span></button>
+      <button type="button" class="tb-link" id="rand-btn" aria-label="幫我配一套"><svg class="lic" aria-hidden="true" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg><span class="t">幫我配</span></button>
+    </div>
+    <a class="wordmark" href="./">我的夢想車庫</a>
+    <div class="actions">
+      <button type="button" class="ic" id="btn-cinema" title="電影式展示" aria-label="電影式展示" onclick="location.href='./'"><svg class="lic" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" /></svg></button>
+      <button type="button" class="ic" id="btn-shot" title="存成圖片" aria-label="存成圖片"><svg class="lic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg></button>
+      <button type="button" class="pbtn" id="btn-sum">總覽</button>
+      <button type="button" class="pbtn primary" id="btn-share">分享這台車</button>
+    </div>
+  </header>
 
-  <model-viewer id="mv"
-    src="w202.glb"
-    alt="1993 Mercedes-Benz W202 C220"
-    loading="eager"
-    camera-controls
-    auto-rotate auto-rotate-delay="800" rotation-per-second="22deg"
-    interaction-prompt="none"
-    shadow-intensity="1.0" shadow-softness="0.6"
-    environment-image="neutral" exposure="1.05" tone-mapping="neutral"
-    orientation="0deg -90deg 0deg" scale="0.01 0.01 0.01"
-    ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor"
-    camera-orbit="-30deg 75deg 120%" max-camera-orbit="auto 89deg auto"
-    min-field-of-view="20deg">
-  </model-viewer>
-
-  <div id="drop">放開以載入這個 3D 模型</div>
-
-  <!-- 品牌（左上）/ 動作鈕（右上）-->
-  <button type="button" class="brand" aria-label="我的夢想車庫，回車庫大廳"><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> <b>我的夢想車庫</b> <span class="sep">·</span> 360°</button>
-  <div class="actions">
-    <button id="btn-cinema" title="回電影式展示" onclick="location.href='./'"><svg class="lic" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" /></svg></button>
-    <button id="btn-cfg" title="個人化設定"><svg class="lic" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg></button>
-    <button id="btn-shot" title="存成圖片"><svg class="lic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg></button>
-    <button id="btn-share" title="分享連結"><svg class="lic" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></svg></button>
-  </div>
-
-  <!-- 車名 / 副標：置頂左上（乾淨背景、清楚可讀）-->
-  <div class="title">
-    <div id="car-name">1993 W202 C220</div>
-    <div id="car-tag"></div>
-    <div id="car-chips"></div>
-  </div>
-
-  <!-- 底部：車身＋內裝色 + 介紹鈕（霧面底襯，色點清楚、與車身分隔）-->
-  <div class="info">
-    <div class="dock">
-      <div class="color-rows">
-        <div class="color-row"><span class="lab" id="lab-ext">車身</span><div class="swatches" id="sw-ext"></div></div>
-        <div class="color-row"><span class="lab" id="lab-int">內裝</span><div class="swatches" id="sw-int"></div></div>
-        <div class="color-row ride-row" id="ride-row" hidden>
-          <span class="lab"><label for="ride">車高</label> · <output id="ride-val" for="ride">原廠</output></span>
-          <input type="range" id="ride" min="0" max="40" step="5" value="0" aria-valuetext="原廠高度">
-        </div>
-        <!-- 窗戶隔熱紙（2026-10-08）：原本放在齒輪的個人化視窗裡，找不到，搬到控制列 -->
-        <div class="color-row tint-row" id="tint-block" hidden>
-          <span class="lab">隔熱紙 · <output id="tint-val">原廠</output></span>
-          <div class="tint-seg" id="tint-row" role="group" aria-label="窗戶隔熱紙"></div>
-        </div>
-        <!-- 自訂車牌（2026-10-08）：模型裡有 plate_print 薄板的車，九台都有 -->
-        <div class="color-row plate-row" id="plate-block" hidden>
-          <span class="lab"><label for="plate-in">車牌</label></span>
-          <input type="text" id="plate-in" maxlength="8" placeholder="打字印上車牌" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
-        </div>
-        <!-- 改裝（2026-10-09）：燻黑燈組、黑化套件、後視鏡，九台都有 -->
-        <div class="color-row mod-row" id="mod-block" hidden>
-          <span class="lab">改裝</span>
-          <div class="tint-seg" role="group" aria-label="改裝">
-            <button type="button" id="mod-smoke" aria-pressed="false">燻黑燈組</button>
-            <button type="button" id="mod-black" aria-pressed="false" hidden>黑化套件</button>
-            <button type="button" id="mod-mirror" aria-pressed="false" hidden>後視鏡亮黑</button>
-            <button type="button" id="mod-handle" aria-pressed="false" hidden>把手亮黑</button>
-          </div>
+  <main class="main">
+    <div class="stagecol">
+      <!-- 車圖卡：場景（暗棚、白棚、夕陽、夜晚）只換這張卡的底 -->
+      <div class="stage" id="stage">
+        <div id="floor"><div class="mast" aria-hidden="true" data-code="W202"></div><div class="disc"></div><div class="horizon"></div></div>
+        <div class="dims" id="dims" hidden></div>
+        <model-viewer id="mv"
+          src="w202.glb"
+          alt="1993 Mercedes-Benz W202 C220"
+          loading="eager"
+          camera-controls
+          auto-rotate auto-rotate-delay="800" rotation-per-second="22deg"
+          interaction-prompt="none"
+          shadow-intensity="1.0" shadow-softness="0.6"
+          environment-image="neutral" exposure="1.05" tone-mapping="neutral"
+          orientation="0deg -90deg 0deg" scale="0.01 0.01 0.01"
+          ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor"
+          camera-orbit="-30deg 75deg 100%" max-camera-orbit="auto 89deg auto"
+          min-field-of-view="20deg">
+        </model-viewer>
+        <div id="cmp-tip" role="status">原廠</div>
+        <div class="controls" role="toolbar" aria-label="展示控制">
+          <button id="lights-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></svg> 發動引擎</button>
+          <button id="scene-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.9 4.9 1.4 1.4" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.3 17.7-1.4 1.4" /><path d="m19.1 4.9-1.4 1.4" /></svg> 場景</button>
+          <button id="interior-view"><svg class="lic" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" /><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" /><path d="M5 18v2" /><path d="M19 18v2" /></svg> 看內裝</button>
+          <button id="tips-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" /></svg> 亮點</button>
+          <button type="button" id="cmp-btn" aria-describedby="cmp-tip"><svg class="lic" viewBox="0 0 24 24"><path d="M12 3v18" /><path d="M5 8h4M5 12h4M15 8h4M15 12h4" /></svg> 按住看原廠</button>
+          <button id="rotate-toggle"><svg class="lic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg> 自動旋轉</button>
+          <button id="showcase-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /><path d="m6.2 5.3 3.1 3.9" /><path d="m12.4 3.4 3.1 4" /><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg> 展示</button>
+          <button type="button" id="ar-go" hidden><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></svg> AR 看車</button>
         </div>
       </div>
-      <div class="more"><button type="button" class="linkbtn" id="more-colors">更多車色</button><button type="button" class="linkbtn dock-page" id="dock-page" aria-expanded="false" aria-controls="tint-block plate-block mod-block">改裝 ›</button><button class="linkbtn" id="rand-btn"><svg class="lic" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" /></svg> 幫我配</button><button class="linkbtn" id="btn-story">車款故事與規格 <svg class="lic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6" /></svg></button></div>
+      <!-- 圖卡下面：換車 -->
+      <div class="garage" id="garage" role="group" aria-label="換車"></div>
     </div>
-  </div>
 
-  <!-- 底部：換車 -->
-  <div class="garage" id="garage"></div>
-  <div id="cmp-tip" role="status">原廠</div>
+    <!-- 右欄：所有選項，照類別分區（Porsche 的車身顏色、輪圈、內裝、外觀…） -->
+    <aside class="panel" aria-label="配置選項">
+      <div class="p-head">
+        <h1 id="car-name">1993 W202 C220</h1>
+        <p id="car-tag"></p>
+        <div id="car-chips"></div>
+        <button type="button" class="linkbtn" id="btn-story">車款故事與規格</button>
+      </div>
+      <section class="opt" id="opt-ext">
+        <h2><button type="button" class="opt-h" aria-expanded="true" aria-controls="ob-ext"><span class="t">車身顏色</span><span class="val" id="lab-ext"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
+        <div class="opt-b" id="ob-ext">
+          <div id="ext-tiers"></div>
+          <div class="grp"><div class="grp-h">車漆質感</div><div class="finish-row seg" id="finish-row" role="group" aria-label="車漆質感"></div></div>
+          <div class="grp"><label class="custom-color"><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 自己調一個車色 <input type="color" id="ext-color" value="#0c0d10"></label></div>
+        </div>
+      </section>
+      <section class="opt" id="opt-wheel">
+        <h2><button type="button" class="opt-h" aria-expanded="true" aria-controls="ob-wheel"><span class="t">輪圈與卡鉗</span><span class="val" id="val-wheel"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
+        <div class="opt-b" id="ob-wheel">
+          <div class="grp" id="wheel-block" style="display:none"><div class="grp-h">輪圈顏色</div><div class="swatches" id="sw-wheel"></div></div>
+          <div class="grp" id="caliper-block" style="display:none"><div class="grp-h">煞車卡鉗</div><div class="swatches" id="sw-caliper"></div></div>
+        </div>
+      </section>
+      <section class="opt" id="opt-int">
+        <h2><button type="button" class="opt-h" aria-expanded="true" aria-controls="ob-int"><span class="t">內裝</span><span class="val" id="lab-int"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
+        <div class="opt-b" id="ob-int">
+          <div class="grp"><div class="swatches" id="sw-int"></div></div>
+          <div class="grp"><label class="custom-color"><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 自己調一個內裝色 <input type="color" id="int-color" value="#17181c"></label></div>
+        </div>
+      </section>
+      <section class="opt" id="opt-mods">
+        <h2><button type="button" class="opt-h" aria-expanded="true" aria-controls="ob-mods"><span class="t">外觀改裝</span><span class="val" id="val-mods"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
+        <div class="opt-b" id="ob-mods">
+          <!-- 改裝（2026-10-09）：燻黑燈組、黑化套件、後視鏡、把手，九台都有 -->
+          <div class="grp mod-row" id="mod-block" hidden>
+            <div class="opt-list" role="group" aria-label="外觀改裝">
+              <button type="button" id="mod-smoke" aria-pressed="false">燻黑燈組</button>
+              <button type="button" id="mod-black" aria-pressed="false" hidden>黑化套件</button>
+              <button type="button" id="mod-mirror" aria-pressed="false" hidden>後視鏡亮黑</button>
+              <button type="button" id="mod-handle" aria-pressed="false" hidden>把手亮黑</button>
+            </div>
+          </div>
+          <div class="grp tint-row" id="tint-block" hidden>
+            <div class="grp-h">窗戶隔熱紙 <output id="tint-val">原廠</output></div>
+            <div class="tint-seg seg" id="tint-row" role="group" aria-label="窗戶隔熱紙"></div>
+          </div>
+          <div class="grp ride-row" id="ride-row" hidden>
+            <div class="grp-h"><label for="ride">車高</label> <output id="ride-val" for="ride">原廠</output></div>
+            <input type="range" id="ride" min="0" max="40" step="5" value="0" aria-valuetext="原廠高度">
+            <div class="ride-scale" aria-hidden="true"><span>原廠</span><span>降低</span></div>
+          </div>
+        </div>
+      </section>
+      <section class="opt" id="opt-plate">
+        <h2><button type="button" class="opt-h" aria-expanded="true" aria-controls="ob-plate"><span class="t">車牌</span><span class="val" id="val-plate"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
+        <div class="opt-b" id="ob-plate">
+          <!-- 自訂車牌（2026-10-08）：模型裡有 plate_print 薄板的車，九台都有 -->
+          <div class="grp plate-row" id="plate-block" hidden>
+            <label class="grp-h" for="plate-in">印在車牌上的字</label>
+            <input type="text" id="plate-in" maxlength="8" placeholder="最多 8 個英文字母或數字" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+            <p class="plate-note">字會跟著分享連結一起傳出去。</p>
+          </div>
+        </div>
+      </section>
+      <section class="opt" id="opt-adv">
+        <h2><button type="button" class="opt-h" aria-expanded="false" aria-controls="ob-adv"><span class="t">進階：載入自己的車模</span><span class="val" id="val-adv"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
+        <div class="opt-b" id="ob-adv" hidden>
+          <!-- 指定材質只給自己載入的車模用：九台車的材質都設定好了（2026-10-07） -->
+          <div class="grp" id="mat-pick" hidden>
+            <div class="grp-h">指定材質 <span class="note">顏色換錯位置時用</span></div>
+            <select id="body-mat" aria-label="車身材質"></select>
+            <select id="int-mat" aria-label="內裝材質"></select>
+          </div>
+          <div class="grp">
+            <label class="filebtn">選擇 .glb 檔案<input id="file" type="file" accept=".glb,.gltf" hidden></label>
+            <div class="pathrow">
+              <input id="path" type="text" placeholder="例如 w202.glb 或網址" aria-label="模型路徑或網址">
+              <button type="button" id="path-load">載入</button>
+            </div>
+            <div class="orient-row">
+              <button type="button" id="rot-pitch">翻正 90°</button>
+              <button type="button" id="rot-yaw">轉向 90°</button>
+              <button type="button" id="rot-reset">重設方向</button>
+            </div>
+            <p class="adv-note">也可以直接把 .glb 拖進車圖。方向不對就用上面三顆轉正。</p>
+          </div>
+        </div>
+      </section>
+      <div class="p-foot">
+        <div class="credit" id="credit"></div>
+        <nav aria-label="其他頁面"><a href="intro.html">功能導覽</a><a href="sources.html">來源與修改紀錄</a></nav>
+      </div>
+    </aside>
+  </main>
 
-  <!-- 左下：控制鈕 -->
-  <div class="controls">
-    <button id="lights-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></svg> 發動引擎</button>
-    <button id="scene-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.9 4.9 1.4 1.4" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.3 17.7-1.4 1.4" /><path d="m19.1 4.9-1.4 1.4" /></svg> 場景</button>
-    <button id="interior-view"><svg class="lic" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" /><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" /><path d="M5 18v2" /><path d="M19 18v2" /></svg> 看內裝</button>
-    <button id="tips-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" /></svg> 亮點</button>
-    <button type="button" id="cmp-btn" aria-describedby="cmp-tip"><svg class="lic" viewBox="0 0 24 24"><path d="M12 3v18" /><path d="M5 8h4M5 12h4M15 8h4M15 12h4" /></svg> 按住看原廠</button>
-    <button id="rotate-toggle"><svg class="lic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg> 自動旋轉</button>
-    <button id="showcase-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /><path d="m6.2 5.3 3.1 3.9" /><path d="m12.4 3.4 3.1 4" /><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg> 展示</button>
-    <button type="button" id="ar-go" hidden><svg class="lic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></svg> AR 看車</button>
-  </div>
-  <div class="credit" id="credit"></div>
+  <div id="drop">放開以載入這個 3D 模型</div>
 
   <!-- 視窗：車款故事與規格 -->
   <div class="sheet" id="sheet-story">
@@ -599,54 +546,6 @@
       <p class="story" id="story-text"></p>
       <div class="chips" id="story-hi"></div>
       <div id="sec-sum"></div>
-    </div>
-  </div>
-
-  <!-- 視窗：個人化 -->
-  <div class="sheet" id="sheet-cfg">
-    <div class="card">
-      <button class="x" id="cfg-x" title="關閉">✕</button>
-      <h2>個人化</h2>
-      <div class="csub">更多顏色與進階選項</div>
-
-      <h3 id="ext-tiers-h">車身顏色 · 四個色系</h3>
-      <div id="ext-tiers"></div>
-
-      <h3>自訂顏色</h3>
-      <label class="custom-color"><svg class="lic" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 車身 <input type="color" id="ext-color" value="#0c0d10"></label>
-      <label class="custom-color"><svg class="lic" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg> 內裝 <input type="color" id="int-color" value="#17181c"></label>
-
-      <h3>車漆質感</h3>
-      <div class="finish-row" id="finish-row"></div>
-
-      <div id="caliper-block" style="display:none">
-        <h3>煞車卡鉗顏色</h3>
-        <div class="swatches" id="sw-caliper"></div>
-      </div>
-      <div id="wheel-block" style="display:none">
-        <h3>輪圈樣式</h3>
-        <div class="swatches" id="sw-wheel"></div>
-      </div>
-
-      <!-- 指定材質只給自己載入的車模用：九台車的材質都設定好了（2026-10-07） -->
-      <div id="mat-pick" hidden>
-        <h3>進階 · 指定材質（顏色換錯位置時用）</h3>
-        <select id="body-mat"></select>
-        <select id="int-mat"></select>
-      </div>
-
-      <h3>進階 · 載入自己的車模</h3>
-      <label class="filebtn">選擇 .glb 檔案<input id="file" type="file" accept=".glb,.gltf" hidden></label>
-      <div class="pathrow">
-        <input id="path" type="text" placeholder="例如 w202.glb 或網址">
-        <button id="path-load">載入</button>
-      </div>
-      <div class="orient-row">
-        <button id="rot-pitch">翻正 90°</button>
-        <button id="rot-yaw">轉向 90°</button>
-        <button id="rot-reset">重設方向</button>
-      </div>
-      <p style="font-size:12px;color:var(--sub);margin-top:12px;line-height:1.8">載入別的車模若方向不對，用上面三顆轉正。想把新車<b>永久加進車庫</b>，跟我說一聲即可。</p>
     </div>
   </div>
 
@@ -674,9 +573,8 @@
    ===================================================================== */
 
 /* 車身顏色（2026-10-09 參考 Porsche 配置器分成四個色系）：前七色順序不能動（分享連結用序號），新色接在後面。
-   控制列只放前七色，完整的十四色在「個人化」視窗依色系排 */
+   2026-10-10 起十四色全部在右欄依色系排 */
 const EXT_TIERS = [ { key:'base', name:'基本色' }, { key:'metal', name:'金屬色' }, { key:'special', name:'特殊色' }, { key:'classic', name:'經典色' } ];
-const EXT_DOCK = 7;
 const EXTERIOR = [
   { name:'曜岩黑',   hex:'#0c0d10', tier:'base' },
   { name:'北極白',   hex:'#eef0f2', tier:'base' },
@@ -852,7 +750,6 @@ function saveCfg(){
 
 /* ---------- 建立車庫 + 色票 + 分頁 ---------- */
 buildGarage();
-buildSwatches('sw-ext', EXTERIOR.slice(0, EXT_DOCK), i => { state.ext=i; state.extHex=null; applyExterior(); refresh(); });
 (function(){   // 完整色票：依色系分組
   var box=document.getElementById('ext-tiers'); if(!box) return;
   EXT_TIERS.forEach(function(t){
@@ -880,7 +777,7 @@ function buildFinish(){
   var box=document.getElementById('finish-row'); if(!box) return;
   box.innerHTML='';
   FINISHES.forEach(function(f,i){
-    var b=document.createElement('button'); b.textContent=f.name; b.className=(i===state.finish?'active':'');
+    var b=document.createElement('button'); b.type='button'; b.textContent=f.name; b.className=(i===state.finish?'active':'');
     b.onclick=function(){ state.finish=i; applyExterior();
       Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===i?'active':''); });
       refresh(); };
@@ -994,7 +891,7 @@ var LIC = {
 };
 
 /* ---------- 場景：攝影棚／夕陽／夜晚 ---------- */
-function applyScene(i){ state.scene=i; var s=SCENES[i]; document.body.style.background=s.bg;
+function applyScene(i){ state.scene=i; var s=SCENES[i]; var _st=document.getElementById('stage'); (_st||document.body).style.background=s.bg;   // 2026-10-10 場景只換車圖卡的底
   mv.setAttribute('exposure', s.exposure); mv.setAttribute('shadow-intensity', s.shadow);
   mv.setAttribute('environment-image', s.env || 'neutral');
   mv.setAttribute('tone-mapping', s.tone || 'neutral'); mv.setAttribute('shadow-softness', s.soft || 0.6);
@@ -1106,11 +1003,6 @@ function syncMods(){
   if(bh){ bh.hidden=!hasHandle; bh.className=state.handle?'active':''; bh.setAttribute('aria-pressed', state.handle?'true':'false'); }
   if(blk) blk.hidden = !(hasBlack || hasSmoke || hasMirror || hasHandle);
 }
-(function(){
-  var b=document.getElementById('dock-page'); if(!b) return;
-  b.onclick=function(){ var on=document.body.classList.toggle('dock-mods'); b.textContent = on ? '‹ 顏色' : '改裝 ›'; b.setAttribute('aria-expanded', on ? 'true' : 'false'); };
-})();
-document.getElementById('more-colors').onclick=function(){ var b=document.getElementById('btn-cfg'); if(b) b.click(); setTimeout(function(){ var h=document.getElementById('ext-tiers-h'); if(h) h.scrollIntoView({block:'start'}); }, 60); };
 document.getElementById('mod-smoke').onclick=function(){ state.smoke=state.smoke?0:1; applySmoke(); syncMods(); refresh(); focusView('front'); };
 document.getElementById('mod-mirror').onclick=function(){ state.mirror=state.mirror?0:1; applyMirror(); syncMods(); refresh(); focusView('mirror'); };
 document.getElementById('mod-handle').onclick=function(){ state.handle=state.handle?0:1; applyHandle(); syncMods(); refresh(); focusView('side'); };
@@ -1326,12 +1218,13 @@ function applyRide(v){
     } else setT();
   }
 }
-rideIn.addEventListener('input', function(){ applyRide(rideIn.value); saveCfg(); });
+rideIn.addEventListener('input', function(){ applyRide(rideIn.value); saveCfg(); syncSections(); });
 mv.addEventListener('load', function(){
   var r = rideCar();
   rideRow.hidden = !r;
   if(r){ rideIn.max = r.max; applyRide(pendingRide != null ? pendingRide : 0); }
   else { rideMM = 0; mv.removeAttribute('animation-name'); }
+  setTimeout(syncSections, 0);
   pendingRide = null;
 });
 /* ---------- 分享配置：把目前設定編成連結 ---------- */
@@ -1557,7 +1450,7 @@ function buildTabs(){
 }
 
 function buildSwatches(containerId, items, onPick){
-  const wrap = document.getElementById(containerId);
+  const wrap = document.getElementById(containerId); if(!wrap) return;
   wrap.innerHTML = '';
   items.forEach((it,i)=>{
     const s = document.createElement('button');
@@ -1819,14 +1712,35 @@ function refresh(){
     (activeCar>=0 ? row('燈組', state.smoke ? '燻黑' : '原廠') : '')+
     (blackMats().length ? row('亮面飾條', state.black ? '黑化' : '原廠') : '')+
     (handleMats().length ? row('車門把手', state.handle ? '亮黑' : '原廠') : '')+
-    (mirrorMats().length ? row('車外後視鏡', ((CARS[activeCar]||{}).mirrorBlack !== !!state.mirror) ? '亮黑' : '車身色') : '')+
+    (mirrorMats().length ? row('車外後視鏡', (!!(CARS[activeCar]||{}).mirrorBlack !== !!state.mirror) ? '亮黑' : '車身色') : '')+
     (state.plateMat>=0 ? row('車牌', (state.plate && !plateBlocked(state.plate)) ? state.plate : '原廠') : '')+
     specs;
   /* dock 標籤帶目前選中的顏色名稱 */
-  var _le=document.getElementById('lab-ext'); if(_le) _le.textContent='車身 · '+extName;
-  var _li=document.getElementById('lab-int'); if(_li) _li.textContent='內裝 · '+intName;
+  var _le=document.getElementById('lab-ext'); if(_le) _le.textContent=extName;
+  var _li=document.getElementById('lab-int'); if(_li) _li.textContent=intName;
+  syncSections();
   if(typeof saveCfg==='function') saveCfg();
 }
+/* 右欄每一區標題右邊寫目前選的；這台車沒有的區整個藏起來 */
+function syncSections(){
+  function vis(id){ var e=document.getElementById(id); return !!e && !e.hidden && e.style.display!=='none'; }
+  function set(id,t){ var e=document.getElementById(id); if(e) e.textContent=t; }
+  var ow=document.getElementById('opt-wheel'); if(ow) ow.hidden = !(vis('wheel-block') || vis('caliper-block'));
+  set('val-wheel', state.wheelMats.length ? WHEELS[state.wheelStyle].name : (state.caliperMats.length ? CALIPER[state.caliperColor].name+'卡鉗' : ''));
+  var oi=document.getElementById('opt-int'); if(oi) oi.hidden = !state.intMats.length;
+  var om=document.getElementById('opt-mods'); if(om) om.hidden = !(vis('mod-block') || vis('tint-block') || vis('ride-row'));
+  var n = (state.smoke?1:0) + (state.black&&blackMats().length?1:0) + (state.mirror&&mirrorMats().length?1:0) + (state.handle&&handleMats().length?1:0)
+        + (state.tint&&state.tintMats.length?1:0) + ((typeof rideMM!=='undefined'&&rideMM&&rideCar())?1:0);
+  set('val-mods', n ? ('已選 '+n+' 項') : '原廠');
+  var op=document.getElementById('opt-plate'); if(op) op.hidden = !vis('plate-block');
+  set('val-plate', (state.plate && !plateBlocked(state.plate)) ? state.plate : '原廠');
+}
+document.querySelectorAll('.opt-h').forEach(function(h){
+  h.addEventListener('click', function(){
+    var on = h.getAttribute('aria-expanded') !== 'true'; h.setAttribute('aria-expanded', on ? 'true' : 'false');
+    var b=document.getElementById(h.getAttribute('aria-controls')); if(b) b.hidden = !on;
+  });
+});
 function row(k,v){ return '<div class="summary-row"><span>'+k+'</span><span>'+v+'</span></div>'; }
 
 /* ---------- 模型方向控制（W202 預設 -90° 翻正；載入別的車可手動調）---------- */
@@ -1959,7 +1873,7 @@ function exitInterior(){
   mv.minCameraOrbit = 'auto';
   mv.maxFieldOfView = 'auto';
   mv.cameraTarget = 'auto auto auto';
-  mv.cameraOrbit = '-30deg 75deg 120%';
+  mv.cameraOrbit = '-30deg 75deg 100%';
   mv.fieldOfView = 'auto';
   mv.jumpCameraToGoal();
   document.body.classList.remove('iv');
@@ -2000,7 +1914,7 @@ function bindSheet(btnId, sheetId, xId){
   if(sh) sh.addEventListener('click', function(e){ if(e.target===sh) sh.classList.remove('show'); });
 }
 bindSheet('btn-story','sheet-story','story-x');
-bindSheet('btn-cfg','sheet-cfg','cfg-x');
+bindSheet('btn-sum','sheet-story','story-x');   // 頂列「總覽」：故事、規格、你的配置
 
 /* ---------- 展示模式：自動旋轉＋輪播車身色 ---------- */
 var _showTimer=null;
