@@ -477,7 +477,9 @@
           <div class="grp mod-row" id="mod-block" hidden>
             <div class="opt-list" role="group" aria-label="外觀改裝">
               <button type="button" id="mod-smoke" aria-pressed="false">燻黑燈組</button>
+              <button type="button" id="mod-yellow" aria-pressed="false" hidden>頭燈黃光</button>
               <button type="button" id="mod-black" aria-pressed="false" hidden>黑化套件</button>
+              <button type="button" id="mod-roof" aria-pressed="false" hidden>車頂亮黑</button>
               <button type="button" id="mod-mirror" aria-pressed="false" hidden>後視鏡亮黑</button>
               <button type="button" id="mod-handle" aria-pressed="false" hidden>把手亮黑</button>
             </div>
@@ -600,6 +602,9 @@ const INTERIOR = [
 const CALIPER = [
   { name:'紅色', hex:'#c01616' },
   { name:'黑色', hex:'#1a1a1a' },
+  { name:'黃色', hex:'#e3b112' },   // 2026-10-10 加：黃、藍、銀（參考 Porsche PCCB 黃卡鉗）；接在後面，分享連結的序號不變
+  { name:'藍色', hex:'#1f4c9e' },
+  { name:'銀色', hex:'#b8bdc3' },
 ];
 const WHEELS = [
   { name:'原廠銀', hex:'#c8ccd0', metal:0.9,  rough:0.35 },
@@ -725,7 +730,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, handle:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, handle:0, roof:0, yellow:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
 
 const mv = document.getElementById('mv');
 
@@ -742,7 +747,7 @@ function saveCfg(){
   try{
     localStorage.setItem('dg-cfg', JSON.stringify({
       car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
-      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:(plateBlocked(state.plate) ? '' : state.plate), smk:state.smoke, blk:state.black, mir:state.mirror, hdl:state.handle,
+      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:(plateBlocked(state.plate) ? '' : state.plate), smk:state.smoke, blk:state.black, mir:state.mirror, hdl:state.handle, roof:state.roof, ylw:state.yellow,
       scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
@@ -976,6 +981,26 @@ function applyMirror(){
     else if(body){ var b=body.pbrMetallicRoughness; p.setBaseColorFactor(b.baseColorFactor.slice()); p.setMetallicFactor(b.metallicFactor); p.setRoughnessFactor(b.roughnessFactor); }
   });
 }
+/* 雙色車頂（2026-10-10）：tools/roof_split_v1.mjs 把車頂從車漆切成 roof_paint，原廠跟著車身色，勾了變亮黑。
+   MX-5 是軟頂（帆布，原本就黑）沒有這塊；AMG 車頂中間是全景玻璃，只有兩側和前緣是烤漆 */
+function roofMats(){ return mv.model ? mv.model.materials.filter(function(m){ return m.name==='roof_paint'; }) : []; }
+function applyRoof(){
+  var body = state.bodyMats.length ? matAt(state.bodyMats[0]) : null;
+  roofMats().forEach(function(m){ var p=m.pbrMetallicRoughness;
+    if(state.roof){ p.setBaseColorFactor([0.012,0.012,0.013,1]); p.setMetallicFactor(0.6); p.setRoughnessFactor(0.22); }
+    else if(body){ var b=body.pbrMetallicRoughness; p.setBaseColorFactor(b.baseColorFactor.slice()); p.setMetallicFactor(b.metallicFactor); p.setRoughnessFactor(b.roughnessFactor);
+      // 透明漆層也要跟車身一樣（applyExterior 照車漆質感設的），不然車頂的高光會跟車身不一樣亮（Q50、Mazda 3 看得出來）
+      var f=(typeof FINISHES!=='undefined'&&FINISHES[state.finish])?FINISHES[state.finish]:{coat:0.8}, mr=(CARS[activeCar]||{}).minRough||0;
+      if(m.setClearcoatFactor){ m.setClearcoatFactor(f.coat!=null ? f.coat : 0.8); if(m.setClearcoatRoughnessFactor) m.setClearcoatRoughnessFactor(mr ? 0.2 : 0.06); } }
+  });
+}
+/* 頭燈黃光（2026-10-10）：只改頭燈亮起來的顏色，熄火時看不出差別；勾的時候順便把燈打開（不發動引擎、不出聲） */
+var HEAD_WHITE = [1,0.98,0.92], HEAD_YELLOW = [1,0.62,0.03];   // 黃光比白光暗一點（1.3），太亮色調映射會把黃推成奶油白
+function headCol(){ return state.yellow ? HEAD_YELLOW : HEAD_WHITE; }
+function setLightsOnly(on){
+  state.lights = on; applyLights();
+  var lb=document.getElementById('lights-btn'); if(lb){ lb.classList.toggle('on', on); lb.innerHTML = on ? (LIC.flame+' 熄火') : (LIC.key+' 發動引擎'); }
+}
 /* 車門把手（2026-10-09，參考 Porsche「車門把手施以高亮澤黑色烤漆」）：tools/mods_split_v1.mjs（ONLY=handle）切出來。
    door_handle＝車漆做的（原廠跟著車身色），door_handle_trim＝其他材質（W202 黑塑膠、Q50／AMG 鍍鉻飾條，原廠照原樣） */
 var _handleOrig = new WeakMap();
@@ -1001,11 +1026,18 @@ function syncMods(){
     bm.className=state.mirror?'active':''; bm.setAttribute('aria-pressed', state.mirror?'true':'false'); }
   var hasHandle = activeCar>=0 && handleMats().length>0, bh=document.getElementById('mod-handle');
   if(bh){ bh.hidden=!hasHandle; bh.className=state.handle?'active':''; bh.setAttribute('aria-pressed', state.handle?'true':'false'); }
-  if(blk) blk.hidden = !(hasBlack || hasSmoke || hasMirror || hasHandle);
+  var hasRoof = activeCar>=0 && roofMats().length>0, br=document.getElementById('mod-roof');
+  if(br){ br.hidden=!hasRoof; br.className=state.roof?'active':''; br.setAttribute('aria-pressed', state.roof?'true':'false'); }
+  var hasYellow = activeCar>=0, by=document.getElementById('mod-yellow');
+  if(by){ by.hidden=!hasYellow; by.className=state.yellow?'active':''; by.setAttribute('aria-pressed', state.yellow?'true':'false'); }
+  if(blk) blk.hidden = !(hasBlack || hasSmoke || hasMirror || hasHandle || hasRoof || hasYellow);
 }
 document.getElementById('mod-smoke').onclick=function(){ state.smoke=state.smoke?0:1; applySmoke(); syncMods(); refresh(); focusView('front'); };
 document.getElementById('mod-mirror').onclick=function(){ state.mirror=state.mirror?0:1; applyMirror(); syncMods(); refresh(); focusView('mirror'); };
-document.getElementById('mod-handle').onclick=function(){ state.handle=state.handle?0:1; applyHandle(); syncMods(); refresh(); focusView('side'); };
+document.getElementById('mod-handle').onclick=function(){ state.handle=state.handle?0:1; applyHandle(); applyRoof(); syncMods(); refresh(); focusView('side'); };
+document.getElementById('mod-roof').onclick=function(){ state.roof=state.roof?0:1; applyRoof(); syncMods(); refresh(); focusView('roof'); };
+document.getElementById('mod-yellow').onclick=function(){ state.yellow=state.yellow?0:1; if(state.yellow && !state.lights) setLightsOnly(true); else applyLights(); syncMods(); refresh(); focusView('front');
+  if(state.yellow) toast('頭燈換成黃光（燈亮著才看得到）'); };
 document.getElementById('mod-black').onclick=function(){ state.black=state.black?0:1; applyBlack(); syncMods(); refresh(); focusView('front'); };
 function applyLights(){
   if(!mv.model) return;
@@ -1013,12 +1045,12 @@ function applyLights(){
   mv.model.materials.forEach(function(m){
     var n=(m.name||'').toLowerCase(); var col=null;
     if(_car.noLights && _car.noLights.test(n)) return;
-    if(n==='headlight_lens'){ applyLens(m, state.lights, [1,0.98,0.92]); return; }
+    if(n==='headlight_lens'){ applyLens(m, state.lights, headCol(), state.yellow ? 1.3 : undefined); return; }
     if(n==='taillight_lens'){ applyLens(m, state.lights, [0.75,0.01,0.01], 1.1); return; }
     if(/disk|disc|rotor|caliper/.test(n)) return;   // brakedisk 也含 brake，以前發動引擎時碟盤會發紅光
     if(/taillight|tail_light|\bbrake|stoplight|reverselight|glass_tail|\brb1|rueck|chmsl|red_?glass|redglass/.test(n)) col=[0.95,0.03,0.03];               // 尾燈：紅
     else if(/signal|indicator|blinker|strelki|orange_?glass|orangeglass/.test(n)) col=[1,0.45,0];                                                          // 方向燈：橙
-    else if(/headlight|head_light|highbeam|lowbeam|\bfog|foglight|drl|daytime|xenon|phare|glass_fara|movsteer1101|hlight|\blights?\b|gl_emiss|emiss/.test(n)) col=[1,1,0.96]; // 頭燈：乾淨白（避免在夜晚變成橘色光點）
+    else if(/headlight|head_light|highbeam|lowbeam|\bfog|foglight|drl|daytime|xenon|phare|glass_fara|movsteer1101|hlight|\blights?\b|gl_emiss|emiss/.test(n)) col=state.yellow ? HEAD_YELLOW : [1,1,0.96]; // 頭燈：乾淨白（避免在夜晚變成橘色光點）；勾了黃光換黃
     // 半透明的紅色尾燈玻璃（W202、MX-5 的 redglass）：跟切出來的燈罩一樣處理，不然淡紅玻璃一發光就變粉白
     if(col && col[1]<0.1 && (alphaModeOf(m)==='BLEND' || _lensOrig.has(m))){ applyLens(m, state.lights, [0.75,0.01,0.01], 1.1); return; }
     if(col && m.setEmissiveFactor){ m.setEmissiveFactor(state.lights ? col : [0,0,0]); if(m.setEmissiveStrength) m.setEmissiveStrength(state.lights ? 1.6 : 1); }
@@ -1241,6 +1273,8 @@ function buildShareLink(){
   if(state.black && blackMats().length) p.set('blk', 1);
   if(state.mirror && mirrorMats().length) p.set('mir', 1);
   if(state.handle && handleMats().length) p.set('hdl', 1);
+  if(state.roof && roofMats().length) p.set('roof', 1);
+  if(state.yellow) p.set('ylw', 1);
   if(state.plateMat>=0 && state.plate && !plateBlocked(state.plate)) p.set('plate', state.plate);
   p.set('scene', state.scene);
   if(rideMM && rideCar()) p.set('ride', rideMM);
@@ -1277,8 +1311,8 @@ function randomConfig(){
   if(state.caliperMats.length) state.caliperColor=ri(CALIPER.length);
   if(state.wheelMats.length) state.wheelStyle=ri(WHEELS.length);
   if(state.tintMats.length) state.tint=ri(TINTS.length);
-  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0; state.handle=handleMats().length ? ri(2) : 0;
-  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); syncMods(); refresh();
+  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0; state.handle=handleMats().length ? ri(2) : 0; state.roof=roofMats().length ? ri(2) : 0;
+  applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); syncMods(); refresh();
   toast(LIC.dice+' 幫你配了一套！');
 }
 var randBtn=document.getElementById('rand-btn'); if(randBtn) randBtn.onclick=randomConfig;
@@ -1334,7 +1368,7 @@ function enterFromLobby(i){
   if(savedCfg && savedCfg.car===i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
-    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate, smk:savedCfg.smk, blk:savedCfg.blk, mir:savedCfg.mir, hdl:savedCfg.hdl };
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate, smk:savedCfg.smk, blk:savedCfg.blk, mir:savedCfg.mir, hdl:savedCfg.hdl, roof:savedCfg.roof, ylw:savedCfg.ylw };
     pendingRide = savedCfg.ride || 0;
     if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
@@ -1365,6 +1399,8 @@ function parseShareURL(){
   if(p.has('blk')) cfg.blk=+p.get('blk');
   if(p.has('mir')) cfg.mir=+p.get('mir');
   if(p.has('hdl')) cfg.hdl=+p.get('hdl');
+  if(p.has('roof')) cfg.roof=+p.get('roof');
+  if(p.has('ylw')) cfg.ylw=+p.get('ylw');
   if(p.has('plate')){ var _pl=cleanPlate(p.get('plate')); if(!plateBlocked(_pl)) cfg.plate=_pl; }
   // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
@@ -1413,7 +1449,7 @@ function switchCar(i){
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
   _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code); setMatPick(false);
-  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0;
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
@@ -1506,7 +1542,7 @@ function onModelLoad(){
   state.plateMat = -1;
   if(activeCar>=0) mats.forEach(function(m,i){ if(/^plate_print(@|$)/.test(m.name||'')) state.plateMat=i; });
   var pblk=document.getElementById('plate-block'); if(pblk) pblk.hidden = state.plateMat<0;
-  applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); syncMods();
+  applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); syncMods();
   if(typeof pendingCfg!=='undefined' && pendingCfg){
     var c=pendingCfg; pendingCfg=null;
     if(c.ext!=null){ if((''+c.ext).charAt(0)==='#'){ state.extHex=c.ext; } else { state.ext=+c.ext; state.extHex=null; } }
@@ -1520,7 +1556,9 @@ function onModelLoad(){
     if(c.blk!=null) state.black = (+c.blk && blackMats().length) ? 1 : 0;
     if(c.mir!=null) state.mirror = (+c.mir && mirrorMats().length) ? 1 : 0;
     if(c.hdl!=null) state.handle = (+c.hdl && handleMats().length) ? 1 : 0;
-    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); syncMods(); refresh();
+    if(c.roof!=null) state.roof = (+c.roof && roofMats().length) ? 1 : 0;
+    if(c.ylw!=null) state.yellow = +c.ylw ? 1 : 0;
+    applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); syncMods(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
   }
@@ -1612,6 +1650,7 @@ function applyExterior(){
   });
   if(typeof applyMirror==='function') applyMirror();
   if(typeof applyHandle==='function') applyHandle();
+  if(typeof applyRoof==='function') applyRoof();
   if(typeof WHEELS!=='undefined' && WHEELS[state.wheelStyle] && WHEELS[state.wheelStyle].body) applyWheel();
 }
 function applyInterior(){
@@ -1712,6 +1751,8 @@ function refresh(){
     (activeCar>=0 ? row('燈組', state.smoke ? '燻黑' : '原廠') : '')+
     (blackMats().length ? row('亮面飾條', state.black ? '黑化' : '原廠') : '')+
     (handleMats().length ? row('車門把手', state.handle ? '亮黑' : '原廠') : '')+
+    (roofMats().length ? row('車頂', state.roof ? '亮黑' : '車身色') : '')+
+    (activeCar>=0 ? row('頭燈光色', state.yellow ? '黃光' : '白光') : '')+
     (mirrorMats().length ? row('車外後視鏡', (!!(CARS[activeCar]||{}).mirrorBlack !== !!state.mirror) ? '亮黑' : '車身色') : '')+
     (state.plateMat>=0 ? row('車牌', (state.plate && !plateBlocked(state.plate)) ? state.plate : '原廠') : '')+
     specs;
@@ -1729,7 +1770,7 @@ function syncSections(){
   set('val-wheel', state.wheelMats.length ? WHEELS[state.wheelStyle].name : (state.caliperMats.length ? CALIPER[state.caliperColor].name+'卡鉗' : ''));
   var oi=document.getElementById('opt-int'); if(oi) oi.hidden = !state.intMats.length;
   var om=document.getElementById('opt-mods'); if(om) om.hidden = !(vis('mod-block') || vis('tint-block') || vis('ride-row'));
-  var n = (state.smoke?1:0) + (state.black&&blackMats().length?1:0) + (state.mirror&&mirrorMats().length?1:0) + (state.handle&&handleMats().length?1:0)
+  var n = (state.smoke?1:0) + (state.black&&blackMats().length?1:0) + (state.mirror&&mirrorMats().length?1:0) + (state.handle&&handleMats().length?1:0) + (state.roof&&roofMats().length?1:0) + (state.yellow?1:0)
         + (state.tint&&state.tintMats.length?1:0) + ((typeof rideMM!=='undefined'&&rideMM&&rideCar())?1:0);
   set('val-mods', n ? ('已選 '+n+' 項') : '原廠');
   var op=document.getElementById('opt-plate'); if(op) op.hidden = !vis('plate-block');
@@ -1793,7 +1834,7 @@ window.addEventListener('drop', e=>{
 
 /* ---------- 選項連動鏡頭（2026-10-09，學 Porsche 配置器：點輪圈轉到側面、點尾燈轉到車尾） ----------
    只在使用者自己點選項時轉；車內視角、看展示時不動。轉之前先停自動旋轉、把轉盤歸零，不然角度會跟著跑 */
-var VIEWS = { side:[75,82], front:[-32,80], rear:[148,80], mirror:[-48,78], plate:[180,84] };
+var VIEWS = { side:[75,82], front:[-32,80], rear:[148,80], mirror:[-48,78], plate:[180,84], roof:[-35,50] };
 function focusView(k){
   var v = VIEWS[k]; if(!v || document.body.classList.contains('iv') || activeCar<0) return;
   if(mv.hasAttribute('auto-rotate')) rotBtn.onclick();
@@ -1803,15 +1844,15 @@ function focusView(k){
 }
 /* 按住看原廠（2026-10-09，學 Porsche 的比較功能）：按下時把這台車套回剛換上時的樣子，放開還原；不存檔、不改分享連結 */
 var _cmpSaved = null;
-var CMP_KEYS = ['ext','extHex','int','intHex','caliperColor','wheelStyle','finish','tint','plate','smoke','black','mirror','handle'];
-function applyLook(){ applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); }
+var CMP_KEYS = ['ext','extHex','int','intHex','caliperColor','wheelStyle','finish','tint','plate','smoke','black','mirror','handle','roof','yellow'];
+function applyLook(){ applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); applyLights(); }
 function compareOn(){
   if(_cmpSaved || activeCar<0) return;
   var c = CARS[activeCar];
   _cmpSaved = {}; CMP_KEYS.forEach(function(k){ _cmpSaved[k] = state[k]; }); _cmpSaved.ride = rideMM;
   state.ext = DEFAULT_EXT; state.extHex = c.realColor ? c.realColor.hex : null; state.int = 0; state.intHex = null;
   state.caliperColor = c.calIdx!=null ? c.calIdx : 0; state.wheelStyle = c.wheelIdx!=null ? c.wheelIdx : 0; state.finish = 0; state.tint = 0;
-  state.plate = ''; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0;
+  state.plate = ''; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0;
   applyLook(); if(rideCar()) applyRide(0);
   document.body.classList.add('comparing');
 }
