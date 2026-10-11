@@ -242,6 +242,17 @@
   #sw-wheel .swatch::before{ content:''; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 0 6px #1c1d1f, inset 0 0 0 7px rgba(255,255,255,.14); pointer-events:none; z-index:1; }
   #ext-tiers{ display:grid; gap:20px; }
 
+  /* 輪圈造型：縮圖格子（2026-10-11，輪圈庫） */
+  .rim-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); gap:8px; }
+  .rim-tile{ display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px 9px; font-size:12px; line-height:1.3; white-space:nowrap; color:var(--ink); text-align:center;
+    background:var(--surface); border:1px solid var(--line); border-radius:8px; cursor:pointer; transition:border-color .15s; }
+  .rim-tile img{ width:58px; height:58px; border-radius:50%; object-fit:cover; background:var(--chip); }
+  .rim-tile:hover{ border-color:var(--line-strong); }
+  .rim-tile.active{ border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink); }
+  .rim-tile[aria-busy=true] img{ opacity:.35; }
+  .rim-tile:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  #rim-lib{ position:absolute; left:0; top:0; width:2px; height:2px; overflow:hidden; opacity:0; pointer-events:none; }
+  #rim-lib model-viewer{ width:2px; height:2px; }
   /* 分段切換：隔熱紙、車漆質感 */
   .seg{ display:flex; border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; }
   .seg button{ flex:1 1 0; min-height:40px; padding:0 10px; font-size:13.5px; background:transparent; border:none; color:var(--ink); cursor:pointer; transition:background .15s; }
@@ -425,6 +436,7 @@
           camera-orbit="-30deg 75deg 100%" max-camera-orbit="auto 89deg auto"
           min-field-of-view="20deg">
         </model-viewer>
+        <div id="rim-lib" aria-hidden="true"></div>
         <div id="cmp-tip" role="status">原廠</div>
         <div class="controls" role="toolbar" aria-label="展示控制">
           <button id="lights-btn"><svg class="lic" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></svg> 發動引擎</button>
@@ -460,7 +472,7 @@
       <section class="opt" id="opt-wheel">
         <h2><button type="button" class="opt-h" aria-expanded="true" aria-controls="ob-wheel"><span class="t">輪圈與卡鉗</span><span class="val" id="val-wheel"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
         <div class="opt-b" id="ob-wheel">
-          <div class="grp" id="rim-block" hidden><div class="grp-h">輪圈造型 <output id="rim-val">原廠</output></div><div class="seg" id="rim-row" role="group" aria-label="輪圈造型"></div></div>
+          <div class="grp" id="rim-block" hidden><div class="grp-h">輪圈造型 <output id="rim-val">原廠</output></div><div class="rim-grid" id="rim-row" role="group" aria-label="輪圈造型"></div></div>
           <div class="grp" id="wheel-block" style="display:none"><div class="grp-h">輪圈顏色</div><div class="swatches" id="sw-wheel"></div></div>
           <div class="grp" id="caliper-block" style="display:none"><div class="grp-h">煞車卡鉗</div><div class="swatches" id="sw-caliper"></div></div>
         </div>
@@ -734,7 +746,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, handle:0, roof:0, yellow:0, stripe:0, rim:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, handle:0, roof:0, yellow:0, stripe:0, rim:'', tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
 
 const mv = document.getElementById('mv');
 
@@ -1034,36 +1046,115 @@ function syncStripeRow(){
   Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===state.stripe?'active':''); x.setAttribute('aria-pressed', xi===state.stripe ? 'true' : 'false'); });
   var v=document.getElementById('stripe-val'); if(v) v.textContent = state.stripe ? (STRIPES[state.stripe].name+'色雙條') : '無';
 }
-/* 輪圈造型（2026-10-11）：make_wheels_v1.py 在 Blender 產生三款輪圈（每台照原廠輪圈的半徑、寬度、卡鉗深度量身做），
-   add_wheels_v1.mjs 併進模型：新輪圈叫 mod_rim_<造型>_<輪子>；原廠輪圈和正面的中心蓋、廠徽拆到 stock_rim_N。
-   model-viewer 沒有開放「藏節點」的 API，這裡用它內部的 three.js 場景切 visible（版本鎖在 3.5.0）。
-   AR 只留 WebXR 和 Quick Look（都照目前畫面），Scene Viewer 會直接讀模型檔、四套輪圈疊在一起，拿掉 */
-var RIMS = [ { name:'原廠' }, { name:'Y 字雙輻', key:'y5' }, { name:'十輻', key:'s10' }, { name:'五輻', key:'f5' } ];
-function mvScene(){ var k = Object.getOwnPropertySymbols(mv).find(function(x){ return x.description==='scene'; }); return k ? mv[k] : null; }
-function rimAvail(){ var sc=mvScene(), has=false; if(sc && mv.model) sc.traverse(function(o){ if(/^mod_rim_/.test(o.name)) has=true; }); return has; }
+/* 輪圈造型（2026-10-11 第二版）：輪圈庫 wheels/<key>.glb，選到才載入。
+   第一版用 Blender 程式產生三款，本人說「太假」，拿掉。現在的來源：九台車模本身的原廠輪圈（tools/extract_rim_v1.mjs 抽出來，
+   座標統一成「原點＝輪圈外緣中心、+X 往外、公尺」）。
+   載入：另開一個 2px 透明的 model-viewer 讀輪圈檔（跟主畫面同一套 three.js），把它的網格複製四份掛到主模型底下，
+   照這台車的輪位（WHEEL_FIT，tools/wheel_fit_v1.mjs 量的）放：半徑照原廠輪圈縮放；卡鉗那段半徑如果太深，往輪軸方向壓扁，卡鉗才不會穿出輪輻。
+   原廠輪圈（stock_rim_N 節點）等新輪圈裝好才藏，中間不會有一瞬間沒輪圈。model-viewer 沒有開放場景 API，這裡用它內部的 three.js（版本鎖 3.5.0）。 */
+var WHEEL_FIT = {"w202.glb":{"k":100,"up":2,"ln":1,"lat":0,"w":[{"c":[-73.941607,-144.351627,32.302127],"s":-1,"o":-83.736979,"R":0.2114,"d":0.0345,"b":0.1231},{"c":[73.937074,-144.351627,32.283163],"s":1,"o":83.741776,"R":0.2114,"d":0.0344,"b":0.1234},{"c":[-73.932125,124.068143,32.036539],"s":-1,"o":-83.736979,"R":0.2115,"d":0.0344,"b":0.1233},{"c":[73.937074,124.068143,32.036539],"s":1,"o":83.741776,"R":0.2115,"d":0.0344,"b":0.1233}]},"mx5.glb":{"k":100,"up":2,"ln":1,"lat":0,"w":[{"c":[-73.957007,-121.359052,29.910857],"s":-1,"o":-83.599755,"R":0.2224,"d":0.0771,"b":0.1494},{"c":[74.064667,-121.359052,29.910857],"s":1,"o":83.715871,"R":0.2224,"d":0.0771,"b":0.1496},{"c":[-73.957007,111.081056,29.910787],"s":-1,"o":-83.599755,"R":0.2224,"d":0.0771,"b":0.1313},{"c":[74.064667,111.081056,29.910787],"s":1,"o":83.715871,"R":0.2224,"d":0.0776,"b":0.1313}]},"macan.glb":{"k":3.846153846153846,"up":1,"ln":0,"lat":2,"w":[{"c":[-14.593165,1.534766,-45.72541],"s":1,"o":-45.200758,"R":0.2927,"d":0.0974,"b":0.2275},{"c":[-3.860935,1.535877,-45.776527],"s":1,"o":-45.251876,"R":0.2927,"d":0.0974,"b":0.2276},{"c":[-14.593165,1.535877,-52.001643],"s":-1,"o":-52.5256,"R":0.2927,"d":0.0972,"b":0.2275},{"c":[-3.860935,1.534766,-51.993309],"s":-1,"o":-52.517822,"R":0.2927,"d":0.0975,"b":0.2276}]},"x5.glb":{"k":0.01,"up":1,"ln":2,"lat":0,"w":[{"c":[-0.008089,0.002514,0.014612],"s":-1,"o":-0.009529,"R":0.2665,"d":0.052,"b":0.2093},{"c":[0.008089,0.002514,-0.014681],"s":1,"o":0.009529,"R":0.2665,"d":0.052,"b":0.2015},{"c":[-0.008089,0.002514,-0.014681],"s":-1,"o":-0.009529,"R":0.2665,"d":0.052,"b":0.2015},{"c":[0.008089,0.002514,0.014612],"s":1,"o":0.009529,"R":0.2665,"d":0.052,"b":0.2093}]},"q50.glb":{"k":1,"up":1,"ln":2,"lat":0,"w":[{"c":[0.778835,0.329851,1.49996],"s":1,"o":0.906075,"R":0.2652,"d":0.0548,"b":0.1924},{"c":[-0.777712,0.329851,1.49996],"s":-1,"o":-0.904849,"R":0.2652,"d":0.0523,"b":0.1924},{"c":[-0.778332,0.329851,-1.35638],"s":-1,"o":-0.905469,"R":0.2652,"d":0.0595,"b":0.1858},{"c":[0.777905,0.329851,-1.35638],"s":1,"o":0.905041,"R":0.2652,"d":0.0592,"b":0.1867}]},"mazda3.glb":{"k":0.01,"up":1,"ln":2,"lat":0,"w":[{"c":[0.00778,0.00344,0.01237],"s":1,"o":0.008911,"R":0.2516,"d":0.0534,"b":0.1857},{"c":[-0.007776,0.00344,0.01237],"s":-1,"o":-0.008907,"R":0.2516,"d":0.0534,"b":0.1855},{"c":[0.00751,0.003442,-0.014999],"s":1,"o":0.008871,"R":0.2516,"d":0.0643,"b":0.1854},{"c":[-0.007514,0.00344,-0.015001],"s":-1,"o":-0.008875,"R":0.2516,"d":0.0644,"b":0.1856}]},"mustang.glb":{"k":0.01,"up":1,"ln":2,"lat":0,"w":[{"c":[0.007933,0.003452,0.01449],"s":1,"o":0.009345,"R":0.268,"d":0.0917,"b":0.2111},{"c":[-0.007933,0.003452,0.01449],"s":-1,"o":-0.009345,"R":0.268,"d":0.0918,"b":0.2111},{"c":[0.008165,0.003537,-0.01271],"s":1,"o":0.009665,"R":0.268,"d":0.1114,"b":0.1951},{"c":[-0.008165,0.003537,-0.01271],"s":-1,"o":-0.009665,"R":0.268,"d":0.1114,"b":0.1951}]},"gt43.glb":{"k":1,"up":1,"ln":2,"lat":0,"w":[{"c":[0.824956,0.330035,1.320003],"s":1,"o":0.964758,"R":0.2689,"d":null,"b":0},{"c":[-0.824956,0.330035,1.319997],"s":-1,"o":-0.964758,"R":0.2689,"d":null,"b":0},{"c":[-0.824956,0.330034,-1.420003],"s":-1,"o":-0.964758,"R":0.2689,"d":null,"b":0},{"c":[0.824956,0.330034,-1.419997],"s":1,"o":0.964758,"R":0.2689,"d":null,"b":0}]},"cx5.glb":{"k":1,"up":1,"ln":2,"lat":0,"w":[{"c":[0.801539,0.359769,1.313612],"s":1,"o":0.902122,"R":0.2573,"d":null,"b":0},{"c":[0.801539,0.359866,-1.353008],"s":1,"o":0.902122,"R":0.2574,"d":null,"b":0},{"c":[-0.801676,0.359866,-1.351843],"s":-1,"o":-0.902162,"R":0.2584,"d":null,"b":0},{"c":[-0.801676,0.359769,1.313612],"s":-1,"o":-0.902162,"R":0.2573,"d":null,"b":0}]}};
+var RIM_LIB = [{"key":"oem-w202","name":"W202 原廠","R":0.2127,"d":[0.001,0.001,0.003,0.026,0.027,0.027,0.027,0.002,0.002,0.003,0.004,0.013,0.023,0.024,0.024,0.025,0.028,0.036,0.188,0.196]},{"key":"oem-mx5","name":"MX-5 原廠","R":0.2224,"d":[0.021,0.021,0.03,0.03,0.03,0.03,0.03,0.03,0.03,0.025,0.025,0.026,0.026,0.031,0.031,0.037,0.054,0.18,0.185,0.193]},{"key":"oem-macan","name":"Macan 原廠","R":0.2928,"d":[0.055,0,0.092,0.092,0.092,0.094,0.147,0.147,0.18,0.053,0.18,0.18,0.18,0.18,0.18,0.042,0.048,0.037,0.273,0.273]},{"key":"oem-x5","name":"BMW X5 原廠","R":0.2666,"d":[0,0,0.028,0.05,0.087,0.05,0.05,0.047,0.042,0,0.019,0.035,0.037,0,0,0,0.05,0.288,0.274,0.288]},{"key":"oem-q50","name":"Q50 原廠","R":0.2656,"d":[0.031,0.032,0.071,0.065,0.065,0.077,0.071,0.054,0.036,0.028,0.025,0.023,0.023,0.023,0.023,0.025,0.22,0.036,0.223,0.254]},{"key":"oem-mazda3","name":"Mazda 3 原廠","R":0.2517,"d":[0.037,0.037,0.042,0.063,0.063,0.063,0.036,0.058,0.056,0.053,0.051,0.05,0,0.05,0.05,0.053,0.071,0.069,0.226,0.226]},{"key":"oem-mustang","name":"Mustang 原廠","R":0.2746,"d":[0.172,0.07,0.078,0.08,0.08,0.148,0.085,0.074,0.081,0.077,0.077,0.178,0.178,0.07,0.07,0.296,0.072,0.298,0.295,0.299]},{"key":"oem-gt43","name":"AMG GT 原廠","R":0.2689,"d":[0.168,0.058,0.099,0.168,0.168,0.125,0.112,0.092,0.07,0.05,0.05,0,0,0,0,0,0.118,0.28,0.254,0.28]},{"key":"oem-cx5","name":"CX-5 原廠","R":0.2577,"d":[0.164,0.023,0.067,0.067,0.067,0.067,0.017,0.05,0.049,0.048,0.046,0.047,0,0.047,0.046,0.043,0.05,0.199,0.201,0.164]}];
+var RIM_VER = '1';
+function mvScene(el){ el = el || mv; var k = Object.getOwnPropertySymbols(el).find(function(x){ return x.description==='scene'; }); return k ? el[k] : null; }
+function carKey(){ return activeCar>=0 ? CARS[activeCar].file.replace(/\.glb$/,'') : ''; }
+function rimAvail(){ return typeof WHEEL_FIT!=='undefined' && activeCar>=0 && !!WHEEL_FIT[CARS[activeCar].file]; }   // refresh() 比這段早跑：資料還沒定義時當作沒有
+function rimInfo(key){ if(typeof RIM_LIB==='undefined') return null; for(var i=0;i<RIM_LIB.length;i++) if(RIM_LIB[i].key===key) return RIM_LIB[i]; return null; }
+function rimChoices(){
+  if(!rimAvail()) return [];
+  var own = 'oem-' + carKey(), out = [ { key:'', name:'原廠', thumb:own } ];
+  // 格子只寫車名（「Mazda 3 原廠」放不下一行），完整名稱在標題的目前選擇和總覽裡
+  RIM_LIB.forEach(function(r){ if(r.key!==own) out.push({ key:r.key, name:r.name.replace(/ 原廠$/, ''), thumb:r.key }); });
+  return out;
+}
+function rimName(key){ if(!key) return '原廠'; var r=rimInfo(key); return r ? r.name : '原廠'; }
+var _rimCache = {}, _rimToken = 0, _curLib = null;
+function loadRimLib(key){
+  if(_rimCache[key]) return _rimCache[key];
+  _rimCache[key] = new Promise(function(res, rej){
+    var el = document.createElement('model-viewer');
+    el.setAttribute('loading', 'eager'); el.setAttribute('interaction-prompt', 'none'); el.setAttribute('aria-hidden', 'true');
+    el.addEventListener('load', function(){
+      var sc = mvScene(el), root = null;
+      if(sc && sc._model) sc._model.traverse(function(o){ if(!root && o.name==='rim') root = o; });
+      if(!root){ rej(new Error('no rim')); return; }
+      // 輪圈本體＝三角形最多的那個材質（輪圈顏色只上這個，中心蓋、廠徽照原樣）
+      var tri = new Map();
+      root.traverse(function(o){ if(o.isMesh && o.geometry){ var g=o.geometry, n=(g.index ? g.index.count : g.attributes.position.count)/3; tri.set(o.material, (tri.get(o.material)||0) + n); } });
+      var body = null, best = -1; tri.forEach(function(n, m){ if(n > best){ best = n; body = m; } });
+      res({ key:key, root:root, body:body });
+    }, { once:true });
+    el.addEventListener('error', function(e){ delete _rimCache[key]; rej(e); }, { once:true });
+    el.setAttribute('src', 'wheels/' + key + '.glb?v=' + RIM_VER);
+    document.getElementById('rim-lib').appendChild(el);
+  });
+  return _rimCache[key];
+}
+function det3(a, b, c){ return a[0]*(b[1]*c[2]-b[2]*c[1]) - a[1]*(b[0]*c[2]-b[2]*c[0]) + a[2]*(b[0]*c[1]-b[1]*c[0]); }
+function clearLibRims(host){ var rm=[]; host.traverse(function(o){ if(o.userData && o.userData.libRim) rm.push(o); }); rm.forEach(function(o){ o.parent.remove(o); }); }
+function placeLibRims(lib, host, fit){
+  var info = rimInfo(lib.key);
+  fit.w.forEach(function(w){
+    var E = function(ax, sg){ var e=[0,0,0]; e[ax]=sg; return e; };
+    var X = E(fit.lat, w.s), Y = E(fit.up, 1), Z = E(fit.ln, w.s);
+    if(det3(X, Y, Z) < 0) Z = Z.map(function(v){ return -v; });
+    var sR = w.R / info.R, sX = sR;
+    if(w.d != null){   // 卡鉗那段半徑（到 brakeR 再多 5%）裡，輪圈最深的點不能超過卡鉗深度（留 4 mm）
+      var top = Math.min(19, Math.ceil((w.b / w.R + 0.05) * 20)), need = 0;
+      for(var i = 4; i <= top; i++) need = Math.max(need, info.d[i] || 0);
+      need *= sR; var budget = w.d - 0.004;
+      if(need > budget && need > 0) sX = Math.max(sR * 0.3, sR * budget / need);
+    }
+    var k = fit.k, t = w.c.slice(); t[fit.lat] = w.o;
+    var o = lib.root.clone(true); o.userData.libRim = true; o.matrixAutoUpdate = false;
+    o.matrix.fromArray([X[0]*k*sX, X[1]*k*sX, X[2]*k*sX, 0,  Y[0]*k*sR, Y[1]*k*sR, Y[2]*k*sR, 0,  Z[0]*k*sR, Z[1]*k*sR, Z[2]*k*sR, 0,  t[0], t[1], t[2], 1]);
+    o.matrixWorldNeedsUpdate = true; host.add(o);
+  });
+}
+function setStock(host, on){ host.traverse(function(o){ if(/^stock_rim_/.test(o.name)) o.visible = on; }); }
+function rerender(){ var sc=mvScene(); if(sc){ if(sc.updateShadow) sc.updateShadow(); if(sc.queueRender) sc.queueRender(); } }
 function applyRim(){
   syncRimRow();
-  var sc=mvScene(); if(!sc) return;
-  var key = (RIMS[state.rim] || RIMS[0]).key || '';
-  sc.traverse(function(o){
-    if(/^stock_rim_/.test(o.name)) o.visible = !key;
-    else { var m=/^mod_rim_([a-z0-9]+)_/.exec(o.name); if(m) o.visible = (m[1]===key); }
-  });
-  if(sc.queueRender) sc.queueRender();
+  var sc = mvScene(); if(!sc || !sc._model || !rimAvail()) return;
+  var host = sc._model, key = state.rim || '', tok = ++_rimToken, model = mv.model, fit = WHEEL_FIT[CARS[activeCar].file];
+  if(!key || !rimInfo(key)){ clearLibRims(host); setStock(host, true); _curLib = null; rerender(); return; }
+  var tile = document.querySelector('#rim-row .rim-tile[data-key="' + key + '"]'); if(tile) tile.setAttribute('aria-busy', 'true');
+  loadRimLib(key).then(function(lib){
+    if(tile) tile.removeAttribute('aria-busy');
+    if(tok !== _rimToken || mv.model !== model) return;
+    clearLibRims(host); placeLibRims(lib, host, fit); setStock(host, false); _curLib = lib; applyLibColor(); rerender();
+  }, function(){ if(tile) tile.removeAttribute('aria-busy'); if(tok === _rimToken){ state.rim = ''; syncRimRow(); toast('這款輪圈載入失敗，換回原廠'); } });
+}
+// 輪圈顏色也套到換上的輪圈（只上輪圈本體，中心蓋、廠徽照原樣）
+var _libOrig = new WeakMap();
+function applyLibColor(){
+  var lib = _curLib; if(!lib || !lib.body || !lib.body.color) return;
+  var m = lib.body; if(!_libOrig.has(m)) _libOrig.set(m, { c:m.color.clone(), mt:m.metalness, r:m.roughness, tex:!!m.map });
+  var o = _libOrig.get(m), wc = activeCar>=0 ? CARS[activeCar] : {};
+  // 顏色停在這台車的預設（原廠銀，或 Macan 的消光黑）＝換上的輪圈照它自己原本的樣子：有貼圖的照原樣，沒貼圖的套原廠銀（網站載入時原廠輪圈就是這樣上色的）
+  var isDefault = state.wheelStyle===0 || (wc.wheelIdx!=null && wc.wheelIdx===state.wheelStyle);
+  var w = isDefault ? WHEELS[0] : (WHEELS[state.wheelStyle] || WHEELS[0]);
+  if(o.tex && isDefault){ m.color.copy(o.c); m.metalness = o.mt; m.roughness = o.r; }
+  else if(w.body){ var bm = state.bodyMats.length ? matAt(state.bodyMats[0]) : null; if(bm){ var f = bm.pbrMetallicRoughness.baseColorFactor; m.color.setRGB(f[0], f[1], f[2]); m.metalness = bm.pbrMetallicRoughness.metallicFactor; m.roughness = bm.pbrMetallicRoughness.roughnessFactor; } }
+  else { var lin = hexToLinear(w.hex); m.color.setRGB(lin[0], lin[1], lin[2]); m.metalness = w.metal; m.roughness = w.rough; }
+  rerender();
 }
 function buildRim(){
-  var box=document.getElementById('rim-row'); if(!box) return; box.innerHTML='';
-  RIMS.forEach(function(t,i){ var b=document.createElement('button'); b.type='button'; b.textContent=t.name;
-    b.onclick=function(){ state.rim=i; applyRim(); syncMods(); refresh(); focusView('side'); }; box.appendChild(b); });
-  syncRimRow();
+  var box = document.getElementById('rim-row'); if(!box) return;
+  box.innerHTML = ''; box.dataset.car = activeCar>=0 ? CARS[activeCar].file : '';
+  rimChoices().forEach(function(t){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'rim-tile'; b.dataset.key = t.key;
+    b.innerHTML = '<img src="wheels/thumb-' + t.thumb + '.webp?v=' + RIM_VER + '" alt="" width="58" height="58" loading="lazy" decoding="async"><span>' + t.name + '</span>';
+    b.onclick = function(){ state.rim = t.key; applyRim(); syncMods(); refresh(); focusView('side'); };
+    box.appendChild(b);
+  });
 }
 function syncRimRow(){
-  var box=document.getElementById('rim-row'); if(!box) return;
-  Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===state.rim?'active':''); x.setAttribute('aria-pressed', xi===state.rim ? 'true' : 'false'); });
-  var v=document.getElementById('rim-val'); if(v) v.textContent = (RIMS[state.rim] || RIMS[0]).name;
-  var blk=document.getElementById('rim-block'); if(blk) blk.hidden = !(activeCar>=0 && rimAvail());
+  var box = document.getElementById('rim-row'); if(!box) return;
+  if(box.dataset.car !== (activeCar>=0 ? CARS[activeCar].file : '')) buildRim();
+  Array.prototype.forEach.call(box.children, function(x){ var on = x.dataset.key === (state.rim || ''); x.classList.toggle('active', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  var v = document.getElementById('rim-val'); if(v) v.textContent = rimName(state.rim);
+  var blk = document.getElementById('rim-block'); if(blk) blk.hidden = !rimAvail();
 }
-buildRim();
 buildStripe();   // STRIPES 在這段才定義，按鈕要在這之後才建得出來
 /* 頭燈黃光（2026-10-10）：只改頭燈亮起來的顏色，熄火時看不出差別；勾的時候順便把燈打開（不發動引擎、不出聲） */
 var HEAD_WHITE = [1,0.98,0.92], HEAD_YELLOW = [1,0.62,0.03];   // 黃光比白光暗一點（1.3），太亮色調映射會把黃推成奶油白
@@ -1352,7 +1443,7 @@ function buildShareLink(){
   if(state.roof && roofMats().length) p.set('roof', 1);
   if(state.yellow) p.set('ylw', 1);
   if(state.stripe && stripeMats().length) p.set('stp', state.stripe);
-  if(state.rim && rimAvail()) p.set('rim', state.rim);
+  if(state.rim && rimAvail() && rimInfo(state.rim)) p.set('rim', state.rim);
   if(state.plateMat>=0 && state.plate && !plateBlocked(state.plate)) p.set('plate', state.plate);
   p.set('scene', state.scene);
   if(rideMM && rideCar()) p.set('ride', rideMM);
@@ -1389,7 +1480,7 @@ function randomConfig(){
   if(state.caliperMats.length) state.caliperColor=ri(CALIPER.length);
   if(state.wheelMats.length) state.wheelStyle=ri(WHEELS.length);
   if(state.tintMats.length) state.tint=ri(TINTS.length);
-  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0; state.handle=handleMats().length ? ri(2) : 0; state.roof=roofMats().length ? ri(2) : 0; state.stripe=stripeMats().length ? ri(STRIPES.length) : 0; state.rim=rimAvail() ? ri(RIMS.length) : 0;
+  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0; state.handle=handleMats().length ? ri(2) : 0; state.roof=roofMats().length ? ri(2) : 0; state.stripe=stripeMats().length ? ri(STRIPES.length) : 0; var _rc=rimChoices(); state.rim=_rc.length ? _rc[ri(_rc.length)].key : '';
   applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); applyRim(); syncMods(); refresh();
   toast(LIC.dice+' 幫你配了一套！');
 }
@@ -1480,7 +1571,7 @@ function parseShareURL(){
   if(p.has('roof')) cfg.roof=+p.get('roof');
   if(p.has('ylw')) cfg.ylw=+p.get('ylw');
   if(p.has('stp')) cfg.stp=+p.get('stp');
-  if(p.has('rim')) cfg.rim=+p.get('rim');
+  if(p.has('rim')) cfg.rim=p.get('rim');
   if(p.has('plate')){ var _pl=cleanPlate(p.get('plate')); if(!plateBlocked(_pl)) cfg.plate=_pl; }
   // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
@@ -1529,7 +1620,7 @@ function switchCar(i){
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
   _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code); setMatPick(false);
-  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0; state.stripe = 0; state.rim = 0;
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0; state.stripe = 0; state.rim = '';
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
@@ -1602,7 +1693,6 @@ function onModelLoad(){
   // 輪圈：僅指定 wheel 的車才有
   state.wheelMats = [];
   if (carCfg.wheel){ mats.forEach((m,i)=>{ var sp=carCfg.wheel; var hit=(sp instanceof RegExp)? sp.test(m.name||'') : (m.name===sp); if(hit) state.wheelMats.push(i); }); }
-  mats.forEach(function(m,i){ if(m.name==='mod_rim') state.wheelMats.push(i); });   // 2026-10-11 新輪圈也吃輪圈顏色
   var wblk=document.getElementById('wheel-block'); if(wblk) wblk.style.display = state.wheelMats.length ? 'block' : 'none';
   bodySel.value = state.bodyMats[0]; intSel.value = state.intMats[0];
   bodySel.onchange = ()=>{ state.bodyMats = [+bodySel.value]; applyExterior(); };
@@ -1640,7 +1730,7 @@ function onModelLoad(){
     if(c.roof!=null) state.roof = (+c.roof && roofMats().length) ? 1 : 0;
     if(c.ylw!=null) state.yellow = +c.ylw ? 1 : 0;
     if(c.stp!=null) state.stripe = (STRIPES[+c.stp] && stripeMats().length) ? +c.stp : 0;
-    if(c.rim!=null) state.rim = (RIMS[+c.rim] && rimAvail()) ? +c.rim : 0;
+    if(c.rim!=null) state.rim = (rimAvail() && rimInfo(''+c.rim) && rimChoices().some(function(x){ return x.key===''+c.rim; })) ? ''+c.rim : '';
     applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); applyRim(); syncMods(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
@@ -1771,13 +1861,14 @@ function applyWheel(){
     // 有貼圖的輪圈（CX-5 掃描模型）：顏色是乘上去的，選「原廠銀」就照原樣
     var _wc = activeCar>=0 ? CARS[activeCar] : {};
     // 原廠那一格（Macan 是消光黑 wheelIdx）照原本的材質，不用色票的近似值
-    if(m.name!=='mod_rim' && ((o.tex && state.wheelStyle===0) || (_wc.wheelIdx!=null && _wc.wheelIdx===state.wheelStyle))){ p.setBaseColorFactor(o.base); p.setMetallicFactor(o.metal); p.setRoughnessFactor(o.rough); return; }
+    if((o.tex && state.wheelStyle===0) || (_wc.wheelIdx!=null && _wc.wheelIdx===state.wheelStyle)){ p.setBaseColorFactor(o.base); p.setMetallicFactor(o.metal); p.setRoughnessFactor(o.rough); return; }
     if(w.body){ var bm = state.bodyMats.length ? matAt(state.bodyMats[0]) : null; if(bm){ var bp=bm.pbrMetallicRoughness;
       p.setBaseColorFactor(bp.baseColorFactor.slice()); p.setMetallicFactor(bp.metallicFactor); p.setRoughnessFactor(bp.roughnessFactor); } return; }
     m.pbrMetallicRoughness.setBaseColorFactor([lin[0],lin[1],lin[2],1]);
     m.pbrMetallicRoughness.setMetallicFactor(w.metal);
     m.pbrMetallicRoughness.setRoughnessFactor(w.rough);
   });
+  if(typeof applyLibColor==='function') applyLibColor();
 }
 // 有些模型（如 Macan）的車窗玻璃透明度幾乎是 0，看起來像沒裝玻璃。
 // 把「幾乎透明」的玻璃材質補成淡色半透明玻璃（不動本來就正常的玻璃）。
@@ -1829,7 +1920,7 @@ function refresh(){
     row('車漆質感', (typeof FINISHES!=='undefined'&&FINISHES[state.finish]?FINISHES[state.finish].name:''))+
     (state.intMats.length ? row('內裝顏色', intName) : '')+
     (state.caliperMats.length ? row('煞車卡鉗', CALIPER[state.caliperColor].name) : '')+
-    (rimAvail() ? row('輪圈造型', RIMS[state.rim].name) : '')+
+    (rimAvail() ? row('輪圈造型', rimName(state.rim)) : '')+
     (state.wheelMats.length ? row('輪圈顏色', WHEELS[state.wheelStyle].name) : '')+
     (state.tintMats.length ? row('窗戶隔熱紙', TINTS[state.tint].name) : '')+
     (activeCar>=0 ? row('燈組', state.smoke ? '燻黑' : '原廠') : '')+
@@ -1852,7 +1943,7 @@ function syncSections(){
   function vis(id){ var e=document.getElementById(id); return !!e && !e.hidden && e.style.display!=='none'; }
   function set(id,t){ var e=document.getElementById(id); if(e) e.textContent=t; }
   var ow=document.getElementById('opt-wheel'); if(ow) ow.hidden = !(vis('rim-block') || vis('wheel-block') || vis('caliper-block'));
-  set('val-wheel', (state.rim ? RIMS[state.rim].name+'・' : '') + (state.wheelMats.length ? WHEELS[state.wheelStyle].name : (state.caliperMats.length ? CALIPER[state.caliperColor].name+'卡鉗' : '')));
+  set('val-wheel', (state.rim ? rimName(state.rim)+'・' : '') + (state.wheelMats.length ? WHEELS[state.wheelStyle].name : (state.caliperMats.length ? CALIPER[state.caliperColor].name+'卡鉗' : '')));
   var oi=document.getElementById('opt-int'); if(oi) oi.hidden = !state.intMats.length;
   var om=document.getElementById('opt-mods'); if(om) om.hidden = !(vis('mod-block') || vis('stripe-block') || vis('tint-block') || vis('ride-row'));
   var n = (state.smoke?1:0) + (state.black&&blackMats().length?1:0) + (state.mirror&&mirrorMats().length?1:0) + (state.handle&&handleMats().length?1:0) + (state.roof&&roofMats().length?1:0) + (state.yellow?1:0) + (state.stripe&&stripeMats().length?1:0)
@@ -1942,7 +2033,7 @@ function compareOn(){
   _cmpSaved = {}; CMP_KEYS.forEach(function(k){ _cmpSaved[k] = state[k]; }); _cmpSaved.ride = rideMM;
   state.ext = DEFAULT_EXT; state.extHex = c.realColor ? c.realColor.hex : null; state.int = 0; state.intHex = null;
   state.caliperColor = c.calIdx!=null ? c.calIdx : 0; state.wheelStyle = c.wheelIdx!=null ? c.wheelIdx : 0; state.finish = 0; state.tint = 0;
-  state.plate = ''; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0; state.stripe = 0; state.rim = 0;
+  state.plate = ''; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0; state.stripe = 0; state.rim = '';
   applyLook(); if(rideCar()) applyRide(0);
   document.body.classList.add('comparing');
 }

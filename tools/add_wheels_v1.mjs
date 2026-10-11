@@ -3,7 +3,7 @@
 //     子節點掛在原本的節點底下、不帶位移，所以原本跟著什麼動（車高動畫）就還是跟著動。
 //     Mustang 的輪圈和輪胎是同一個材質：只拆半徑 ≤ rcut 的三角形（輪圈），輪胎留著。
 //  2. Blender 產生的三款輪圈（mod_rim_<造型>_<輪子>）掛到場景最上層，節點自帶位置、旋轉、單位縮放。
-// 用法：node add_wheels_v1.mjs <車模.glb> <wheelfit.json> <輪圈.glb> <輸出.glb>
+// 用法：node add_wheels_v1.mjs <車模.glb> <wheelfit.json> <輪圈.glb 或 -> <輸出.glb>
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { mergeDocuments, unpartition, draco, prune, compactPrimitive } from '@gltf-transform/functions';
@@ -42,11 +42,13 @@ for (const { n, p: prim, rcut } of jobs) {
   const child = doc.createNode('stock_rim_' + (k++)).setMesh(doc.createMesh('stock_rim_' + k).addPrimitive(take));
   n.addChild(child);
 }
-mergeDocuments(doc, await io.read(PARTS));
-await doc.transform(unpartition());
-const extra = root.listScenes().find(s => s !== scene);
-for (const n of extra.listChildren().slice()) { if (!/^mod_rim_/.test(n.getName())) throw new Error('unexpected ' + n.getName()); extra.removeChild(n); scene.addChild(n); }
-extra.dispose();
+if (PARTS !== '-') {   // 2026-10-11 第二版：輪圈改成網頁另外載入（wheels/），這裡只拆原廠輪圈，零件檔給 '-'
+  mergeDocuments(doc, await io.read(PARTS));
+  await doc.transform(unpartition());
+  const extra = root.listScenes().find(s => s !== scene);
+  for (const n of extra.listChildren().slice()) { if (!/^mod_rim_/.test(n.getName())) throw new Error('unexpected ' + n.getName()); extra.removeChild(n); scene.addChild(n); }
+  extra.dispose();
+}
 console.log('stock_rim nodes', k, '| mod_rim nodes', scene.listChildren().filter(n => /^mod_rim_/.test(n.getName())).length);
 await doc.transform(prune({ keepAttributes: true, keepIndices: true, keepLeaves: true }), draco({ quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 12 }));
 await io.write(OUT, doc);
