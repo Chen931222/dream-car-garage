@@ -511,9 +511,8 @@
           </div>
         </div>
       </section>
-      <section class="opt" id="opt-adv">
-        <h2><button type="button" class="opt-h" aria-expanded="false" aria-controls="ob-adv"><span class="t">進階：載入自己的車模</span><span class="val" id="val-adv"></span><svg class="lic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg></button></h2>
-        <div class="opt-b" id="ob-adv" hidden>
+      <!-- 2026-10-11 本人：「把載入自己車模拿掉」。分區拿掉；選檔元件留著不顯示，大廳第十格「增加其他車輛」和拖放 .glb 還會用到 -->
+      <div id="adv-hidden" hidden>
           <!-- 指定材質只給自己載入的車模用：九台車的材質都設定好了（2026-10-07） -->
           <div class="grp" id="mat-pick" hidden>
             <div class="grp-h">指定材質 <span class="note">顏色換錯位置時用</span></div>
@@ -533,8 +532,7 @@
             </div>
             <p class="adv-note">也可以直接把 .glb 拖進車圖。方向不對就用上面三顆轉正。</p>
           </div>
-        </div>
-      </section>
+      </div>
       <div class="p-foot">
         <div class="credit" id="credit"></div>
         <nav aria-label="其他頁面"><a href="intro.html">功能導覽</a><a href="sources.html">來源與修改紀錄</a></nav>
@@ -1076,7 +1074,10 @@ function syncMods(){
   var sb=document.getElementById('stripe-block'); if(sb) sb.hidden = !(activeCar>=0 && stripeMats().length);
   syncStripeRow();
 }
-document.getElementById('mod-smoke').onclick=function(){ state.smoke=state.smoke?0:1; applySmoke(); syncMods(); refresh(); focusView('front'); };
+document.getElementById('mod-smoke').onclick=function(){ state.smoke=state.smoke?0:1;
+  // 2026-10-11 本人：「燻黑燈組好像沒有用」——燈亮著時燈罩是發光的，燻黑蓋不上去。勾燻黑時燈若亮著就先熄火
+  if(state.smoke && state.lights){ lightsBtn.onclick(); toast('已熄火，燈罩燻黑要熄火才看得清楚'); }
+  applySmoke(); syncMods(); refresh(); focusView('front'); };
 document.getElementById('mod-mirror').onclick=function(){ state.mirror=state.mirror?0:1; applyMirror(); syncMods(); refresh(); focusView('mirror'); };
 document.getElementById('mod-handle').onclick=function(){ state.handle=state.handle?0:1; applyHandle(); applyRoof(); syncMods(); refresh(); focusView('side'); };
 document.getElementById('mod-roof').onclick=function(){ state.roof=state.roof?0:1; applyRoof(); syncMods(); refresh(); focusView('roof'); };
