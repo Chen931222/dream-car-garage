@@ -353,6 +353,7 @@
     .main{ display:block; overflow-y:auto; overscroll-behavior:contain; padding:0; }
     .stagecol{ display:contents; }
     .stage{ position:sticky; top:0; z-index:3; height:46svh; min-height:250px; border-radius:0; }
+    .panel *{ scroll-margin-top:calc(max(46svh, 250px) + 12px); }   /* 捲到某個選項時停在黏住的車圖下面，不要被車圖蓋住 */
     .garage{ padding:12px 12px 6px; }
     .garage button{ flex:0 0 70px; }
     .panel{ overflow:visible; padding:10px 12px 40px; }
@@ -484,13 +485,17 @@
               <button type="button" id="mod-handle" aria-pressed="false" hidden>把手亮黑</button>
             </div>
           </div>
+          <div class="grp" id="stripe-block" hidden>
+            <div class="grp-h">賽車條紋 <output id="stripe-val">無</output></div>
+            <div class="seg" id="stripe-row" role="group" aria-label="賽車條紋"></div>
+          </div>
           <div class="grp tint-row" id="tint-block" hidden>
             <div class="grp-h">窗戶隔熱紙 <output id="tint-val">原廠</output></div>
             <div class="tint-seg seg" id="tint-row" role="group" aria-label="窗戶隔熱紙"></div>
           </div>
           <div class="grp ride-row" id="ride-row" hidden>
             <div class="grp-h"><label for="ride">車高</label> <output id="ride-val" for="ride">原廠</output></div>
-            <input type="range" id="ride" min="0" max="40" step="5" value="0" aria-valuetext="原廠高度">
+            <input type="range" id="ride" min="0" max="40" step="1" value="0" aria-valuetext="原廠高度">
             <div class="ride-scale" aria-hidden="true"><span>原廠</span><span>降低</span></div>
           </div>
         </div>
@@ -730,7 +735,7 @@ const STORIES = [
 
 let activeCar = 0;
 const DEFAULT_EXT = 3;   // 預設鈦銀：暗棚是深色背景，黑車會看不見
-const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, handle:0, roof:0, yellow:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
+const state = { ext:DEFAULT_EXT, int:0, extHex:null, intHex:null, caliperColor:0, wheelStyle:0, finish:0, tint:0, plate:'', smoke:0, black:0, mirror:0, handle:0, roof:0, yellow:0, stripe:0, tips:false, scene:0, lights:false, bodyMats:[], intMats:[], caliperMats:[], wheelMats:[], tintMats:[], plateMat:-1 };
 
 const mv = document.getElementById('mv');
 
@@ -747,7 +752,7 @@ function saveCfg(){
   try{
     localStorage.setItem('dg-cfg', JSON.stringify({
       car:(activeCar>=0 && CARS[activeCar] ? CARS[activeCar].id : activeCar), ext:(state.extHex||state.ext), int:(state.intHex||state.int),
-      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:(plateBlocked(state.plate) ? '' : state.plate), smk:state.smoke, blk:state.black, mir:state.mirror, hdl:state.handle, roof:state.roof, ylw:state.yellow,
+      cal:state.caliperColor, wheel:state.wheelStyle, fin:state.finish, tint:state.tint, plate:(plateBlocked(state.plate) ? '' : state.plate), smk:state.smoke, blk:state.black, mir:state.mirror, hdl:state.handle, roof:state.roof, ylw:state.yellow, stp:state.stripe,
       scene:state.scene, ride:(typeof rideMM!=='undefined' ? rideMM : 0)
     }));
   }catch(e){}
@@ -764,13 +769,13 @@ buildGarage();
     EXTERIOR.forEach(function(it,i){ if(it.tier!==t.key) return;
       var b=document.createElement('button'); b.type='button'; b.className='swatch'; b.style.background=it.hex; b.dataset.box='sw-ext-all'; b.dataset.i=i;
       b.setAttribute('aria-label', it.name); b.setAttribute('aria-pressed','false'); b.innerHTML='<span class="tip" aria-hidden="true">'+it.name+'</span>';
-      b.onclick=function(){ state.ext=i; state.extHex=null; applyExterior(); refresh(); };
+      b.onclick=function(){ state.ext=i; state.extHex=null; applyExterior(); refresh(); showOutside(); };
       row.appendChild(b);
     });
     g.appendChild(row); box.appendChild(g);
   });
 })();
-buildSwatches('sw-int', INTERIOR, i => { state.int=i; state.intHex=null; applyInterior(); refresh(); });
+buildSwatches('sw-int', INTERIOR, i => { state.int=i; state.intHex=null; applyInterior(); refresh(); showInside(); });
 buildSwatches('sw-caliper', CALIPER, i => { state.caliperColor=i; applyCaliper(); refresh(); focusView('side'); });
 buildSwatches('sw-wheel', WHEELS, i => { state.wheelStyle=i; applyWheel(); refresh(); focusView('side'); });
 buildFinish();
@@ -880,6 +885,8 @@ function applyPlate(){
 /* ---------- 自訂顏色（調色盤）---------- */
 document.getElementById('ext-color').addEventListener('input', e=>{ state.extHex=e.target.value; applyExterior(); refresh(); });
 document.getElementById('int-color').addEventListener('input', e=>{ state.intHex=e.target.value; applyInterior(); refresh(); });
+document.getElementById('int-color').addEventListener('change', function(){ showInside(); });
+document.getElementById('ext-color').addEventListener('change', function(){ showOutside(); });
 
 /* Lucide icon 字串（給會動態改字的按鈕/toast 用） */
 var LIC = {
@@ -993,7 +1000,42 @@ function applyRoof(){
       var f=(typeof FINISHES!=='undefined'&&FINISHES[state.finish])?FINISHES[state.finish]:{coat:0.8}, mr=(CARS[activeCar]||{}).minRough||0;
       if(m.setClearcoatFactor){ m.setClearcoatFactor(f.coat!=null ? f.coat : 0.8); if(m.setClearcoatRoughnessFactor) m.setClearcoatRoughnessFactor(mr ? 0.2 : 0.06); } }
   });
+  if(typeof applyStripe==='function') applyStripe();
 }
+/* 賽車條紋（2026-10-10）：tools/clip_split_v1.mjs 沿平面把車漆切開（邊是直線），離中線 6–30 cm 左右各一條，從引擎蓋經車頂到行李廂。
+   stripe_paint 從車漆切出來（沒選時跟車身色），stripe_roof 從車頂切出來（沒選時跟著車頂，車頂亮黑就一起黑）。
+   選了條紋時把底色貼圖拿掉（Mustang 的車漆是貼圖乘顏色，白條紋會變成貼圖的藍），沒選時放回去 */
+var STRIPES = [ { name:'無' }, { name:'白', hex:'#ecebe6' }, { name:'黑', hex:'#121314' } ];
+var _stripeTex = new WeakMap();
+function stripeMats(){ return mv.model ? mv.model.materials.filter(function(m){ return /^stripe_(paint|roof)$/.test(m.name); }) : []; }
+function copyPaint(p, m, src){ var b=src.pbrMetallicRoughness; p.setBaseColorFactor(b.baseColorFactor.slice()); p.setMetallicFactor(b.metallicFactor); p.setRoughnessFactor(b.roughnessFactor);
+  var f=(typeof FINISHES!=='undefined'&&FINISHES[state.finish])?FINISHES[state.finish]:{coat:0.8}, mr=(CARS[activeCar]||{}).minRough||0;
+  if(m.setClearcoatFactor){ m.setClearcoatFactor(f.coat!=null ? f.coat : 0.8); if(m.setClearcoatRoughnessFactor) m.setClearcoatRoughnessFactor(mr ? 0.2 : 0.06); } }
+function applyStripe(){
+  syncStripeRow();
+  var body = state.bodyMats.length ? matAt(state.bodyMats[0]) : null, roof = roofMats()[0] || body, st = STRIPES[state.stripe] || STRIPES[0];
+  stripeMats().forEach(function(m){ var p=m.pbrMetallicRoughness, ti=p.baseColorTexture;
+    if(!_stripeTex.has(m)) _stripeTex.set(m, ti ? ti.texture : null);
+    var orig=_stripeTex.get(m);
+    if(state.stripe){ if(ti && ti.texture) ti.setTexture(null);
+      var lin=hexToLinear(st.hex); p.setBaseColorFactor([lin[0],lin[1],lin[2],1]); p.setMetallicFactor(0.1); p.setRoughnessFactor(0.3);
+      if(m.setClearcoatFactor){ m.setClearcoatFactor(1); if(m.setClearcoatRoughnessFactor) m.setClearcoatRoughnessFactor(0.06); } }
+    else { if(ti && orig && ti.texture!==orig) ti.setTexture(orig);
+      var src = m.name==='stripe_roof' ? roof : body; if(src) copyPaint(p, m, src); }
+  });
+}
+function buildStripe(){
+  var box=document.getElementById('stripe-row'); if(!box) return; box.innerHTML='';
+  STRIPES.forEach(function(t,i){ var b=document.createElement('button'); b.type='button'; b.textContent=t.name;
+    b.onclick=function(){ state.stripe=i; applyStripe(); syncMods(); refresh(); focusView('roof'); }; box.appendChild(b); });
+  syncStripeRow();
+}
+function syncStripeRow(){
+  var box=document.getElementById('stripe-row'); if(!box) return;
+  Array.prototype.forEach.call(box.children,function(x,xi){ x.className=(xi===state.stripe?'active':''); x.setAttribute('aria-pressed', xi===state.stripe ? 'true' : 'false'); });
+  var v=document.getElementById('stripe-val'); if(v) v.textContent = state.stripe ? (STRIPES[state.stripe].name+'色雙條') : '無';
+}
+buildStripe();   // STRIPES 在這段才定義，按鈕要在這之後才建得出來
 /* 頭燈黃光（2026-10-10）：只改頭燈亮起來的顏色，熄火時看不出差別；勾的時候順便把燈打開（不發動引擎、不出聲） */
 var HEAD_WHITE = [1,0.98,0.92], HEAD_YELLOW = [1,0.62,0.03];   // 黃光比白光暗一點（1.3），太亮色調映射會把黃推成奶油白
 function headCol(){ return state.yellow ? HEAD_YELLOW : HEAD_WHITE; }
@@ -1031,6 +1073,8 @@ function syncMods(){
   var hasYellow = activeCar>=0, by=document.getElementById('mod-yellow');
   if(by){ by.hidden=!hasYellow; by.className=state.yellow?'active':''; by.setAttribute('aria-pressed', state.yellow?'true':'false'); }
   if(blk) blk.hidden = !(hasBlack || hasSmoke || hasMirror || hasHandle || hasRoof || hasYellow);
+  var sb=document.getElementById('stripe-block'); if(sb) sb.hidden = !(activeCar>=0 && stripeMats().length);
+  syncStripeRow();
 }
 document.getElementById('mod-smoke').onclick=function(){ state.smoke=state.smoke?0:1; applySmoke(); syncMods(); refresh(); focusView('front'); };
 document.getElementById('mod-mirror').onclick=function(){ state.mirror=state.mirror?0:1; applyMirror(); syncMods(); refresh(); focusView('mirror'); };
@@ -1230,7 +1274,7 @@ var RIDE_RANGE = 40;   // 每台車的 ride 動畫都烘到 40 mm（W202 用 Ble
 function rideCar(){ var c = CARS[activeCar]; return c && c.ride ? c.ride : null; }
 function applyRide(v){
   var r = rideCar(); if(!r) return;
-  rideMM = Math.max(0, Math.min(r.max, Math.round((+v || 0) / 5) * 5));
+  rideMM = Math.max(0, Math.min(r.max, Math.round(+v || 0)));   // 2026-10-11 改成每 1 mm（原本 5 mm 一格，Macan 只能降 10 mm，拉起來只有三個點）
   rideIn.value = rideMM;
   rideOut.textContent = rideMM ? ('−' + rideMM + ' mm') : '原廠';
   rideIn.setAttribute('aria-valuetext', rideMM ? ('降低 ' + rideMM + ' 毫米') : '原廠高度');
@@ -1275,6 +1319,7 @@ function buildShareLink(){
   if(state.handle && handleMats().length) p.set('hdl', 1);
   if(state.roof && roofMats().length) p.set('roof', 1);
   if(state.yellow) p.set('ylw', 1);
+  if(state.stripe && stripeMats().length) p.set('stp', state.stripe);
   if(state.plateMat>=0 && state.plate && !plateBlocked(state.plate)) p.set('plate', state.plate);
   p.set('scene', state.scene);
   if(rideMM && rideCar()) p.set('ride', rideMM);
@@ -1311,7 +1356,7 @@ function randomConfig(){
   if(state.caliperMats.length) state.caliperColor=ri(CALIPER.length);
   if(state.wheelMats.length) state.wheelStyle=ri(WHEELS.length);
   if(state.tintMats.length) state.tint=ri(TINTS.length);
-  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0; state.handle=handleMats().length ? ri(2) : 0; state.roof=roofMats().length ? ri(2) : 0;
+  state.smoke=ri(2); state.black=blackMats().length ? ri(2) : 0; state.mirror=mirrorMats().length ? ri(2) : 0; state.handle=handleMats().length ? ri(2) : 0; state.roof=roofMats().length ? ri(2) : 0; state.stripe=stripeMats().length ? ri(STRIPES.length) : 0;
   applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); syncMods(); refresh();
   toast(LIC.dice+' 幫你配了一套！');
 }
@@ -1368,7 +1413,7 @@ function enterFromLobby(i){
   if(savedCfg && savedCfg.car===i){
     // 回到上次的車 → 原封不動還原上次的顏色/選配/場景
     applyScene((+savedCfg.scene)||0);
-    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate, smk:savedCfg.smk, blk:savedCfg.blk, mir:savedCfg.mir, hdl:savedCfg.hdl, roof:savedCfg.roof, ylw:savedCfg.ylw };
+    pendingCfg={ ext:savedCfg.ext, int:savedCfg.int, cal:savedCfg.cal, wheel:savedCfg.wheel, fin:savedCfg.fin, tint:savedCfg.tint, plate:savedCfg.plate, smk:savedCfg.smk, blk:savedCfg.blk, mir:savedCfg.mir, hdl:savedCfg.hdl, roof:savedCfg.roof, ylw:savedCfg.ylw, stp:savedCfg.stp };
     pendingRide = savedCfg.ride || 0;
     if(i===activeCar && mv.loaded && rideCar()){ applyRide(pendingRide); pendingRide = null; }   // 同一台車不會再觸發 load
     if(i!==activeCar){ switchCar(i); } else if(mv.model){ onModelLoad(); }
@@ -1401,6 +1446,7 @@ function parseShareURL(){
   if(p.has('hdl')) cfg.hdl=+p.get('hdl');
   if(p.has('roof')) cfg.roof=+p.get('roof');
   if(p.has('ylw')) cfg.ylw=+p.get('ylw');
+  if(p.has('stp')) cfg.stp=+p.get('stp');
   if(p.has('plate')){ var _pl=cleanPlate(p.get('plate')); if(!plateBlocked(_pl)) cfg.plate=_pl; }
   // opt（選配）2026-10-07 拿掉了：舊連結帶著也直接略過
   if(p.has('ride')) pendingRide=+p.get('ride')||0;
@@ -1449,7 +1495,7 @@ function switchCar(i){
   if(typeof showLoader==='function') showLoader();
   const car = CARS[i];
   _pitch = car.pitch; _yaw = car.yaw || 0; applyOrientation(); applyScale(car.scale); setMast(car.code); setMatPick(false);
-  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0;
+  state.ext = DEFAULT_EXT; state.int = 0; state.extHex = null; state.intHex = null; state.caliperColor = 0; state.wheelStyle = 0; state.finish = 0; state.tint = 0; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0; state.stripe = 0;
   if(car.realColor) state.extHex = car.realColor.hex;   // 真的那台：預設用原車色
   document.getElementById('car-name').textContent = car.name;
   mv.setAttribute('alt', car.name);
@@ -1558,6 +1604,7 @@ function onModelLoad(){
     if(c.hdl!=null) state.handle = (+c.hdl && handleMats().length) ? 1 : 0;
     if(c.roof!=null) state.roof = (+c.roof && roofMats().length) ? 1 : 0;
     if(c.ylw!=null) state.yellow = +c.ylw ? 1 : 0;
+    if(c.stp!=null) state.stripe = (STRIPES[+c.stp] && stripeMats().length) ? +c.stp : 0;
     applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); syncMods(); refresh();
     var ec=document.getElementById('ext-color'); if(ec && state.extHex) ec.value=state.extHex;
     var ic=document.getElementById('int-color'); if(ic && state.intHex) ic.value=state.intHex;
@@ -1752,6 +1799,7 @@ function refresh(){
     (blackMats().length ? row('亮面飾條', state.black ? '黑化' : '原廠') : '')+
     (handleMats().length ? row('車門把手', state.handle ? '亮黑' : '原廠') : '')+
     (roofMats().length ? row('車頂', state.roof ? '亮黑' : '車身色') : '')+
+    (stripeMats().length ? row('賽車條紋', state.stripe ? (STRIPES[state.stripe].name+'色雙條') : '無') : '')+
     (activeCar>=0 ? row('頭燈光色', state.yellow ? '黃光' : '白光') : '')+
     (mirrorMats().length ? row('車外後視鏡', (!!(CARS[activeCar]||{}).mirrorBlack !== !!state.mirror) ? '亮黑' : '車身色') : '')+
     (state.plateMat>=0 ? row('車牌', (state.plate && !plateBlocked(state.plate)) ? state.plate : '原廠') : '')+
@@ -1769,8 +1817,8 @@ function syncSections(){
   var ow=document.getElementById('opt-wheel'); if(ow) ow.hidden = !(vis('wheel-block') || vis('caliper-block'));
   set('val-wheel', state.wheelMats.length ? WHEELS[state.wheelStyle].name : (state.caliperMats.length ? CALIPER[state.caliperColor].name+'卡鉗' : ''));
   var oi=document.getElementById('opt-int'); if(oi) oi.hidden = !state.intMats.length;
-  var om=document.getElementById('opt-mods'); if(om) om.hidden = !(vis('mod-block') || vis('tint-block') || vis('ride-row'));
-  var n = (state.smoke?1:0) + (state.black&&blackMats().length?1:0) + (state.mirror&&mirrorMats().length?1:0) + (state.handle&&handleMats().length?1:0) + (state.roof&&roofMats().length?1:0) + (state.yellow?1:0)
+  var om=document.getElementById('opt-mods'); if(om) om.hidden = !(vis('mod-block') || vis('stripe-block') || vis('tint-block') || vis('ride-row'));
+  var n = (state.smoke?1:0) + (state.black&&blackMats().length?1:0) + (state.mirror&&mirrorMats().length?1:0) + (state.handle&&handleMats().length?1:0) + (state.roof&&roofMats().length?1:0) + (state.yellow?1:0) + (state.stripe&&stripeMats().length?1:0)
         + (state.tint&&state.tintMats.length?1:0) + ((typeof rideMM!=='undefined'&&rideMM&&rideCar())?1:0);
   set('val-mods', n ? ('已選 '+n+' 項') : '原廠');
   var op=document.getElementById('opt-plate'); if(op) op.hidden = !vis('plate-block');
@@ -1835,8 +1883,13 @@ window.addEventListener('drop', e=>{
 /* ---------- 選項連動鏡頭（2026-10-09，學 Porsche 配置器：點輪圈轉到側面、點尾燈轉到車尾） ----------
    只在使用者自己點選項時轉；車內視角、看展示時不動。轉之前先停自動旋轉、把轉盤歸零，不然角度會跟著跑 */
 var VIEWS = { side:[75,82], front:[-32,80], rear:[148,80], mirror:[-48,78], plate:[180,84], roof:[-35,50] };
+/* 2026-10-11 本人：「點內裝的時候幫我拉到車內」。點內裝色就坐進車裡（有車內視角的車才會），點車色或外觀選項就回到車外 */
+function canInside(){ var c = activeCar>=0 ? CARS[activeCar] : null; return !!c && !c.noInterior && !c.noIv; }
+function showInside(){ if(canInside() && !interiorView) enterInterior(); }
+function showOutside(){ if(interiorView) exitInterior(); }
 function focusView(k){
-  var v = VIEWS[k]; if(!v || document.body.classList.contains('iv') || activeCar<0) return;
+  var v = VIEWS[k]; if(!v || activeCar<0) return;
+  showOutside();
   if(mv.hasAttribute('auto-rotate')) rotBtn.onclick();
   if(mv.resetTurntableRotation) mv.resetTurntableRotation(0);
   var off = CARS[activeCar].viewOff || 0;
@@ -1844,7 +1897,7 @@ function focusView(k){
 }
 /* 按住看原廠（2026-10-09，學 Porsche 的比較功能）：按下時把這台車套回剛換上時的樣子，放開還原；不存檔、不改分享連結 */
 var _cmpSaved = null;
-var CMP_KEYS = ['ext','extHex','int','intHex','caliperColor','wheelStyle','finish','tint','plate','smoke','black','mirror','handle','roof','yellow'];
+var CMP_KEYS = ['ext','extHex','int','intHex','caliperColor','wheelStyle','finish','tint','plate','smoke','black','mirror','handle','roof','yellow','stripe'];
 function applyLook(){ applyExterior(); applyInterior(); applyCaliper(); applyWheel(); applyTint(); applyPlate(); applySmoke(); applyBlack(); applyMirror(); applyHandle(); applyRoof(); applyLights(); }
 function compareOn(){
   if(_cmpSaved || activeCar<0) return;
@@ -1852,7 +1905,7 @@ function compareOn(){
   _cmpSaved = {}; CMP_KEYS.forEach(function(k){ _cmpSaved[k] = state[k]; }); _cmpSaved.ride = rideMM;
   state.ext = DEFAULT_EXT; state.extHex = c.realColor ? c.realColor.hex : null; state.int = 0; state.intHex = null;
   state.caliperColor = c.calIdx!=null ? c.calIdx : 0; state.wheelStyle = c.wheelIdx!=null ? c.wheelIdx : 0; state.finish = 0; state.tint = 0;
-  state.plate = ''; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0;
+  state.plate = ''; state.smoke = 0; state.black = 0; state.mirror = 0; state.handle = 0; state.roof = 0; state.yellow = 0; state.stripe = 0;
   applyLook(); if(rideCar()) applyRide(0);
   document.body.classList.add('comparing');
 }
